@@ -15,7 +15,7 @@ const tabs = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Estudio', icon: BookOpen },
   { href: '/ia', label: 'IA', icon: Bot },
-  { href: '/comunidad', label: 'Comunidad', icon: Users },
+  { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: User },
 ]
 
@@ -27,7 +27,8 @@ export function BottomTabs() {
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive =
-            pathname === tab.href || pathname.startsWith(tab.href + '/')
+            pathname === tab.href || pathname.startsWith(tab.href + '/') ||
+            (tab.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
           const Icon = tab.icon
 
           return (

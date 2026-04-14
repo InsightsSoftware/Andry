@@ -44,7 +44,8 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-4">
         {links.map((link) => {
           const isActive =
-            pathname === link.href || pathname.startsWith(link.href + '/')
+            pathname === link.href || pathname.startsWith(link.href + '/') ||
+            (link.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
           const Icon = link.icon
 
           return (
