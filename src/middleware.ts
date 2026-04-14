@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
 
   if (isProtected || isAdmin) {
     // Not authenticated — redirect to login
-    if (!user) {
+    if (!user || !supabase) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)
