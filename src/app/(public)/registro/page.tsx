@@ -73,10 +73,10 @@ function RegisterForm() {
     <Card className="w-full max-w-md" padding="lg">
       <div className="mb-6 text-center">
         <GraduationCap className="mx-auto mb-3 h-10 w-10 text-primary-600" />
-        <h1 className="text-2xl font-bold text-neutral-900">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
           Crear Cuenta
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           {planFromUrl
             ? 'Crea tu cuenta para continuar con tu compra'
             : 'Regístrate para comenzar a estudiar'}
@@ -125,7 +125,7 @@ function RegisterForm() {
         />
 
         {error && (
-          <p className="rounded-lg bg-danger-500/10 px-4 py-2 text-sm text-danger-500">
+          <p className="rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
             {error}
           </p>
         )}
@@ -135,8 +135,8 @@ function RegisterForm() {
         </Button>
       </form>
 
-      <div className="mt-6 border-t border-neutral-200 pt-4 text-center">
-        <p className="text-sm text-neutral-500">
+      <div className="mt-6 border-t border-neutral-200 dark:border-neutral-700 pt-4 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           ¿Ya tienes cuenta?{' '}
           <Link
             href="/login"

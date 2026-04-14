@@ -47,10 +47,10 @@ export default function RecoverPage() {
       <Card className="w-full max-w-md" padding="lg">
         <div className="mb-6 text-center">
           <GraduationCap className="mx-auto mb-3 h-10 w-10 text-primary-600" />
-          <h1 className="text-2xl font-bold text-neutral-900">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             Recuperar Contraseña
           </h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Te enviaremos un enlace para restablecer tu contraseña
           </p>
         </div>
@@ -58,10 +58,10 @@ export default function RecoverPage() {
         {sent ? (
           <div className="text-center">
             <CheckCircle className="mx-auto mb-3 h-12 w-12 text-success-500" />
-            <h2 className="mb-2 text-lg font-bold text-neutral-900">
+            <h2 className="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">
               Correo enviado
             </h2>
-            <p className="mb-6 text-sm text-neutral-500">
+            <p className="mb-6 text-sm text-neutral-500 dark:text-neutral-400">
               Revisa tu bandeja de entrada en <strong>{email}</strong> y sigue
               las instrucciones para restablecer tu contraseña.
             </p>
@@ -87,7 +87,7 @@ export default function RecoverPage() {
               />
 
               {error && (
-                <p className="rounded-lg bg-danger-500/10 px-4 py-2 text-sm text-danger-500">
+                <p className="rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
                   {error}
                 </p>
               )}
@@ -99,7 +99,7 @@ export default function RecoverPage() {
             <div className="mt-4 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-primary-600"
+                className="inline-flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Volver a Iniciar Sesión

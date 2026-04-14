@@ -51,10 +51,10 @@ function LoginForm() {
     <Card className="w-full max-w-md" padding="lg">
       <div className="mb-6 text-center">
         <GraduationCap className="mx-auto mb-3 h-10 w-10 text-primary-600" />
-        <h1 className="text-2xl font-bold text-neutral-900">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
           Iniciar Sesión
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Ingresa a tu cuenta para estudiar
         </p>
       </div>
@@ -80,7 +80,7 @@ function LoginForm() {
         />
 
         {error && (
-          <p className="rounded-lg bg-danger-500/10 px-4 py-2 text-sm text-danger-500">
+          <p className="rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
             {error}
           </p>
         )}
@@ -98,8 +98,8 @@ function LoginForm() {
           ¿Olvidaste tu contraseña?
         </Link>
       </div>
-      <div className="mt-6 border-t border-neutral-200 pt-4 text-center">
-        <p className="text-sm text-neutral-500">
+      <div className="mt-6 border-t border-neutral-200 dark:border-neutral-700 pt-4 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           ¿No tienes cuenta?{' '}
           <Link
             href="/registro"

@@ -33,7 +33,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/registro"
-              className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-white px-8 text-lg font-bold text-primary-700 hover:bg-neutral-50 transition-colors sm:w-auto"
+              className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-white dark:bg-neutral-900 px-8 text-lg font-bold text-primary-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors sm:w-auto"
             >
               Comenzar Ahora
               <ArrowRight className="h-5 w-5" />
@@ -51,10 +51,10 @@ export default function LandingPage() {
       {/* Problem */}
       <section className="px-4 py-16">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
+          <h2 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-neutral-100 sm:text-3xl">
             Los cursos tradicionales te cobran $3,000+ y te dan fotocopias
           </h2>
-          <p className="mx-auto mb-12 max-w-2xl text-neutral-600">
+          <p className="mx-auto mb-12 max-w-2xl text-neutral-600 dark:text-neutral-400">
             Traducciones de Google, videos de 20 minutos, copias textuales del
             libro. Pagaste caro y no aprendiste nada. Nosotros cambiamos eso.
           </p>
@@ -78,15 +78,15 @@ export default function LandingPage() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 text-left"
+                className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6 text-left"
               >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/20">
                   <item.icon className="h-6 w-6 text-primary-600" />
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-neutral-900">
+                <h3 className="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">
                   {item.title}
                 </h3>
-                <p className="text-sm text-neutral-600">{item.desc}</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -94,9 +94,9 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="bg-neutral-100 px-4 py-16">
+      <section className="bg-neutral-100 dark:bg-neutral-800 px-4 py-16">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-12 text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
+          <h2 className="mb-12 text-center text-2xl font-bold text-neutral-900 dark:text-neutral-100 sm:text-3xl">
             Todo lo que necesitas para aprobar
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -124,16 +124,16 @@ export default function LandingPage() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="flex gap-4 rounded-2xl bg-white p-5"
+                className="flex gap-4 rounded-2xl bg-white dark:bg-neutral-900 p-5"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/20">
                   <item.icon className="h-5 w-5 text-primary-600" />
                 </div>
                 <div>
-                  <h3 className="mb-1 font-bold text-neutral-900">
+                  <h3 className="mb-1 font-bold text-neutral-900 dark:text-neutral-100">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-neutral-600">{item.desc}</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -153,7 +153,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/registro"
-            className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl bg-white px-8 text-lg font-bold text-primary-700 hover:bg-neutral-50 transition-colors"
+            className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl bg-white dark:bg-neutral-900 px-8 text-lg font-bold text-primary-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           >
             Crear Mi Cuenta
             <ArrowRight className="h-5 w-5" />

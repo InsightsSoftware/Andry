@@ -44,13 +44,13 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       aria-label={title}
     >
       <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         className={cn(
-          'relative z-10 w-full max-w-lg bg-white',
+          'relative z-10 w-full max-w-lg bg-white dark:bg-neutral-900',
           'rounded-t-2xl sm:rounded-2xl',
           'max-h-[90vh] overflow-y-auto',
           'p-5',
@@ -60,13 +60,13 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       >
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
+            <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">{title}</h2>
             <button
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100"
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
               aria-label="Cerrar"
             >
-              <X className="h-5 w-5 text-neutral-500" />
+              <X className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
             </button>
           </div>
         )}

@@ -14,10 +14,10 @@ export default async function EstudioPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-900">
+      <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
         Modo Estudio
       </h1>
-      <p className="mb-6 text-neutral-500">
+      <p className="mb-6 text-neutral-500 dark:text-neutral-400">
         Selecciona un curso para comenzar a estudiar
       </p>
 
@@ -27,23 +27,23 @@ export default async function EstudioPage() {
             <Link
               key={curso.id}
               href={`/estudio/${curso.slug}`}
-              className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-5 transition-shadow hover:shadow-lg"
+              className="group flex items-center gap-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5 transition-shadow hover:shadow-lg"
             >
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-50">
-                <BookOpen className="h-7 w-7 text-primary-600" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/20">
+                <BookOpen className="h-7 w-7 text-primary-600 dark:text-primary-400" />
               </div>
               <div className="flex-1">
-                <h2 className="font-bold text-neutral-900">{curso.nombre}</h2>
-                <p className="text-sm text-neutral-500">{curso.descripcion}</p>
+                <h2 className="font-bold text-neutral-900 dark:text-neutral-100">{curso.nombre}</h2>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">{curso.descripcion}</p>
               </div>
-              <ArrowRight className="h-5 w-5 text-neutral-400 group-hover:text-primary-600 transition-colors" />
+              <ArrowRight className="h-5 w-5 text-neutral-400 dark:text-neutral-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
             </Link>
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-neutral-200 p-12 text-center">
-          <BookOpen className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
-          <p className="text-neutral-500">
+        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
+          <BookOpen className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
+          <p className="text-neutral-500 dark:text-neutral-400">
             Los cursos se están preparando. Pronto tendrás contenido disponible.
           </p>
         </div>

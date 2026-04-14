@@ -23,7 +23,7 @@ export function BottomTabs() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 bg-white pb-safe md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 pb-safe md:hidden">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive =
@@ -39,8 +39,8 @@ export function BottomTabs() {
                 'flex flex-col items-center gap-0.5 px-3 py-2.5 min-w-[64px] min-h-[48px] justify-center',
                 'transition-colors duration-150',
                 isActive
-                  ? 'text-primary-600'
-                  : 'text-neutral-400 hover:text-neutral-600'
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-neutral-400 dark:text-neutral-500 hover:text-neutral-600'
               )}
             >
               <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />

@@ -48,16 +48,16 @@ function SimulatedCheckoutForm() {
   return (
     <div className="mx-auto w-full max-w-lg">
       {/* Dev mode banner */}
-      <div className="mb-6 flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+      <div className="mb-6 flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 px-4 py-3">
         <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
-        <p className="text-sm text-amber-700">
+        <p className="text-sm text-amber-700 dark:text-amber-400">
           <strong>Modo desarrollo</strong> — Este es un checkout simulado.
           En produccion se usa Stripe real.
         </p>
       </div>
 
       {/* Simulated Stripe card */}
-      <div className="rounded-2xl border border-neutral-200 bg-white shadow-lg overflow-hidden">
+      <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-neutral-900 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -74,15 +74,15 @@ function SimulatedCheckoutForm() {
         {/* Form */}
         <div className="p-6">
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Numero de tarjeta
             </label>
-            <div className="flex items-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-3">
-              <CreditCard className="h-5 w-5 text-neutral-400" />
-              <span className="text-sm text-neutral-500">
+            <div className="flex items-center gap-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
+              <CreditCard className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">
                 4242 4242 4242 4242
               </span>
-              <span className="ml-auto text-xs text-neutral-400">
+              <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
                 TEST
               </span>
             </div>
@@ -90,25 +90,25 @@ function SimulatedCheckoutForm() {
 
           <div className="mb-4 grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">
+              <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Vencimiento
               </label>
-              <div className="rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-3">
-                <span className="text-sm text-neutral-500">12/28</span>
+              <div className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">12/28</span>
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">
+              <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 CVC
               </label>
-              <div className="rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-3">
-                <span className="text-sm text-neutral-500">123</span>
+              <div className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">123</span>
               </div>
             </div>
           </div>
 
           {error && (
-            <p className="mb-4 rounded-lg bg-danger-500/10 px-4 py-2 text-sm text-danger-500">
+            <p className="mb-4 rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
               {error}
             </p>
           )}
@@ -123,7 +123,7 @@ function SimulatedCheckoutForm() {
             Pagar {planPrice} (Simulado)
           </Button>
 
-          <p className="mt-4 text-center text-xs text-neutral-400">
+          <p className="mt-4 text-center text-xs text-neutral-400 dark:text-neutral-500">
             Pago simulado — no se cobra nada real
           </p>
         </div>

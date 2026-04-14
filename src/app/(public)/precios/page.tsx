@@ -96,17 +96,17 @@ export default function PricingPage() {
     <div className="px-4 py-16">
       <div className="mx-auto max-w-4xl">
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-3xl font-extrabold text-neutral-900 sm:text-4xl">
+          <h1 className="mb-4 text-3xl font-extrabold text-neutral-900 dark:text-neutral-100 sm:text-4xl">
             Elige tu plan de estudio
           </h1>
-          <p className="text-lg text-neutral-600">
+          <p className="text-lg text-neutral-600 dark:text-neutral-400">
             Invierte en tu futuro. Un solo pago, sin sorpresas ni
             suscripciones mensuales.
           </p>
         </div>
 
         {error && (
-          <div className="mx-auto mb-8 flex max-w-md items-center gap-3 rounded-xl bg-danger-500/10 px-4 py-3 text-sm text-danger-500">
+          <div className="mx-auto mb-8 flex max-w-md items-center gap-3 rounded-xl bg-danger-500/10 dark:bg-danger-500/20 px-4 py-3 text-sm text-danger-500">
             <AlertCircle className="h-5 w-5 shrink-0" />
             {error}
           </div>
@@ -116,10 +116,10 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.key}
-              className={`relative rounded-2xl border-2 bg-white p-6 sm:p-8 ${
+              className={`relative rounded-2xl border-2 bg-white dark:bg-neutral-900 p-6 sm:p-8 ${
                 plan.popular
                   ? 'border-primary-500 shadow-lg'
-                  : 'border-neutral-200'
+                  : 'border-neutral-200 dark:border-neutral-700'
               }`}
             >
               {plan.popular && (
@@ -130,17 +130,17 @@ export default function PricingPage() {
                   </span>
                 </div>
               )}
-              <h2 className="mb-1 text-xl font-bold text-neutral-900">
+              <h2 className="mb-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
                 {plan.name}
               </h2>
-              <p className="mb-4 text-sm text-neutral-500">
+              <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
                 {plan.description}
               </p>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-neutral-900">
+                <span className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-100">
                   {plan.price}
                 </span>
-                <span className="ml-2 text-neutral-500">
+                <span className="ml-2 text-neutral-500 dark:text-neutral-400">
                   / {plan.period}
                 </span>
               </div>
@@ -148,7 +148,7 @@ export default function PricingPage() {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
                     <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success-500" />
-                    <span className="text-sm text-neutral-700">
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
                       {feature}
                     </span>
                   </li>
@@ -169,7 +169,7 @@ export default function PricingPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Pago seguro con tarjeta de crédito/débito a través de Stripe.
             <br />
             30 días de garantía — si no estás satisfecho, te devolvemos tu

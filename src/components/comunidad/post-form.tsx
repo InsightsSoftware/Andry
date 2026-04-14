@@ -40,14 +40,14 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-neutral-900">
+        <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
           {isDuda ? 'Publicar una duda' : 'Publicar un trabajo'}
         </h2>
         <button
           onClick={onClose}
-          className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          className="rounded-lg p-1 text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-600 dark:hover:text-neutral-300"
         >
           <X className="h-5 w-5" />
         </button>
@@ -66,13 +66,13 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
         />
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {isDuda ? 'Describe tu duda' : 'Descripcion del trabajo'}
           </label>
           <textarea
             name="contenido"
             rows={4}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-4 py-3 text-base text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/30"
             placeholder={
               isDuda
                 ? 'Explica tu duda con el mayor detalle posible...'
@@ -98,7 +98,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
         )}
 
         {error && (
-          <p className="rounded-lg bg-danger-500/10 px-4 py-2 text-sm text-danger-500">
+          <p className="rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
             {error}
           </p>
         )}

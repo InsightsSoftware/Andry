@@ -8,14 +8,14 @@ export default function PaymentSuccessPage() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-500/10">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-500/10 dark:bg-success-500/20">
           <CheckCircle className="h-10 w-10 text-success-500" />
         </div>
 
-        <h1 className="mb-3 text-2xl font-bold text-neutral-900">
+        <h1 className="mb-3 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
           ¡Pago exitoso!
         </h1>
-        <p className="mb-8 text-neutral-600">
+        <p className="mb-8 text-neutral-600 dark:text-neutral-400">
           Tu suscripción está activa. Ya puedes acceder a todo el contenido
           de estudio, el banco de preguntas y el asistente IA.
         </p>
@@ -27,7 +27,7 @@ export default function PaymentSuccessPage() {
           </Button>
         </Link>
 
-        <p className="mt-6 text-sm text-neutral-500">
+        <p className="mt-6 text-sm text-neutral-500 dark:text-neutral-400">
           Recibirás un correo de confirmación con los detalles de tu compra.
         </p>
       </div>

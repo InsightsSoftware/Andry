@@ -13,7 +13,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-neutral-900">
+      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
         Panel de Administración
       </h1>
 
@@ -21,13 +21,13 @@ export default function AdminDashboardPage() {
         {metrics.map((m) => (
           <div
             key={m.label}
-            className="rounded-2xl border border-neutral-200 bg-white p-5"
+            className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5"
           >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50">
-              <m.icon className="h-5 w-5 text-primary-600" />
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/20">
+              <m.icon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
-            <p className="text-sm text-neutral-500">{m.label}</p>
-            <p className="text-2xl font-bold text-neutral-900">{m.value}</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{m.label}</p>
+            <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{m.value}</p>
           </div>
         ))}
       </div>

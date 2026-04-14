@@ -22,7 +22,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-neutral-200 bg-white',
+        'rounded-2xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900',
         paddingStyles[padding],
         hover && 'transition-shadow duration-200 hover:shadow-lg active:shadow-md cursor-pointer',
         className
@@ -53,7 +53,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('text-lg font-bold text-neutral-900', className)}
+      className={cn('text-lg font-bold text-neutral-900 dark:text-neutral-100', className)}
       {...props}
     >
       {children}
@@ -68,7 +68,7 @@ export function CardDescription({
 }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn('text-sm text-neutral-500', className)}
+      className={cn('text-sm text-neutral-500 dark:text-neutral-400', className)}
       {...props}
     >
       {children}

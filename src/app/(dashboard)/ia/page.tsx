@@ -45,21 +45,21 @@ export default function IAPage() {
   return (
     <div className="flex h-[calc(100vh-10rem)] flex-col md:h-[calc(100vh-6rem)]">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-neutral-900">Asistente IA</h1>
-        <p className="text-sm text-neutral-500">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Asistente IA</h1>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           Pregunta lo que sea sobre el examen de licencia
         </p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-4">
+      <div className="flex-1 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <Bot className="mb-3 h-12 w-12 text-primary-300" />
-            <h2 className="mb-1 font-bold text-neutral-700">
+            <Bot className="mb-3 h-12 w-12 text-primary-300 dark:text-primary-600" />
+            <h2 className="mb-1 font-bold text-neutral-700 dark:text-neutral-300">
               ¿En qué te puedo ayudar?
             </h2>
-            <p className="max-w-sm text-sm text-neutral-500">
+            <p className="max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
               Preguntame sobre cualquier tema del examen. Te explico con
               ejemplos y te digo la página del libro donde encontrar la
               respuesta.
@@ -77,21 +77,21 @@ export default function IAPage() {
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                     msg.rol === 'user'
-                      ? 'bg-primary-100'
-                      : 'bg-neutral-100'
+                      ? 'bg-primary-100 dark:bg-primary-800/30'
+                      : 'bg-neutral-100 dark:bg-neutral-800'
                   }`}
                 >
                   {msg.rol === 'user' ? (
-                    <User className="h-4 w-4 text-primary-600" />
+                    <User className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   ) : (
-                    <Bot className="h-4 w-4 text-neutral-600" />
+                    <Bot className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                   )}
                 </div>
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                     msg.rol === 'user'
                       ? 'bg-primary-600 text-white'
-                      : 'bg-neutral-100 text-neutral-800'
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'
                   }`}
                 >
                   {msg.contenido}
@@ -100,14 +100,14 @@ export default function IAPage() {
             ))}
             {loading && (
               <div className="flex gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">
-                  <Bot className="h-4 w-4 text-neutral-600" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <Bot className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                 </div>
-                <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+                <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 px-4 py-3">
                   <div className="flex gap-1">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.1s]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.2s]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 dark:bg-neutral-500" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 dark:bg-neutral-500 [animation-delay:0.1s]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 dark:bg-neutral-500 [animation-delay:0.2s]" />
                   </div>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function IAPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribe tu pregunta..."
-          className="flex-1 rounded-xl border-2 border-neutral-200 bg-white px-4 py-3 text-base placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none min-h-[48px]"
+          className="flex-1 rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-3 text-base text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 focus:outline-none min-h-[48px]"
           disabled={loading}
         />
         <button

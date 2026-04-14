@@ -40,10 +40,10 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             {isDuda ? 'Dudas de Estudio' : 'Trabajos'}
           </h1>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {isDuda
               ? 'Pregunta y resuelve dudas con otros estudiantes'
               : 'Encuentra y publica oportunidades de trabajo'}
@@ -61,13 +61,13 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
       </div>
 
       {/* Tab navigation */}
-      <div className="mb-6 flex gap-2 border-b border-neutral-200">
+      <div className="mb-6 flex gap-2 border-b border-neutral-200 dark:border-neutral-700">
         <a
           href="/comunidad/dudas"
           className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors ${
             isDuda
-              ? 'border-b-2 border-primary-600 font-semibold text-primary-600'
-              : 'text-neutral-500 hover:text-neutral-700'
+              ? 'border-b-2 border-primary-600 dark:border-primary-400 font-semibold text-primary-600 dark:text-primary-400'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
           }`}
         >
           <MessageCircle className="h-4 w-4" />
@@ -77,8 +77,8 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
           href="/comunidad/trabajos"
           className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors ${
             !isDuda
-              ? 'border-b-2 border-primary-600 font-semibold text-primary-600'
-              : 'text-neutral-500 hover:text-neutral-700'
+              ? 'border-b-2 border-primary-600 dark:border-primary-400 font-semibold text-primary-600 dark:text-primary-400'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
           }`}
         >
           <Briefcase className="h-4 w-4" />
@@ -108,18 +108,18 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-neutral-200 p-12 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
           {isDuda ? (
-            <MessageCircle className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
+            <MessageCircle className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
           ) : (
-            <Briefcase className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
+            <Briefcase className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
           )}
-          <h2 className="mb-1 font-bold text-neutral-700">
+          <h2 className="mb-1 font-bold text-neutral-700 dark:text-neutral-300">
             {isDuda
               ? 'Aun no hay dudas publicadas'
               : 'Aun no hay trabajos publicados'}
           </h2>
-          <p className="mb-4 text-sm text-neutral-500">
+          <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
             {isDuda
               ? 'Se el primero en hacer una pregunta sobre el material.'
               : 'Publica tu primer trabajo o busca oportunidades.'}

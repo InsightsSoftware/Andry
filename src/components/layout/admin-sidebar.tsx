@@ -25,10 +25,10 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-neutral-200 md:bg-white">
-      <div className="flex h-16 items-center gap-2 border-b border-neutral-200 px-6">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-neutral-200 dark:border-neutral-700 md:bg-white dark:bg-neutral-900">
+      <div className="flex h-16 items-center gap-2 border-b border-neutral-200 dark:border-neutral-700 px-6">
         <GraduationCap className="h-7 w-7 text-primary-600" />
-        <span className="text-lg font-bold text-neutral-900">
+        <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
           Admin<span className="text-primary-600">Panel</span>
         </span>
       </div>
@@ -45,8 +45,8 @@ export function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                  ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -55,10 +55,10 @@ export function AdminSidebar() {
           )
         })}
       </nav>
-      <div className="border-t border-neutral-200 p-4">
+      <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
         <Link
           href="/panel"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           Volver a la App
