@@ -11,10 +11,12 @@ import {
   User,
   GraduationCap,
   LogOut,
+  Shield,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useState, useEffect } from 'react'
 
 const links = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
@@ -27,6 +29,22 @@ const links = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.rol === 'admin') setIsAdmin(true)
+        })
+    })
+  }, [])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -69,10 +87,26 @@ export function Sidebar() {
       <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
         <ThemeToggle />
       </div>
+      {isAdmin && (
+        <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
+          <Link
+            href="/admin/dashboard"
+            className={cn(
+              'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
+              pathname.startsWith('/admin')
+                ? 'bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400'
+                : 'text-warning-600 dark:text-warning-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+            )}
+          >
+            <Shield className="h-5 w-5" />
+            Panel Admin
+          </Link>
+        </div>
+      )}
       <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-danger-500 dark:hover:text-danger-400 transition-colors"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-danger-500 dark:hover:text-danger-400 transition-colors cursor-pointer"
         >
           <LogOut className="h-5 w-5" />
           Cerrar Sesión
