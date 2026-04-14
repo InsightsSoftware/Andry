@@ -191,7 +191,7 @@ export default function IAPage() {
             userContent.length > 50
               ? userContent.slice(0, 47) + '...'
               : userContent
-          await updateConversationTitle(convId, title)
+          await updateConversationTitle(convId!, title)
           loadConversations()
         } else {
           loadConversations()

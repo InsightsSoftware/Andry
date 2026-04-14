@@ -60,7 +60,7 @@ export function Sidebar() {
           Contratistas<span className="text-primary-600">Pro</span>
         </span>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-4">
+      <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
         {links.map((link) => {
           const isActive =
             pathname === link.href || pathname.startsWith(link.href + '/') ||
@@ -71,6 +71,7 @@ export function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
                 isActive
@@ -78,7 +79,7 @@ export function Sidebar() {
                   : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100'
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5" aria-hidden="true" />
               {link.label}
             </Link>
           )

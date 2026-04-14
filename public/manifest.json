@@ -1,0 +1,19 @@
+{
+  "name": "ContratistasPro",
+  "short_name": "ContratistasPro",
+  "description": "Plataforma de estudio para contratistas hispanos en Florida",
+  "start_url": "/panel",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

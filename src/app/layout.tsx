@@ -16,6 +16,16 @@ export const metadata: Metadata = {
   description:
     'Plataforma de estudio en espanol para contratistas hispanos en Florida. Preparate para tu examen de licencia con audiolibros, PDF interactivo, banco de preguntas y asistente IA.',
   robots: 'index, follow',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ContratistasPro',
+  },
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon.svg',
+  },
 }
 
 export const viewport: Viewport = {

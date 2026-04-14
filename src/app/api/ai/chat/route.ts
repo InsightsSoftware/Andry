@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     model: aiModel,
     system: SYSTEM_PROMPT,
     messages,
-    maxTokens: 1024,
+    maxOutputTokens: 1024,
     async onFinish({ text }) {
       // Save assistant response to DB
       if (conversationId) {

@@ -5,7 +5,15 @@ import { QuestionList } from '@/components/admin/question-list'
 export const metadata = { title: 'Admin - Preguntas' }
 
 export default async function AdminQuestionsPage() {
-  const { questions } = await getQuestions()
+  const result = await getQuestions()
+  const questions = result.questions as unknown as {
+    id: string
+    texto: string
+    respuesta_correcta: string
+    pagina_libro: number | null
+    capitulo_id: string
+    capitulos: { nombre: string; cursos: { nombre: string } | null } | null
+  }[]
 
   return (
     <div>
