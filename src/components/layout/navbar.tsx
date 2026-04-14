@@ -31,12 +31,20 @@ export function Navbar() {
             Comenzar Ahora
           </Link>
         </div>
-        <Link
-          href="/registro"
-          className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white sm:hidden"
-        >
-          Comenzar
-        </Link>
+        <div className="flex items-center gap-3 sm:hidden">
+          <Link
+            href="/login"
+            className="text-sm font-medium text-neutral-600"
+          >
+            Entrar
+          </Link>
+          <Link
+            href="/registro"
+            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            Comenzar
+          </Link>
+        </div>
       </div>
     </nav>
   )

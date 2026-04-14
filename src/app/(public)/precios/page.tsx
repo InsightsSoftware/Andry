@@ -1,5 +1,10 @@
-import Link from 'next/link'
-import { CheckCircle, ArrowRight, Star } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { CheckCircle, ArrowRight, Star, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 
 const plans = [
   {
@@ -17,7 +22,6 @@ const plans = [
       'Asistente IA 24/7',
       'Comunidad de estudio',
     ],
-    cta: 'Elegir Plan Básico',
     popular: false,
   },
   {
@@ -34,12 +38,60 @@ const plans = [
       'Marketplace de contratistas',
       'Soporte prioritario',
     ],
-    cta: 'Elegir Plan Premium',
     popular: true,
   },
 ]
 
 export default function PricingPage() {
+  const router = useRouter()
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [error, setError] = useState('')
+
+  async function handleCheckout(planKey: string) {
+    setError('')
+    setLoadingPlan(planKey)
+
+    try {
+      // Check if user is logged in
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        // Not logged in — redirect to register with plan
+        router.push(`/registro?plan=${planKey}`)
+        return
+      }
+
+      // User is logged in — create checkout session
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planKey }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al procesar pago')
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Error al conectar con el sistema de pagos'
+      )
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
+
   return (
     <div className="px-4 py-16">
       <div className="mx-auto max-w-4xl">
@@ -48,9 +100,17 @@ export default function PricingPage() {
             Elige tu plan de estudio
           </h1>
           <p className="text-lg text-neutral-600">
-            Invierte en tu futuro. Un solo pago, sin sorpresas ni suscripciones mensuales.
+            Invierte en tu futuro. Un solo pago, sin sorpresas ni
+            suscripciones mensuales.
           </p>
         </div>
+
+        {error && (
+          <div className="mx-auto mb-8 flex max-w-md items-center gap-3 rounded-xl bg-danger-500/10 px-4 py-3 text-sm text-danger-500">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            {error}
+          </div>
+        )}
 
         <div className="grid gap-6 sm:grid-cols-2">
           {plans.map((plan) => (
@@ -80,27 +140,30 @@ export default function PricingPage() {
                 <span className="text-4xl font-extrabold text-neutral-900">
                   {plan.price}
                 </span>
-                <span className="ml-2 text-neutral-500">/ {plan.period}</span>
+                <span className="ml-2 text-neutral-500">
+                  / {plan.period}
+                </span>
               </div>
               <ul className="mb-8 flex flex-col gap-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
                     <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success-500" />
-                    <span className="text-sm text-neutral-700">{feature}</span>
+                    <span className="text-sm text-neutral-700">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
-              <Link
-                href={`/registro?plan=${plan.key}`}
-                className={`flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl text-lg font-bold transition-colors ${
-                  plan.popular
-                    ? 'bg-primary-600 text-white hover:bg-primary-700'
-                    : 'border-2 border-neutral-300 text-neutral-700 hover:bg-neutral-50'
-                }`}
+              <Button
+                size="lg"
+                fullWidth
+                variant={plan.popular ? 'primary' : 'outline'}
+                loading={loadingPlan === plan.key}
+                onClick={() => handleCheckout(plan.key)}
               >
-                {plan.cta}
-                <ArrowRight className="h-5 w-5" />
-              </Link>
+                {plan.popular ? plan.name : `Elegir ${plan.name}`}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
             </div>
           ))}
         </div>
@@ -109,7 +172,8 @@ export default function PricingPage() {
           <p className="text-sm text-neutral-500">
             Pago seguro con tarjeta de crédito/débito a través de Stripe.
             <br />
-            30 días de garantía — si no estás satisfecho, te devolvemos tu dinero.
+            30 días de garantía — si no estás satisfecho, te devolvemos tu
+            dinero.
           </p>
         </div>
       </div>

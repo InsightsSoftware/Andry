@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { ManageSubscriptionButton } from '@/components/ui/manage-subscription-button'
 
 export const metadata = { title: 'Mi Perfil' }
 
@@ -94,6 +95,12 @@ export default async function ProfilePage() {
                   {formatDate(profile.subscription_expires_at)}
                 </strong>
               </p>
+            </div>
+          )}
+
+          {profile.stripe_customer_id && (
+            <div className="mt-4">
+              <ManageSubscriptionButton />
             </div>
           )}
         </div>
