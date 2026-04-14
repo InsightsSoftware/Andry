@@ -31,6 +31,15 @@ export async function POST(request: Request) {
 
     const plan = PLANS[planKey]
 
+    // DEV MODE: If Stripe keys are placeholders, redirect to simulated checkout
+    const stripeKey = process.env.STRIPE_SECRET_KEY || ''
+    if (stripeKey.includes('placeholder')) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      return NextResponse.json({
+        url: `${appUrl}/pago/simular?plan=${planKey}&uid=${user.id}`,
+      })
+    }
+
     // 3. Get or create Stripe customer
     const adminSupabase = createAdminClient()
     const { data: profile } = await adminSupabase
