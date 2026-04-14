@@ -12,10 +12,20 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Update Supabase session and get user
-  const { user, supabaseResponse, supabase } = await updateSession(request)
+  let user = null
+  let supabase = null
+  let response = NextResponse.next({ request })
+
+  try {
+    const session = await updateSession(request)
+    user = session.user
+    supabase = session.supabase
+    response = session.supabaseResponse
+  } catch {
+    // Supabase not configured yet — allow public routes, block protected
+  }
 
   // Security headers
-  const response = supabaseResponse
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
