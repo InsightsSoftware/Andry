@@ -4,63 +4,64 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Brand Colors */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Brand — electric blue on black */
+  --color-primary-50: #eef4ff;
+  --color-primary-100: #d9e6ff;
+  --color-primary-200: #bcd3ff;
+  --color-primary-300: #8eb8ff;
+  --color-primary-400: #5a94ff;
+  --color-primary-500: #3b6ff8;
+  --color-primary-600: #2451ed;
+  --color-primary-700: #1c3dda;
+  --color-primary-800: #1d33b1;
+  --color-primary-900: #1e308c;
 
   --color-accent-50: #fef3c7;
   --color-accent-100: #fde68a;
   --color-accent-400: #f59e0b;
   --color-accent-500: #d97706;
 
-  --color-success-50: #f0fdf4;
+  --color-success-50: #0d2818;
   --color-success-400: #4ade80;
   --color-success-500: #22c55e;
   --color-success-600: #16a34a;
   --color-success-700: #15803d;
-  --color-success-900: #14532d;
+  --color-success-900: #052e16;
 
-  --color-danger-50: #fef2f2;
+  --color-danger-50: #2a0a0a;
   --color-danger-200: #fecaca;
   --color-danger-400: #f87171;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
   --color-danger-800: #991b1b;
-  --color-danger-900: #7f1d1d;
+  --color-danger-900: #450a0a;
 
-  --color-warning-50: #fffbeb;
+  --color-warning-50: #1a1400;
   --color-warning-400: #fbbf24;
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
   --color-warning-700: #b45309;
-  --color-warning-900: #78350f;
+  --color-warning-900: #451a03;
 
+  /* Neutral — true black tones */
   --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
-  --color-neutral-600: #475569;
-  --color-neutral-700: #334155;
-  --color-neutral-800: #1e293b;
-  --color-neutral-900: #0f172a;
-  --color-neutral-950: #020617;
+  --color-neutral-100: #e2e8f0;
+  --color-neutral-200: #c4cdd8;
+  --color-neutral-300: #94a3b8;
+  --color-neutral-400: #64748b;
+  --color-neutral-500: #475569;
+  --color-neutral-600: #334155;
+  --color-neutral-700: #1e293b;
+  --color-neutral-800: #111827;
+  --color-neutral-900: #0a0a0f;
+  --color-neutral-950: #050507;
 
-  /* Dark mode surface colors */
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #f1f5f9;
-  --color-surface-800: #1e293b;
-  --color-surface-900: #0f172a;
-  --color-surface-950: #020617;
+  /* Glass surface tokens */
+  --color-glass-bg: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-hover: rgba(255, 255, 255, 0.06);
+  --color-glass-active: rgba(255, 255, 255, 0.10);
+  --color-glass-highlight: rgba(255, 255, 255, 0.12);
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --spacing-touch: 48px;
@@ -73,22 +74,26 @@ html {
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-neutral-800);
-  background-color: var(--color-neutral-50);
+  color: #e2e8f0;
+  background-color: #050507;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Dark mode body */
+/* Dark mode body (kept for compatibility but dark is now default) */
 .dark body {
-  color: var(--color-neutral-200);
-  background-color: var(--color-neutral-950);
+  color: #e2e8f0;
+  background-color: #050507;
 }
 
-/* Dark mode meta color */
 .dark {
   color-scheme: dark;
+}
+
+/* Light mode override (in case toggled) */
+.light body {
+  color: var(--color-neutral-800);
+  background-color: var(--color-neutral-50);
 }
 
 @supports (padding: env(safe-area-inset-bottom)) {
@@ -97,11 +102,126 @@ body {
   }
 }
 
+/* ─── Glass Utilities ───────────────────────────────────── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.glass-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) inset,
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.08) inset,
+    0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.glass-sidebar {
+  background: rgba(10, 10, 15, 0.85);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+}
+
+.glass-nav {
+  background: rgba(10, 10, 15, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(30px) saturate(1.8);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.glass-input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 111, 248, 0.15);
+  outline: none;
+}
+
+.glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Gradient Mesh Background ──────────────────────────── */
+
+.mesh-bg {
+  position: relative;
+}
+
+.mesh-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(36, 81, 237, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(59, 111, 248, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(36, 81, 237, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Glow Effects ──────────────────────────────────────── */
+
+.glow-blue {
+  box-shadow:
+    0 0 20px rgba(36, 81, 237, 0.15),
+    0 0 60px rgba(36, 81, 237, 0.05);
+}
+
+.glow-blue-strong {
+  box-shadow:
+    0 0 30px rgba(36, 81, 237, 0.25),
+    0 0 80px rgba(36, 81, 237, 0.1);
+}
+
+.text-glow {
+  text-shadow: 0 0 40px rgba(36, 81, 237, 0.4);
+}
+
+/* ─── Focus Visible ─────────────────────────────────────── */
+
 *:focus-visible {
   outline: 2px solid var(--color-primary-500);
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ─── Skeleton Shimmer ──────────────────────────────────── */
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
@@ -111,37 +231,32 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-neutral-200) 25%,
-    var(--color-neutral-100) 50%,
-    var(--color-neutral-200) 75%
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-.dark .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-neutral-800) 25%,
-    var(--color-neutral-700) 50%,
-    var(--color-neutral-800) 75%
-  );
-  background-size: 200% 100%;
+/* ─── Scrollbar ─────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Scrollbar styling for dark mode */
-.dark ::-webkit-scrollbar {
-  width: 8px;
-}
-.dark ::-webkit-scrollbar-track {
-  background: var(--color-neutral-900);
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: var(--color-neutral-700);
-  border-radius: 4px;
-}
+/* ─── Reduced Motion ────────────────────────────────────── */
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

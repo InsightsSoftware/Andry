@@ -7,19 +7,19 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; cls: string }> = {
     activa: {
       label: 'Activa',
-      cls: 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-400',
+      cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
     },
     expirada: {
       label: 'Expirada',
-      cls: 'bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400',
+      cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
     },
     cancelada: {
       label: 'Cancelada',
-      cls: 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400',
+      cls: 'bg-red-500/10 text-red-400 border border-red-500/20',
     },
     ninguna: {
       label: 'Sin plan',
-      cls: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400',
+      cls: 'bg-white/5 text-neutral-500 border border-white/10',
     },
   }
   const c = config[status] || config.ninguna
@@ -36,34 +36,34 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl font-bold text-white">
           Gestión de Usuarios
         </h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="text-sm text-neutral-500">
           {users.length} usuarios
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+      <div className="overflow-x-auto rounded-2xl glass-card">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+            <tr className="border-b border-white/5">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Nombre
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Email
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Plan
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Estado
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Rol
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-400">
                 Registro
               </th>
             </tr>
@@ -72,15 +72,15 @@ export default async function AdminUsersPage() {
             {users.map((user) => (
               <tr
                 key={user.id}
-                className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/30"
+                className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
               >
-                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
+                <td className="px-4 py-3 font-medium text-white">
                   {user.nombre_completo || '—'}
                 </td>
-                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                <td className="px-4 py-3 text-neutral-400">
                   {user.email}
                 </td>
-                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize">
+                <td className="px-4 py-3 text-neutral-400 capitalize">
                   {user.subscription_plan || 'ninguno'}
                 </td>
                 <td className="px-4 py-3">
@@ -89,7 +89,7 @@ export default async function AdminUsersPage() {
                 <td className="px-4 py-3">
                   <UserRoleToggle userId={user.id} currentRole={user.rol} />
                 </td>
-                <td className="px-4 py-3 text-neutral-400 dark:text-neutral-500 text-xs">
+                <td className="px-4 py-3 text-neutral-500 text-xs">
                   {new Date(user.created_at).toLocaleDateString('es-ES')}
                 </td>
               </tr>
@@ -98,7 +98,7 @@ export default async function AdminUsersPage() {
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-12 text-center text-neutral-400 dark:text-neutral-500"
+                  className="px-4 py-12 text-center text-neutral-500"
                 >
                   No hay usuarios registrados
                 </td>

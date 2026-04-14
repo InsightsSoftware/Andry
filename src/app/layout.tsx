@@ -33,10 +33,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
-  ],
+  themeColor: '#050507',
 }
 
 export default function RootLayout({
@@ -46,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${inter.className} h-full`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col mesh-bg">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

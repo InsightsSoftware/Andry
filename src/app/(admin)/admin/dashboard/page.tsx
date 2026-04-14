@@ -1,6 +1,5 @@
 import {
   Users,
-  CreditCard,
   BookOpen,
   HelpCircle,
   TrendingUp,
@@ -19,49 +18,49 @@ export default async function AdminDashboardPage() {
       label: 'Usuarios Totales',
       value: metrics.totalUsers.toString(),
       icon: Users,
-      color: 'text-primary-600 dark:text-primary-400',
-      bg: 'bg-primary-50 dark:bg-primary-900/20',
+      color: 'text-primary-400',
+      glow: 'from-primary-500/10',
     },
     {
       label: 'Suscripciones Activas',
       value: metrics.activeSubscriptions.toString(),
       icon: UserCheck,
-      color: 'text-success-600 dark:text-success-400',
-      bg: 'bg-success-50 dark:bg-success-900/20',
+      color: 'text-emerald-400',
+      glow: 'from-emerald-500/10',
     },
     {
       label: 'Nuevos (7 días)',
       value: metrics.recentSignups.toString(),
       icon: UserPlus,
-      color: 'text-accent-600 dark:text-accent-400',
-      bg: 'bg-accent-50 dark:bg-accent-900/20',
+      color: 'text-amber-400',
+      glow: 'from-amber-500/10',
     },
     {
       label: 'Ingresos del Mes',
       value: `$${metrics.monthlyRevenue.toFixed(2)}`,
       icon: TrendingUp,
-      color: 'text-success-600 dark:text-success-400',
-      bg: 'bg-success-50 dark:bg-success-900/20',
+      color: 'text-emerald-400',
+      glow: 'from-emerald-500/10',
     },
     {
       label: 'Cursos Activos',
       value: metrics.activeCourses.toString(),
       icon: BookOpen,
-      color: 'text-primary-600 dark:text-primary-400',
-      bg: 'bg-primary-50 dark:bg-primary-900/20',
+      color: 'text-primary-400',
+      glow: 'from-primary-500/10',
     },
     {
       label: 'Preguntas Totales',
       value: metrics.totalQuestions.toString(),
       icon: HelpCircle,
-      color: 'text-warning-600 dark:text-warning-400',
-      bg: 'bg-warning-50 dark:bg-warning-900/20',
+      color: 'text-amber-400',
+      glow: 'from-amber-500/10',
     },
   ]
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+      <h1 className="mb-6 text-2xl font-bold text-white">
         Panel de Administración
       </h1>
 
@@ -69,19 +68,20 @@ export default async function AdminDashboardPage() {
         {cards.map((m) => (
           <div
             key={m.label}
-            className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5"
+            className="relative rounded-2xl p-5 glass-card overflow-hidden transition-all duration-300"
           >
-            <div
-              className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${m.bg}`}
-            >
-              <m.icon className={`h-5 w-5 ${m.color}`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${m.glow} to-transparent pointer-events-none`} />
+            <div className="relative">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10">
+                <m.icon className={`h-5 w-5 ${m.color}`} />
+              </div>
+              <p className="text-sm text-neutral-400">
+                {m.label}
+              </p>
+              <p className="text-2xl font-bold text-white">
+                {m.value}
+              </p>
             </div>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              {m.label}
-            </p>
-            <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              {m.value}
-            </p>
           </div>
         ))}
       </div>

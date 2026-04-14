@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useState, useEffect } from 'react'
 
 const links = [
@@ -53,11 +52,11 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-neutral-200 dark:border-neutral-700 md:bg-white dark:bg-neutral-900">
-      <div className="flex h-16 items-center gap-2 border-b border-neutral-200 dark:border-neutral-700 px-6">
-        <GraduationCap className="h-7 w-7 text-primary-600" />
-        <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-          Contratistas<span className="text-primary-600">Pro</span>
+    <aside className="hidden md:flex md:w-64 md:flex-col glass-sidebar">
+      <div className="flex h-16 items-center gap-2 border-b border-white/5 px-6">
+        <GraduationCap className="h-7 w-7 text-primary-400" />
+        <span className="text-lg font-bold text-white">
+          Contratistas<span className="text-primary-400">Pro</span>
         </span>
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
@@ -73,30 +72,30 @@ export function Sidebar() {
               href={link.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  ? 'glass-active text-white'
+                  : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
               )}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
               {link.label}
+              {isActive && (
+                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-400" />
+              )}
             </Link>
           )
         })}
       </nav>
-      <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
-        <ThemeToggle />
-      </div>
       {isAdmin && (
-        <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
+        <div className="border-t border-white/5 p-4">
           <Link
             href="/admin/dashboard"
             className={cn(
-              'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
+              'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
               pathname.startsWith('/admin')
-                ? 'bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400'
-                : 'text-warning-600 dark:text-warning-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                ? 'glass-active text-amber-400'
+                : 'text-amber-400/70 hover:text-amber-400 hover:bg-white/[0.04]'
             )}
           >
             <Shield className="h-5 w-5" />
@@ -104,10 +103,10 @@ export function Sidebar() {
           </Link>
         </div>
       )}
-      <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
+      <div className="border-t border-white/5 p-4">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-danger-500 dark:hover:text-danger-400 transition-colors cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
         >
           <LogOut className="h-5 w-5" />
           Cerrar Sesión

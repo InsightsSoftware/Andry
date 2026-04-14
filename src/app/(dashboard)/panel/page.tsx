@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BookOpen, Users, ArrowRight } from 'lucide-react'
+import { BookOpen, Users, ArrowRight, Shield, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
@@ -18,10 +18,13 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        Hola, {firstName}
-      </h1>
-      <p className="mb-8 text-neutral-500 dark:text-neutral-400">
+      <div className="mb-2 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-white">
+          Hola, {firstName}
+        </h1>
+        <Sparkles className="h-5 w-5 text-primary-400" />
+      </div>
+      <p className="mb-8 text-neutral-400">
         ¿Qué quieres hacer hoy?
       </p>
 
@@ -29,41 +32,47 @@ export default async function DashboardPage() {
         {/* Study Mode Card */}
         <Link
           href="/estudio"
-          className="group flex flex-col rounded-2xl border-2 border-primary-200 dark:border-primary-800 bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-neutral-900 p-6 transition-shadow hover:shadow-lg active:shadow-md"
+          className="group relative flex flex-col rounded-2xl p-6 glass-card transition-all duration-300 overflow-hidden"
         >
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 dark:bg-primary-800/30">
-            <BookOpen className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent pointer-events-none" />
+          <div className="relative">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 border border-primary-500/20">
+              <BookOpen className="h-7 w-7 text-primary-400" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-white">
+              Modo Estudio
+            </h2>
+            <p className="mb-4 flex-1 text-sm text-neutral-400">
+              PDF interactivo, audiolibros, videos, banco de preguntas y modo examen cronometrado.
+            </p>
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary-400 group-hover:gap-2 transition-all">
+              Estudiar ahora
+              <ArrowRight className="h-4 w-4" />
+            </span>
           </div>
-          <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Modo Estudio
-          </h2>
-          <p className="mb-4 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
-            PDF interactivo, audiolibros, videos, banco de preguntas y modo examen cronometrado.
-          </p>
-          <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 group-hover:gap-2 transition-all">
-            Estudiar ahora
-            <ArrowRight className="h-4 w-4" />
-          </span>
         </Link>
 
         {/* Community Card */}
         <Link
           href="/comunidad/dudas"
-          className="group flex flex-col rounded-2xl border-2 border-accent-400/30 dark:border-accent-400/20 bg-gradient-to-br from-accent-50 to-white dark:from-accent-900/20 dark:to-neutral-900 p-6 transition-shadow hover:shadow-lg active:shadow-md"
+          className="group relative flex flex-col rounded-2xl p-6 glass-card transition-all duration-300 overflow-hidden"
         >
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 dark:bg-accent-400/10">
-            <Users className="h-7 w-7 text-accent-500 dark:text-accent-400" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-transparent pointer-events-none" />
+          <div className="relative">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <Users className="h-7 w-7 text-amber-400" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-white">
+              Comunidad
+            </h2>
+            <p className="mb-4 flex-1 text-sm text-neutral-400">
+              Pregunta dudas de estudio por capítulo y encuentra trabajos con otros contratistas.
+            </p>
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-amber-400 group-hover:gap-2 transition-all">
+              Ir a la comunidad
+              <ArrowRight className="h-4 w-4" />
+            </span>
           </div>
-          <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Comunidad
-          </h2>
-          <p className="mb-4 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Pregunta dudas de estudio por capítulo y encuentra trabajos con otros contratistas.
-          </p>
-          <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent-500 dark:text-accent-400 group-hover:gap-2 transition-all">
-            Ir a la comunidad
-            <ArrowRight className="h-4 w-4" />
-          </span>
         </Link>
       </div>
 
@@ -71,12 +80,15 @@ export default async function DashboardPage() {
       {profile?.rol === 'admin' && (
         <Link
           href="/admin/dashboard"
-          className="mt-6 flex items-center justify-between rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          className="mt-6 flex items-center justify-between rounded-xl p-4 glass glass-hover transition-all duration-200"
         >
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            Panel de Administración
-          </span>
-          <ArrowRight className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+          <div className="flex items-center gap-3">
+            <Shield className="h-5 w-5 text-amber-400" />
+            <span className="text-sm font-medium text-neutral-300">
+              Panel de Administración
+            </span>
+          </div>
+          <ArrowRight className="h-4 w-4 text-neutral-500" />
         </Link>
       )}
     </div>

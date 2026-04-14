@@ -27,10 +27,10 @@ export function UserRoleToggle({ userId, currentRole }: UserRoleToggleProps) {
     <button
       onClick={handleToggle}
       disabled={loading}
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 border ${
         role === 'admin'
-          ? 'bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400'
-          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+          : 'bg-white/5 text-neutral-400 border-white/10 hover:bg-white/[0.08]'
       }`}
       title={`Click para cambiar a ${role === 'admin' ? 'estudiante' : 'admin'}`}
     >
