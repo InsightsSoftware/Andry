@@ -1,18 +1,111 @@
-import { Users } from 'lucide-react'
+import { getUsers } from '@/actions/admin'
+import { UserRoleToggle } from '@/components/admin/user-role-toggle'
 
 export const metadata = { title: 'Admin - Usuarios' }
 
-export default function AdminUsersPage() {
+function StatusBadge({ status }: { status: string }) {
+  const config: Record<string, { label: string; cls: string }> = {
+    activa: {
+      label: 'Activa',
+      cls: 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-400',
+    },
+    expirada: {
+      label: 'Expirada',
+      cls: 'bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400',
+    },
+    cancelada: {
+      label: 'Cancelada',
+      cls: 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400',
+    },
+    ninguna: {
+      label: 'Sin plan',
+      cls: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400',
+    },
+  }
+  const c = config[status] || config.ninguna
+  return (
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${c.cls}`}>
+      {c.label}
+    </span>
+  )
+}
+
+export default async function AdminUsersPage() {
+  const { users } = await getUsers()
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        Gestión de Usuarios
-      </h1>
-      <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
-        <Users className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-        <p className="text-neutral-500 dark:text-neutral-400">
-          La tabla de usuarios se mostrará aquí cuando se conecte Supabase.
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          Gestión de Usuarios
+        </h1>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          {users.length} usuarios
         </p>
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Nombre
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Email
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Plan
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Estado
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Rol
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                Registro
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr
+                key={user.id}
+                className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/30"
+              >
+                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
+                  {user.nombre_completo || '—'}
+                </td>
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                  {user.email}
+                </td>
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize">
+                  {user.subscription_plan || 'ninguno'}
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={user.subscription_status || 'ninguna'} />
+                </td>
+                <td className="px-4 py-3">
+                  <UserRoleToggle userId={user.id} currentRole={user.rol} />
+                </td>
+                <td className="px-4 py-3 text-neutral-400 dark:text-neutral-500 text-xs">
+                  {new Date(user.created_at).toLocaleDateString('es-ES')}
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-12 text-center text-neutral-400 dark:text-neutral-500"
+                >
+                  No hay usuarios registrados
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )
