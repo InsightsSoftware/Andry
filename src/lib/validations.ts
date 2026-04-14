@@ -100,7 +100,7 @@ export const csvQuestionRowSchema = z.object({
   opcion_c: z.string().min(1, 'La opción C es obligatoria'),
   opcion_d: z.string().min(1, 'La opción D es obligatoria'),
   respuesta_correcta: z.enum(['a', 'b', 'c', 'd'], {
-    errorMap: () => ({ message: 'La respuesta debe ser a, b, c o d' }),
+    error: 'La respuesta debe ser a, b, c o d',
   }),
   explicacion: z.string().min(1, 'La explicación es obligatoria'),
   pagina_libro: z.coerce
