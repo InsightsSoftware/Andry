@@ -59,55 +59,68 @@ export function Tilt3D({
   }, [])
 
   // Mobile: gyroscope-based tilt
+  const orientationHandlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+
   useEffect(() => {
-    // Only activate on touch devices without a mouse
-    const isTouchDevice = 'ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches
-    if (!isTouchDevice) return
+    const touch = 'ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches
+    setIsTouchDevice(touch)
 
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const beta = e.beta ?? 0   // front-to-back tilt (-180 to 180)
-      const gamma = e.gamma ?? 0 // left-to-right tilt (-90 to 90)
-
-      // Normalize: beta rests around 45-60 when holding phone, gamma rests at 0
-      // Map to -1..1 range, clamped
-      const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
-      const normalizedBeta = clamp((beta - 45) / 30, -1, 1)  // 15-75 deg range
-      const normalizedGamma = clamp(gamma / 30, -1, 1)       // -30 to 30 deg range
-
-      const tiltX = -normalizedBeta * maxTilt
-      const tiltY = normalizedGamma * maxTilt
-
-      setTransform(
-        `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(${scale}, ${scale}, ${scale})`
-      )
-    }
-
-    // iOS 13+ requires permission
-    const requestPermission = async () => {
+    // Android: no permission needed, activate on mount
+    if (touch) {
       const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-      if (typeof DOE.requestPermission === 'function') {
-        try {
-          const permission = await DOE.requestPermission()
-          if (permission === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation)
-            setGyroActive(true)
-          }
-        } catch {
-          // Permission denied — no gyro tilt
+      if (typeof DOE.requestPermission !== 'function') {
+        // Android — start immediately
+        const handler = (e: DeviceOrientationEvent) => {
+          const beta = e.beta ?? 0
+          const gamma = e.gamma ?? 0
+          const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+          const normalizedBeta = clamp((beta - 45) / 30, -1, 1)
+          const normalizedGamma = clamp(gamma / 30, -1, 1)
+          setTransform(
+            `perspective(800px) rotateX(${-normalizedBeta * maxTilt}deg) rotateY(${normalizedGamma * maxTilt}deg) scale3d(${scale}, ${scale}, ${scale})`
+          )
         }
-      } else {
-        // Android / non-iOS — no permission needed
-        window.addEventListener('deviceorientation', handleOrientation)
+        window.addEventListener('deviceorientation', handler)
+        orientationHandlerRef.current = handler
         setGyroActive(true)
       }
     }
 
-    requestPermission()
-
     return () => {
-      window.removeEventListener('deviceorientation', handleOrientation)
+      if (orientationHandlerRef.current) {
+        window.removeEventListener('deviceorientation', orientationHandlerRef.current)
+      }
     }
   }, [maxTilt, scale])
+
+  // iOS: request permission on first tap (Apple requires user gesture)
+  const handleTouchStart = useCallback(async () => {
+    if (gyroActive) return // Already active
+    const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+    if (typeof DOE.requestPermission !== 'function') return // Not iOS
+
+    try {
+      const permission = await DOE.requestPermission()
+      if (permission === 'granted') {
+        const handler = (e: DeviceOrientationEvent) => {
+          const beta = e.beta ?? 0
+          const gamma = e.gamma ?? 0
+          const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+          const normalizedBeta = clamp((beta - 45) / 30, -1, 1)
+          const normalizedGamma = clamp(gamma / 30, -1, 1)
+          setTransform(
+            `perspective(800px) rotateX(${-normalizedBeta * maxTilt}deg) rotateY(${normalizedGamma * maxTilt}deg) scale3d(${scale}, ${scale}, ${scale})`
+          )
+        }
+        window.addEventListener('deviceorientation', handler)
+        orientationHandlerRef.current = handler
+        setGyroActive(true)
+      }
+    } catch {
+      // Permission denied
+    }
+  }, [gyroActive, maxTilt, scale])
 
   return (
     <div
@@ -115,6 +128,7 @@ export function Tilt3D({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={isTouchDevice ? handleTouchStart : undefined}
       className={className}
       style={{
         transformStyle: 'preserve-3d',
