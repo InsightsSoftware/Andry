@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { postDudaSchema, postTrabajoSchema, comentarioSchema } from '@/lib/validations'
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
@@ -14,20 +15,33 @@ export async function createPost(formData: FormData) {
   }
 
   const tipo = formData.get('tipo') as string
-  const titulo = (formData.get('titulo') as string)?.trim()
-  const contenido = (formData.get('contenido') as string)?.trim()
+  if (!tipo || !['duda', 'trabajo'].includes(tipo)) {
+    return { error: 'Tipo de post inválido' }
+  }
+
+  // Validate with Zod based on post type
+  const raw = {
+    titulo: (formData.get('titulo') as string)?.trim(),
+    contenido: (formData.get('contenido') as string)?.trim(),
+    ...(tipo === 'trabajo' && {
+      ubicacion: (formData.get('ubicacion') as string)?.trim() || '',
+      presupuesto: (formData.get('presupuesto') as string)?.trim() || undefined,
+    }),
+    ...(tipo === 'duda' && {
+      capitulo_id: (formData.get('capitulo_id') as string) || undefined,
+    }),
+  }
+
+  const schema = tipo === 'trabajo' ? postTrabajoSchema : postDudaSchema
+  const result = schema.safeParse(raw)
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message || 'Datos inválidos' }
+  }
+
+  const titulo = raw.titulo
+  const contenido = raw.contenido
   const ubicacion = (formData.get('ubicacion') as string)?.trim() || null
   const presupuesto = (formData.get('presupuesto') as string)?.trim() || null
-
-  if (!titulo || titulo.length < 5) {
-    return { error: 'El titulo debe tener al menos 5 caracteres' }
-  }
-  if (!contenido || contenido.length < 10) {
-    return { error: 'El contenido debe tener al menos 10 caracteres' }
-  }
-  if (!tipo || !['duda', 'trabajo'].includes(tipo)) {
-    return { error: 'Tipo de post invalido' }
-  }
 
   const { error } = await supabase.from('posts_comunidad').insert({
     user_id: user.id,
@@ -58,11 +72,17 @@ export async function createComment(formData: FormData) {
   }
 
   const postId = formData.get('post_id') as string
-  const contenido = (formData.get('contenido') as string)?.trim()
-
-  if (!contenido || contenido.length < 2) {
-    return { error: 'El comentario debe tener al menos 2 caracteres' }
+  const raw = {
+    contenido: (formData.get('contenido') as string)?.trim(),
+    parent_id: (formData.get('parent_id') as string) || undefined,
   }
+
+  const result = comentarioSchema.safeParse(raw)
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message || 'Datos inválidos' }
+  }
+
+  const contenido = result.data.contenido
 
   const { error } = await supabase.from('comentarios').insert({
     post_id: postId,

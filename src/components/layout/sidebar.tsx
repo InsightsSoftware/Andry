@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
@@ -9,10 +10,10 @@ import {
   Bot,
   Users,
   User,
-  GraduationCap,
   LogOut,
   Shield,
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -40,7 +41,7 @@ export function Sidebar() {
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
-          if (data?.rol === 'admin') setIsAdmin(true)
+          if (data?.rol === 'admin' || data?.rol === 'root') setIsAdmin(true)
         })
     })
   }, [])
@@ -52,12 +53,18 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col glass-sidebar">
-      <div className="flex h-16 items-center gap-2 border-b border-white/5 px-6">
-        <GraduationCap className="h-7 w-7 text-primary-400" />
-        <span className="text-lg font-bold text-white">
-          Contratistas<span className="text-primary-400">Pro</span>
-        </span>
+    <aside className="hidden md:flex md:w-64 md:flex-col md:sticky md:top-0 md:h-screen glass-sidebar">
+      <div className="flex h-32 items-center justify-between border-b border-black/5 dark:border-white/5 px-3">
+        <Link href="/panel" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="Y Exam Prep"
+            width={280}
+            height={84}
+            className="h-24 w-auto"
+          />
+        </Link>
+        <ThemeToggle />
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
         {links.map((link) => {
@@ -74,28 +81,28 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'glass-active text-white'
-                  : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'glass-active text-neutral-900 dark:text-white'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
               )}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
               {link.label}
               {isActive && (
-                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-400" />
+                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-500 dark:bg-primary-400" />
               )}
             </Link>
           )
         })}
       </nav>
       {isAdmin && (
-        <div className="border-t border-white/5 p-4">
+        <div className="border-t border-black/5 dark:border-white/5 p-4">
           <Link
             href="/admin/dashboard"
             className={cn(
               'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
               pathname.startsWith('/admin')
-                ? 'glass-active text-amber-400'
-                : 'text-amber-400/70 hover:text-amber-400 hover:bg-white/[0.04]'
+                ? 'glass-active text-amber-600 dark:text-amber-400'
+                : 'text-amber-600/70 dark:text-amber-400/70 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
             )}
           >
             <Shield className="h-5 w-5" />
@@ -103,10 +110,10 @@ export function Sidebar() {
           </Link>
         </div>
       )}
-      <div className="border-t border-white/5 p-4">
+      <div className="border-t border-black/5 dark:border-white/5 p-4">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-neutral-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
         >
           <LogOut className="h-5 w-5" />
           Cerrar Sesión

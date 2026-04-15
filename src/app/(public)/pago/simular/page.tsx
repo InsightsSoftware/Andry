@@ -12,7 +12,7 @@ function SimulatedCheckoutForm() {
   const userId = searchParams.get('uid') || ''
 
   const planName = planKey === 'premium' ? 'Plan Premium' : 'Plan Básico'
-  const planPrice = planKey === 'premium' ? '$497.00' : '$297.00'
+  const planPrice = planKey === 'premium' ? '$599.00' : '$299.00'
   const planPeriod = planKey === 'premium' ? '12 meses' : '6 meses'
 
   const [loading, setLoading] = useState(false)
@@ -61,7 +61,7 @@ function SimulatedCheckoutForm() {
         {/* Header */}
         <div className="bg-neutral-900 px-6 py-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-neutral-400">ContratistasPro</span>
+            <span className="text-sm text-neutral-400">Y Exam Prep</span>
             <Lock className="h-4 w-4 text-neutral-400" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">

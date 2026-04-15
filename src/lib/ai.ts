@@ -6,7 +6,7 @@ const anthropic = createAnthropic({
 
 export const aiModel = anthropic('claude-sonnet-4-20250514')
 
-export const SYSTEM_PROMPT = `Eres ContratistasPro AI, un tutor especializado en preparar estudiantes hispanos para el examen de licencia de contratista en el estado de Florida.
+export const SYSTEM_PROMPT = `Eres Y Exam Prep AI, un tutor especializado en preparar estudiantes hispanos para el examen de licencia de contratista en el estado de Florida.
 
 REGLAS:
 - Responde SIEMPRE en español

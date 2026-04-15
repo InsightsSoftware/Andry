@@ -1,4 +1,4 @@
-import { getUsers } from '@/actions/admin'
+import { getUsers, getCurrentUserRole } from '@/actions/admin'
 import { UserRoleToggle } from '@/components/admin/user-role-toggle'
 
 export const metadata = { title: 'Admin - Usuarios' }
@@ -19,7 +19,7 @@ function StatusBadge({ status }: { status: string }) {
     },
     ninguna: {
       label: 'Sin plan',
-      cls: 'bg-white/5 text-neutral-500 border border-white/10',
+      cls: 'bg-black/[0.03] dark:bg-white/5 text-neutral-500 border border-black/10 dark:border-white/10',
     },
   }
   const c = config[status] || config.ninguna
@@ -31,12 +31,15 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default async function AdminUsersPage() {
-  const { users } = await getUsers()
+  const [{ users }, { rol: callerRole, userId: callerId }] = await Promise.all([
+    getUsers(),
+    getCurrentUserRole(),
+  ])
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
           Gestión de Usuarios
         </h1>
         <p className="text-sm text-neutral-500">
@@ -47,23 +50,23 @@ export default async function AdminUsersPage() {
       <div className="overflow-x-auto rounded-2xl glass-card">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/5">
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+            <tr className="border-b border-black/5 dark:border-white/5">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Nombre
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Email
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Plan
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Estado
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Rol
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-400">
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Registro
               </th>
             </tr>
@@ -72,22 +75,27 @@ export default async function AdminUsersPage() {
             {users.map((user) => (
               <tr
                 key={user.id}
-                className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                className="border-b border-black/5 dark:border-white/5 last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/[0.02]"
               >
-                <td className="px-4 py-3 font-medium text-white">
+                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-white">
                   {user.nombre_completo || '—'}
                 </td>
-                <td className="px-4 py-3 text-neutral-400">
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">
                   {user.email}
                 </td>
-                <td className="px-4 py-3 text-neutral-400 capitalize">
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize">
                   {user.subscription_plan || 'ninguno'}
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadge status={user.subscription_status || 'ninguna'} />
                 </td>
                 <td className="px-4 py-3">
-                  <UserRoleToggle userId={user.id} currentRole={user.rol} />
+                  <UserRoleToggle
+                    userId={user.id}
+                    currentRole={user.rol}
+                    callerRole={callerRole}
+                    callerId={callerId ?? null}
+                  />
                 </td>
                 <td className="px-4 py-3 text-neutral-500 text-xs">
                   {new Date(user.created_at).toLocaleDateString('es-ES')}

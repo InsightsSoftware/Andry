@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">
+      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-white">
         Panel de Administración
       </h1>
 
@@ -72,13 +72,13 @@ export default async function AdminDashboardPage() {
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${m.glow} to-transparent pointer-events-none`} />
             <div className="relative">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-black/[0.03] dark:bg-white/5 border border-black/10 dark:border-white/10">
                 <m.icon className={`h-5 w-5 ${m.color}`} />
               </div>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {m.label}
               </p>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-neutral-900 dark:text-white">
                 {m.value}
               </p>
             </div>

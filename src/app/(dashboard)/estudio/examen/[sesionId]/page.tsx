@@ -11,12 +11,15 @@ export default async function ExamenPage({
 }) {
   const { sesionId } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  // Fetch session
+  // Fetch session — scoped to current user
   const { data: sesion } = await supabase
     .from('sesiones_examen')
     .select('*, cursos(slug, nombre)')
     .eq('id', sesionId)
+    .eq('user_id', user.id)
     .single()
 
   if (!sesion) notFound()

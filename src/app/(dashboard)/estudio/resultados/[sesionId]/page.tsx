@@ -21,12 +21,15 @@ export default async function ResultadosPage({
 }) {
   const { sesionId } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) notFound()
 
-  // Fetch session with course info
+  // Fetch session with course info — scoped to current user
   const { data: sesion } = await supabase
     .from('sesiones_examen')
     .select('*, cursos(slug, nombre)')
     .eq('id', sesionId)
+    .eq('user_id', user.id)
     .single()
 
   if (!sesion) notFound()

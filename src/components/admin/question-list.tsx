@@ -29,14 +29,14 @@ export function QuestionList({ questions }: { questions: Question[] }) {
 
   if (questions.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
+      <div className="rounded-2xl border border-dashed border-black/10 dark:border-white/10 p-8 text-center">
         <p className="text-neutral-500">No hay preguntas en el banco</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-2xl glass-card divide-y divide-white/5">
+    <div className="rounded-2xl glass-card divide-y divide-black/5 dark:divide-white/5">
       {questions.map((q) => (
         <div key={q.id} className="px-4 py-3">
           <div className="flex items-start gap-3">
@@ -53,7 +53,7 @@ export function QuestionList({ questions }: { questions: Question[] }) {
               )}
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-neutral-200 truncate">
+              <p className="text-sm text-neutral-700 dark:text-neutral-200 truncate">
                 {q.texto}
               </p>
               <div className="mt-1 flex items-center gap-3 text-xs text-neutral-500">
@@ -75,7 +75,7 @@ export function QuestionList({ questions }: { questions: Question[] }) {
             </button>
           </div>
           {expandedId === q.id && (
-            <div className="mt-2 ml-7 text-xs text-neutral-400 bg-white/[0.02] rounded-lg p-3 border border-white/5">
+            <div className="mt-2 ml-7 text-xs text-neutral-600 dark:text-neutral-400 bg-black/[0.03] dark:bg-white/[0.02] rounded-lg p-3 border border-black/5 dark:border-white/5">
               <p className="mb-1 whitespace-pre-wrap">{q.texto}</p>
             </div>
           )}

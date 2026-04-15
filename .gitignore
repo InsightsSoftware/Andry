@@ -44,3 +44,9 @@ next-env.d.ts
 
 # generated DB files
 supabase/combined-migrations.sql
+
+# supabase temp
+supabase/.temp/
+
+# python cache
+__pycache__/

@@ -31,12 +31,15 @@ export async function POST(request: Request) {
 
     const plan = PLANS[planKey]
 
-    // DEV MODE: If Stripe keys are placeholders, redirect to simulated checkout
+    // DEV MODE: If Stripe keys are not real, redirect to simulated checkout
     const stripeKey = process.env.STRIPE_SECRET_KEY || ''
-    if (stripeKey.includes('placeholder')) {
+    const isDevMode =
+      process.env.ENABLE_SIMULATED_CHECKOUT === 'true' ||
+      !stripeKey.startsWith('sk_')
+    if (isDevMode) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       return NextResponse.json({
-        url: `${appUrl}/pago/simular?plan=${planKey}&uid=${user.id}`,
+        url: `${appUrl}/pago/simular?plan=${planKey}`,
       })
     }
 

@@ -10,8 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'ContratistasPro - Preparate para tu Licencia de Contratista',
-    template: '%s | ContratistasPro',
+    default: 'Y Exam Prep - Preparate para tu Licencia de Contratista',
+    template: '%s | Y Exam Prep',
   },
   description:
     'Plataforma de estudio en espanol para contratistas hispanos en Florida. Preparate para tu examen de licencia con audiolibros, PDF interactivo, banco de preguntas y asistente IA.',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'ContratistasPro',
+    title: 'Y Exam Prep',
   },
   icons: {
     icon: '/icons/icon.svg',

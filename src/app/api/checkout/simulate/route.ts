@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS, type PlanKey } from '@/lib/stripe'
 
 // Simulated checkout — only works when Stripe keys are placeholders
 // In production, this route does nothing.
 export async function POST(request: Request) {
-  // Block in production
+  // Block in production — only allow if explicitly enabled or Stripe key is a placeholder
   const stripeKey = process.env.STRIPE_SECRET_KEY || ''
-  if (!stripeKey.includes('placeholder')) {
+  const isDevMode =
+    process.env.ENABLE_SIMULATED_CHECKOUT === 'true' ||
+    !stripeKey.startsWith('sk_')
+  if (!isDevMode) {
     return NextResponse.json(
       { error: 'Simulated checkout disabled in production' },
       { status: 403 }
@@ -15,22 +19,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json()
-    const { planKey, userId } = body as {
-      planKey: PlanKey
-      userId: string
+    // Verify authenticated user
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      )
     }
+
+    const body = await request.json()
+    const { planKey } = body as { planKey: PlanKey }
+    const userId = user.id
 
     if (!planKey || !PLANS[planKey]) {
       return NextResponse.json(
         { error: 'Plan inválido' },
-        { status: 400 }
-      )
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario no especificado' },
         { status: 400 }
       )
     }
@@ -67,7 +72,7 @@ export async function POST(request: Request) {
         user_id: userId,
         stripe_payment_intent_id: `sim_${Date.now()}`,
         stripe_checkout_session_id: `sim_cs_${Date.now()}`,
-        monto_centavos: planKey === 'premium' ? 49700 : 29700,
+        monto_centavos: planKey === 'premium' ? 59900 : 29900,
         moneda: 'usd',
         estado: 'completado',
         plan: planKey,
@@ -78,9 +83,8 @@ export async function POST(request: Request) {
       // Don't fail — subscription is already active
     }
 
-    console.log(
-      `✅ [SIMULATED] Subscription activated: user=${userId} plan=${planKey} expires=${expiresAt.toISOString()}`
-    )
+    // Log activation without leaking user ID
+    console.log(`[SIMULATED] Subscription activated: plan=${planKey}`)
 
     return NextResponse.json({
       success: true,

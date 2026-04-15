@@ -116,12 +116,23 @@ export async function deleteConversation(conversationId: string) {
 
   if (!user) return { error: 'No autenticado' }
 
-  // Delete messages first (cascade should handle this, but being explicit)
+  // Verify ownership BEFORE deleting anything
+  const { data: conv } = await supabase
+    .from('conversaciones_ai')
+    .select('id')
+    .eq('id', conversationId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!conv) return { error: 'Conversación no encontrada' }
+
+  // Delete messages first (only after ownership confirmed)
   await supabase
     .from('mensajes_ai')
     .delete()
     .eq('conversacion_id', conversationId)
 
+  // Then delete conversation
   await supabase
     .from('conversaciones_ai')
     .delete()

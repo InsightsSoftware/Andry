@@ -29,10 +29,29 @@ export async function middleware(request: NextRequest) {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=()'
+  )
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains'
+  )
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.anthropic.com https://api.openai.com",
+      "frame-src https://js.stripe.com https://hooks.stripe.com",
+      "media-src 'self' https://*.supabase.co blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
   )
 
   // Redirect authenticated users away from auth pages
@@ -72,8 +91,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Check admin role
-    if (isAdmin && profile?.rol !== 'admin') {
+    // Check admin role (admin or root)
+    if (isAdmin && profile?.rol !== 'admin' && profile?.rol !== 'root') {
       const url = request.nextUrl.clone()
       url.pathname = '/panel'
       return NextResponse.redirect(url)

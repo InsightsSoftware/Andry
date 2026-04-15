@@ -8,7 +8,7 @@ export default async function AdminContentPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">
+      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-white">
         Gestión de Contenido
       </h1>
       <ContentManager courses={courses} />

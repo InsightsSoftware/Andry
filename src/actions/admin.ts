@@ -3,8 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { csvQuestionRowSchema } from '@/lib/validations'
+import { z } from 'zod'
 
-// Helper: verify caller is admin
+// Helper: verify caller is admin or root
 async function requireAdmin() {
   const supabase = await createClient()
   const {
@@ -18,7 +20,25 @@ async function requireAdmin() {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (profile?.rol !== 'admin') throw new Error('No autorizado')
+  if (profile?.rol !== 'admin' && profile?.rol !== 'root') throw new Error('No autorizado')
+  return { ...user, rol: profile.rol as string }
+}
+
+// Helper: verify caller is root
+async function requireRoot() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('rol')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profile?.rol !== 'root') throw new Error('No autorizado — se requiere rol root')
   return user
 }
 
@@ -95,9 +115,45 @@ export async function getUsers() {
   return { users: data || [] }
 }
 
+export async function getCurrentUserRole() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { rol: null }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('rol')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  return { rol: profile?.rol || null, userId: user.id }
+}
+
 export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin') {
-  await requireAdmin()
+  const currentUser = await requireAdmin()
   const admin = createAdminClient()
+
+  // Prevent self-demotion
+  if (userId === currentUser.id) {
+    return { error: 'No puedes cambiar tu propio rol' }
+  }
+
+  // Only root can modify other admins/root users
+  const { data: targetProfile } = await admin
+    .from('profiles')
+    .select('rol')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (targetProfile?.rol === 'root') {
+    return { error: 'No se puede modificar un usuario root' }
+  }
+
+  if (targetProfile?.rol === 'admin' && currentUser.rol !== 'root') {
+    return { error: 'Solo root puede modificar administradores' }
+  }
 
   const { error } = await admin
     .from('profiles')
@@ -107,6 +163,38 @@ export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin'
   if (error) {
     console.error('Error updating role:', error)
     return { error: 'Error al actualizar rol' }
+  }
+
+  revalidatePath('/admin/usuarios')
+  return { success: true }
+}
+
+export async function deleteUser(userId: string) {
+  const currentUser = await requireRoot()
+  const admin = createAdminClient()
+
+  // Cannot delete yourself
+  if (userId === currentUser.id) {
+    return { error: 'No puedes eliminar tu propia cuenta' }
+  }
+
+  // Cannot delete other root users
+  const { data: targetProfile } = await admin
+    .from('profiles')
+    .select('rol')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (targetProfile?.rol === 'root') {
+    return { error: 'No se puede eliminar un usuario root' }
+  }
+
+  // Delete from Supabase Auth (CASCADE will delete profile)
+  const { error } = await admin.auth.admin.deleteUser(userId)
+
+  if (error) {
+    console.error('Error deleting user:', error)
+    return { error: 'Error al eliminar usuario' }
   }
 
   revalidatePath('/admin/usuarios')
@@ -142,23 +230,44 @@ export async function uploadQuestions(
     opcion_c: string
     opcion_d: string
     respuesta_correcta: string
-    explicacion: string
-    pagina_libro: number
+    explicacion?: string
+    pagina_libro?: number
   }[]
 ) {
   await requireAdmin()
   const admin = createAdminClient()
 
-  const rows = questions.map((q) => ({
+  // Validate capituloId
+  if (!capituloId || !z.string().uuid().safeParse(capituloId).success) {
+    return { error: 'ID de capítulo inválido' }
+  }
+
+  // Validate each question with Zod
+  const validatedQuestions = []
+  for (let i = 0; i < questions.length; i++) {
+    const result = csvQuestionRowSchema.safeParse(questions[i])
+    if (!result.success) {
+      return {
+        error: `Pregunta ${i + 1}: ${result.error.issues[0]?.message || 'datos inválidos'}`,
+      }
+    }
+    validatedQuestions.push(result.data)
+  }
+
+  if (validatedQuestions.length === 0) {
+    return { error: 'No hay preguntas para subir' }
+  }
+
+  const rows = validatedQuestions.map((q) => ({
     capitulo_id: capituloId,
     texto: q.texto,
     opcion_a: q.opcion_a,
     opcion_b: q.opcion_b,
-    opcion_c: q.opcion_c,
-    opcion_d: q.opcion_d,
+    opcion_c: q.opcion_c || '',
+    opcion_d: q.opcion_d || '',
     respuesta_correcta: q.respuesta_correcta.toLowerCase(),
-    explicacion: q.explicacion,
-    pagina_libro: q.pagina_libro,
+    explicacion: q.explicacion || '',
+    pagina_libro: q.pagina_libro || 0,
   }))
 
   const { error } = await admin.from('preguntas').insert(rows)
@@ -254,11 +363,26 @@ export async function createContent(contentData: {
   await requireAdmin()
   const admin = createAdminClient()
 
+  // Validate URL — only allow https:// URLs (Supabase storage or trusted CDN)
+  try {
+    const url = new URL(contentData.archivo_url)
+    if (!['https:'].includes(url.protocol)) {
+      return { error: 'Solo se permiten URLs con HTTPS' }
+    }
+  } catch {
+    return { error: 'URL de archivo inválida' }
+  }
+
+  // Validate content type
+  if (!['pdf', 'audio', 'video'].includes(contentData.tipo)) {
+    return { error: 'Tipo de contenido inválido' }
+  }
+
   const { error } = await admin.from('contenido').insert(contentData)
 
   if (error) {
     console.error('Error creating content:', error)
-    return { error: 'Error al crear contenido: ' + error.message }
+    return { error: 'Error al crear contenido' }
   }
 
   revalidatePath('/admin/contenido')

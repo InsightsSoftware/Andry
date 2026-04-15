@@ -1,6 +1,22 @@
 import { streamText } from 'ai'
 import { aiModel, SYSTEM_PROMPT } from '@/lib/ai'
 import { createClient } from '@/lib/supabase/server'
+import { aiChatLimiter } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+// Validate incoming messages shape
+const messageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1).max(4000),
+})
+
+const requestSchema = z.object({
+  messages: z
+    .array(messageSchema)
+    .min(1, 'Al menos un mensaje requerido')
+    .max(50, 'Demasiados mensajes'),
+  conversationId: z.string().uuid().optional().nullable(),
+})
 
 export async function POST(req: Request) {
   // Check API key is configured
@@ -24,11 +40,40 @@ export async function POST(req: Request) {
     return Response.json({ error: 'No autenticado' }, { status: 401 })
   }
 
-  const { messages, conversationId } = await req.json()
+  // Rate limiting — 20 requests/minute per user
+  const { success: withinLimit, remaining } = aiChatLimiter.check(user.id)
+  if (!withinLimit) {
+    return Response.json(
+      { error: 'Has enviado demasiados mensajes. Espera un momento e intenta de nuevo.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': '60' },
+      }
+    )
+  }
+
+  // Validate and sanitize input
+  let parsed: z.infer<typeof requestSchema>
+  try {
+    const body = await req.json()
+    parsed = requestSchema.parse(body)
+  } catch (err) {
+    return Response.json(
+      { error: 'Datos de mensaje inválidos' },
+      { status: 400 }
+    )
+  }
+
+  const { messages, conversationId } = parsed
+
+  // Strip any messages with 'system' role (prevent prompt injection via client)
+  const safeMessages = messages.filter(
+    (m) => m.role === 'user' || m.role === 'assistant'
+  )
 
   // Save user message to DB
-  if (conversationId && messages.length > 0) {
-    const lastUserMsg = messages[messages.length - 1]
+  if (conversationId && safeMessages.length > 0) {
+    const lastUserMsg = safeMessages[safeMessages.length - 1]
     if (lastUserMsg.role === 'user') {
       await supabase.from('mensajes_ai').insert({
         conversacion_id: conversationId,
@@ -41,7 +86,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model: aiModel,
     system: SYSTEM_PROMPT,
-    messages,
+    messages: safeMessages,
     maxOutputTokens: 1024,
     async onFinish({ text }) {
       // Save assistant response to DB

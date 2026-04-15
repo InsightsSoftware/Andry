@@ -97,16 +97,13 @@ export const csvQuestionRowSchema = z.object({
   texto: z.string().min(1, 'El texto de la pregunta es obligatorio'),
   opcion_a: z.string().min(1, 'La opción A es obligatoria'),
   opcion_b: z.string().min(1, 'La opción B es obligatoria'),
-  opcion_c: z.string().min(1, 'La opción C es obligatoria'),
-  opcion_d: z.string().min(1, 'La opción D es obligatoria'),
+  opcion_c: z.string().default(''),
+  opcion_d: z.string().default(''),
   respuesta_correcta: z.enum(['a', 'b', 'c', 'd'], {
     error: 'La respuesta debe ser a, b, c o d',
   }),
-  explicacion: z.string().min(1, 'La explicación es obligatoria'),
-  pagina_libro: z.coerce
-    .number()
-    .int('La página debe ser un número entero')
-    .positive('La página debe ser positiva'),
+  explicacion: z.string().default(''),
+  pagina_libro: z.coerce.number().int().min(0).default(0),
 })
 
 export const examConfigSchema = z.object({

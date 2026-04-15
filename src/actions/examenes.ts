@@ -125,6 +125,16 @@ export async function submitAnswer(
 
   if (!user) return { error: 'No autenticado' }
 
+  // Verify session ownership (IDOR prevention)
+  const { data: sesionOwner } = await supabase
+    .from('sesiones_examen')
+    .select('id')
+    .eq('id', sesionId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!sesionOwner) return { error: 'Sesión no encontrada' }
+
   // Check if this answer already exists (use maybeSingle to avoid PGRST116)
   const { data: existing } = await supabase
     .from('respuestas_usuario')
@@ -186,6 +196,7 @@ export async function submitAnswer(
       .from('sesiones_examen')
       .select('respuestas_correctas')
       .eq('id', sesionId)
+      .eq('user_id', user.id)
       .maybeSingle()
 
     if (sesion) {
@@ -193,6 +204,7 @@ export async function submitAnswer(
         .from('sesiones_examen')
         .update({ respuestas_correctas: sesion.respuestas_correctas + 1 })
         .eq('id', sesionId)
+        .eq('user_id', user.id)
     }
   }
 

@@ -17,13 +17,13 @@ export default async function AdminQuestionsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">
+      <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-white">
         Banco de Preguntas
       </h1>
 
       {/* CSV Upload */}
       <div className="mb-6">
-        <h2 className="mb-3 text-lg font-semibold text-neutral-200">
+        <h2 className="mb-3 text-lg font-semibold text-neutral-700 dark:text-neutral-200">
           Subir Preguntas (CSV)
         </h2>
         <CSVUploader />
@@ -31,7 +31,7 @@ export default async function AdminQuestionsPage() {
 
       {/* Questions list */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-neutral-200">
+        <h2 className="mb-3 text-lg font-semibold text-neutral-700 dark:text-neutral-200">
           Preguntas Existentes ({questions.length})
         </h2>
         <QuestionList questions={questions} />

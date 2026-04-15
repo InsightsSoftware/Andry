@@ -42,8 +42,8 @@ export function BottomTabs() {
                 'flex flex-col items-center gap-0.5 px-3 py-2.5 min-w-[64px] min-h-[48px] justify-center',
                 'transition-all duration-200',
                 isActive
-                  ? 'text-primary-400'
-                  : 'text-neutral-500 hover:text-neutral-300'
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'
               )}
             >
               <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 1.5} aria-hidden="true" />
@@ -51,7 +51,7 @@ export function BottomTabs() {
                 {tab.label}
               </span>
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-primary-400" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-primary-600 dark:bg-primary-400" />
               )}
             </Link>
           )
