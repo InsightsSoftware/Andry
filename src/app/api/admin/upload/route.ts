@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profile?.rol !== 'admin') {
+    if (profile?.rol !== 'admin' && profile?.rol !== 'root') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
