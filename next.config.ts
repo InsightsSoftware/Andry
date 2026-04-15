@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  turbopack: {
+    resolveAlias: {
+      // react-pdf: canvas not needed for SSR
+      canvas: { browser: './empty-module.js' },
+    },
+  },
+  webpack: (config) => {
+    // react-pdf: fallback for webpack builds
+    config.resolve.alias.canvas = false
+    return config
+  },
 }
 
 export default nextConfig
