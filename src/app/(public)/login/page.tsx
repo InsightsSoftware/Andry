@@ -31,20 +31,31 @@ function LoginForm() {
     }
 
     setLoading(true)
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        setError('Error de configuración del servidor. Contacta al administrador.')
+        setLoading(false)
+        return
+      }
 
-    if (authError) {
-      setError('Correo o contraseña incorrectos')
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) {
+        setError('Correo o contraseña incorrectos')
+        setLoading(false)
+        return
+      }
+
+      router.push(redirect)
+      router.refresh()
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.')
       setLoading(false)
-      return
     }
-
-    router.push(redirect)
-    router.refresh()
   }
 
   return (

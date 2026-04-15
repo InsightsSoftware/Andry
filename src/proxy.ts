@@ -8,7 +8,7 @@ const ADMIN_ROUTES = ['/admin']
 // Routes only for unauthenticated users
 const AUTH_ROUTES = ['/login', '/registro', '/recuperar']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Update Supabase session and get user
