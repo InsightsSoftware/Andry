@@ -32,12 +32,6 @@ function LoginForm() {
 
     setLoading(true)
     try {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        setError('Error de configuración del servidor. Contacta al administrador.')
-        setLoading(false)
-        return
-      }
-
       const supabase = createClient()
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -45,7 +39,10 @@ function LoginForm() {
       })
 
       if (authError) {
-        setError('Correo o contraseña incorrectos')
+        const msg = authError.message === 'Invalid login credentials'
+          ? 'Correo o contraseña incorrectos'
+          : authError.message || 'Error al iniciar sesión'
+        setError(msg)
         setLoading(false)
         return
       }
@@ -53,7 +50,7 @@ function LoginForm() {
       router.push(redirect)
       router.refresh()
     } catch {
-      setError('Error de conexión. Intenta de nuevo.')
+      setError('Error de conexión. Verifica tu internet e intenta de nuevo.')
       setLoading(false)
     }
   }
