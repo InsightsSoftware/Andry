@@ -1,11 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Tilt3D } from '@/components/ui/tilt-3d'
 
 export function HeroLogo() {
   const [isHovering, setIsHovering] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches)
+  }, [])
+
+  const showGlow = isHovering || isTouchDevice
 
   return (
     <div className="mb-10 flex flex-col items-center">
@@ -15,7 +22,7 @@ export function HeroLogo() {
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Core glow — outside Tilt3D, centered on logo */}
-        <div className={`hero-core-glow ${isHovering ? 'hero-core-glow-visible' : ''}`} />
+        <div className={`hero-core-glow ${showGlow ? 'hero-core-glow-visible' : ''}`} />
 
         <Tilt3D
           className="relative z-[2] cursor-pointer"
