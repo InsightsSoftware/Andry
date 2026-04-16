@@ -1,0 +1,51 @@
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
+import { ThemeProvider } from '@/components/theme-provider'
+import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: {
+    default: 'Y Exam Prep - Preparate para tu Licencia de Contratista',
+    template: '%s | Y Exam Prep',
+  },
+  description:
+    'Plataforma de estudio en espanol para contratistas hispanos en Florida. Preparate para tu examen de licencia con audiolibros, PDF interactivo, banco de preguntas y asistente IA.',
+  robots: 'index, follow',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Y Exam Prep',
+  },
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon.svg',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#050507',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="es" className={`${inter.className} h-full`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col mesh-bg">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  )
+}

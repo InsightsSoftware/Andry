@@ -1,0 +1,19 @@
+{
+  "name": "Y Exam Prep",
+  "short_name": "Y Exam Prep",
+  "description": "Plataforma de estudio para contratistas hispanos en Florida",
+  "start_url": "/panel",
+  "display": "standalone",
+  "background_color": "#050507",
+  "theme_color": "#9333ea",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
