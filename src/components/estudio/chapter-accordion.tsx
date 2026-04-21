@@ -52,9 +52,9 @@ export function ChapterAccordion({
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="min-w-0 flex-1 truncate font-semibold text-neutral-900 dark:text-neutral-100">
               {nombre}
             </h3>
             {hasGuia && (
