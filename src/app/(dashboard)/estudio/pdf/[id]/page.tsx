@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PDFViewer } from '@/components/estudio/pdf-viewer'
+import { getSignedContentUrl } from '@/lib/supabase/storage'
 
 export async function generateMetadata({
   params,
@@ -57,6 +58,15 @@ export default async function PDFViewerPage({
   const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || 'Curso'
   const capituloNombre = (contenido as any).capitulos?.nombre || ''
 
+  // Generate a short-lived signed URL — content bucket is private
+  let signedUrl: string
+  try {
+    signedUrl = await getSignedContentUrl(supabase, contenido.archivo_url, 3600)
+  } catch (err) {
+    console.error('Signed URL error:', err)
+    notFound()
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.20))] md:h-[calc(100vh-theme(spacing.12))]">
       {/* Header */}
@@ -88,7 +98,7 @@ export default async function PDFViewerPage({
       {/* PDF Viewer */}
       <PDFViewer
         contenidoId={id}
-        archivoUrl={contenido.archivo_url}
+        archivoUrl={signedUrl}
         initialProgress={initialProgress}
       />
     </div>

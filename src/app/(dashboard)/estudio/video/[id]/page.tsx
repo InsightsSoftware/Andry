@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Video } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { VideoPlayer } from '@/components/estudio/video-player'
+import { getSignedContentUrl } from '@/lib/supabase/storage'
 
 export async function generateMetadata({
   params,
@@ -61,6 +62,15 @@ export default async function VideoPlayerPage({
   const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || 'Curso'
   const capituloNombre = (contenido as any).capitulos?.nombre || ''
 
+  // Generate a short-lived signed URL — content bucket is private
+  let signedUrl: string
+  try {
+    signedUrl = await getSignedContentUrl(supabase, contenido.archivo_url, 3600)
+  } catch (err) {
+    console.error('Signed URL error:', err)
+    notFound()
+  }
+
   return (
     <div>
       {/* Header */}
@@ -92,7 +102,7 @@ export default async function VideoPlayerPage({
       {/* Video Player */}
       <VideoPlayer
         contenidoId={id}
-        archivoUrl={contenido.archivo_url}
+        archivoUrl={signedUrl}
         initialProgress={initialProgress}
         initialPosition={initialPosition}
       />

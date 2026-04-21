@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { apiLimiter } from '@/lib/rate-limit'
+import { CONTENIDO_BUCKET, getSignedContentUrl } from '@/lib/supabase/storage'
 
 // Max file sizes by type
 const MAX_SIZES: Record<string, number> = {
@@ -97,9 +98,7 @@ export async function POST(request: Request) {
     const adminSupabase = createAdminClient()
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    const BUCKET = 'contenido-cursos'
-
-    // Ensure bucket exists (auto-create if missing)
+    // Ensure bucket exists (auto-create as PRIVATE if missing)
     const { data: buckets, error: listErr } = await adminSupabase.storage.listBuckets()
 
     if (listErr) {
@@ -110,23 +109,30 @@ export async function POST(request: Request) {
       )
     }
 
-    const bucketExists = buckets?.some((b) => b.id === BUCKET)
+    const bucketExists = buckets?.some((b) => b.id === CONTENIDO_BUCKET)
     if (!bucketExists) {
-      // Try creating without MIME restrictions first (some Supabase versions don't support it)
-      const { error: createErr } = await adminSupabase.storage.createBucket(BUCKET, {
-        public: true,
+      // Create as PRIVATE with size limit and MIME whitelist across all content types
+      const allMimes = [
+        ...ALLOWED_MIMES.pdf,
+        ...ALLOWED_MIMES.audio,
+        ...ALLOWED_MIMES.video,
+      ]
+      const { error: createErr } = await adminSupabase.storage.createBucket(CONTENIDO_BUCKET, {
+        public: false,
+        fileSizeLimit: 500 * 1024 * 1024, // 500 MB hard cap (video limit)
+        allowedMimeTypes: allMimes,
       })
       if (createErr) {
         console.error('Bucket creation error:', JSON.stringify(createErr))
         return NextResponse.json(
-          { error: `No se pudo crear el bucket. Error: ${createErr.message}. Ve a Supabase Dashboard → Storage y crea un bucket público llamado "${BUCKET}".` },
+          { error: `No se pudo crear el bucket. Error: ${createErr.message}. Ve a Supabase Dashboard → Storage y crea un bucket privado llamado "${CONTENIDO_BUCKET}".` },
           { status: 500 }
         )
       }
     }
 
     const { data, error } = await adminSupabase.storage
-      .from(BUCKET)
+      .from(CONTENIDO_BUCKET)
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: false,
@@ -143,14 +149,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: msg }, { status: 500 })
     }
 
-    // 7. Get public URL
-    const { data: urlData } = adminSupabase.storage
-      .from('contenido-cursos')
-      .getPublicUrl(data.path)
+    // 7. Generate a short-lived signed URL (1h) so the admin UI can preview
+    //    the file right after upload. The DB record stores only the path —
+    //    the player pages regenerate signed URLs on every view.
+    const signedUrl = await getSignedContentUrl(adminSupabase, data.path, 3600)
 
     return NextResponse.json({
       success: true,
-      url: urlData.publicUrl,
+      url: signedUrl,
       path: data.path,
       size: file.size,
       type: file.type,
