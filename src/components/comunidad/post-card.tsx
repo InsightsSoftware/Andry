@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MessageCircle, MapPin, DollarSign, CheckCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createComment } from '@/actions/comunidad'
+import { AvatarInicial } from './avatar-inicial'
 
 interface Comment {
   id: string
@@ -66,11 +67,15 @@ export function PostCard({ post }: { post: Post }) {
   return (
     <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5">
       {/* Header */}
-      <div className="mb-3 flex items-start justify-between">
-        <div>
+      <div className="mb-3 flex items-start gap-3">
+        <AvatarInicial nombre={post.profiles?.nombre_completo} size="md" />
+        <div className="min-w-0 flex-1">
           <h3 className="font-bold text-neutral-900 dark:text-neutral-100">{post.titulo}</h3>
-          <div className="mt-1 flex items-center gap-3 text-xs text-neutral-400 dark:text-neutral-500">
-            <span>{post.profiles?.nombre_completo || 'Usuario'}</span>
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+            <span className="font-medium text-neutral-600 dark:text-neutral-400">
+              {post.profiles?.nombre_completo || 'Usuario'}
+            </span>
+            <span>·</span>
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {timeAgo(post.created_at)}
@@ -78,7 +83,7 @@ export function PostCard({ post }: { post: Post }) {
           </div>
         </div>
         {post.resuelto && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success-500/10 dark:bg-success-500/20 px-2 py-0.5 text-xs font-semibold text-success-600 dark:text-success-400">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-500/10 dark:bg-success-500/20 px-2 py-0.5 text-xs font-semibold text-success-600 dark:text-success-400">
             <CheckCircle className="h-3 w-3" />
             Resuelto
           </span>
@@ -121,14 +126,27 @@ export function PostCard({ post }: { post: Post }) {
       {showComments && (
         <div className="mt-4 border-t border-neutral-100 dark:border-neutral-800 pt-4">
           {post.comentarios?.map((comment) => (
-            <div key={comment.id} className="mb-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
-                <span className="font-medium text-neutral-600 dark:text-neutral-400">
-                  {comment.profiles?.nombre_completo || 'Usuario'}
-                </span>
-                <span>{timeAgo(comment.created_at)}</span>
+            <div
+              key={comment.id}
+              className="mb-3 flex gap-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-3"
+            >
+              <AvatarInicial
+                nombre={comment.profiles?.nombre_completo}
+                size="sm"
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                    {comment.profiles?.nombre_completo || 'Usuario'}
+                  </span>
+                  <span>·</span>
+                  <span>{timeAgo(comment.created_at)}</span>
+                </div>
+                <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                  {comment.contenido}
+                </p>
               </div>
-              <p className="text-sm text-neutral-700 dark:text-neutral-300">{comment.contenido}</p>
             </div>
           ))}
 

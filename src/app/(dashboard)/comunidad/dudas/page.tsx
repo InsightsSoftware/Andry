@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { CommunityPage } from '@/components/comunidad/community-page'
+import { CommunityStats } from '@/components/comunidad/community-stats'
 
 export const metadata = { title: 'Comunidad - Dudas' }
 
@@ -19,5 +20,10 @@ export default async function DudasPage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  return <CommunityPage tipo="duda" posts={(posts as never[]) || []} />
+  return (
+    <>
+      <CommunityStats />
+      <CommunityPage tipo="duda" posts={(posts as never[]) || []} />
+    </>
+  )
 }
