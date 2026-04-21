@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
-  Bot,
   Users,
   User,
   LogOut,
@@ -18,10 +17,11 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
+// IA removed from the MVP nav — will return in Fase 2 as part of the
+// "Plan Plus" upsell. The /ia route still exists, just hidden.
 const links = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Modo Estudio', icon: BookOpen },
-  { href: '/ia', label: 'Asistente IA', icon: Bot },
   { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Mi Perfil', icon: User },
 ]

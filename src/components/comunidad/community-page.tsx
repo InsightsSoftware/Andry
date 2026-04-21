@@ -1,11 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, Briefcase, Plus, Sparkles } from 'lucide-react'
+import { MessageCircle, Briefcase, Plus, Sparkles, Search, X, Filter } from 'lucide-react'
 import { PostForm } from './post-form'
 import { PostCard } from './post-card'
+
+// Predefined trades for the Trabajos filter — based on the most common
+// FL contractor specialties. Matching is case-insensitive substring
+// against the post title + content.
+const OFICIOS = [
+  { key: 'electricidad', label: 'Electricidad', match: /electric/i },
+  { key: 'plomeria', label: 'Plomería', match: /plomer|fonta|pipe/i },
+  { key: 'hvac', label: 'HVAC / A-C', match: /hvac|aire\s*acond|climatiza/i },
+  { key: 'albanileria', label: 'Albañilería', match: /alba[nñ]il|mason|concret/i },
+  { key: 'carpinteria', label: 'Carpintería', match: /carpinter|wood/i },
+  { key: 'pintura', label: 'Pintura', match: /pintur|paint/i },
+  { key: 'techos', label: 'Techos', match: /techo|roof/i },
+  { key: 'remodelacion', label: 'Remodelación', match: /remodel|renov/i },
+] as const
+
+type OficioKey = (typeof OFICIOS)[number]['key']
 
 interface Comment {
   id: string
@@ -34,8 +50,33 @@ interface CommunityPageProps {
 
 export function CommunityPage({ tipo, posts }: CommunityPageProps) {
   const [showForm, setShowForm] = useState(false)
+  const [search, setSearch] = useState('')
+  const [oficio, setOficio] = useState<OficioKey | null>(null)
   const router = useRouter()
   const isDuda = tipo === 'duda'
+
+  // Client-side filtering: posts are already fetched server-side, we
+  // just narrow the list. Title is primary signal, content is secondary.
+  const filteredPosts = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    const oficioMatcher = oficio
+      ? OFICIOS.find((o) => o.key === oficio)?.match
+      : null
+
+    return posts.filter((post) => {
+      if (query) {
+        const haystack = `${post.titulo} ${post.contenido}`.toLowerCase()
+        if (!haystack.includes(query)) return false
+      }
+      if (oficioMatcher) {
+        const haystack = `${post.titulo} ${post.contenido}`
+        if (!oficioMatcher.test(haystack)) return false
+      }
+      return true
+    })
+  }, [posts, search, oficio])
+
+  const hasActiveFilter = search.trim().length > 0 || oficio !== null
 
   return (
     <div>
@@ -87,6 +128,82 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
         </a>
       </div>
 
+      {/* Search + filter bar — only shown when there are posts */}
+      {posts.length > 0 && (
+        <div className="mb-5 flex flex-col gap-3">
+          {/* Search input */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={
+                isDuda
+                  ? 'Buscar por título: ej. "cálculo breaker"...'
+                  : 'Buscar por título: ej. "electricidad Miami"...'
+              }
+              className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-9 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+              aria-label="Buscar por título"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Oficio filter — only on Trabajos tab */}
+          {!isDuda && (
+            <div className="flex items-start gap-2">
+              <div className="mt-1.5 flex shrink-0 items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                <Filter className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Oficio:</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {OFICIOS.map((o) => {
+                  const active = oficio === o.key
+                  return (
+                    <button
+                      key={o.key}
+                      onClick={() => setOficio(active ? null : o.key)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                        active
+                          ? 'border-primary-500 bg-primary-500 text-white'
+                          : 'border-neutral-200 bg-white text-neutral-600 hover:border-primary-400 hover:text-primary-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-primary-500 dark:hover:text-primary-400'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  )
+                })}
+                {oficio && (
+                  <button
+                    onClick={() => setOficio(null)}
+                    className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400"
+                  >
+                    <X className="h-3 w-3" />
+                    Limpiar
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Result count line */}
+          {hasActiveFilter && (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Mostrando <strong>{filteredPosts.length}</strong> de {posts.length}{' '}
+              {isDuda ? 'dudas' : 'trabajos'}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Post form */}
       {showForm && (
         <div className="mb-6">
@@ -102,11 +219,32 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
       )}
 
       {/* Posts list */}
-      {posts.length > 0 ? (
+      {posts.length > 0 && filteredPosts.length > 0 ? (
         <div className="flex flex-col gap-4">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
+        </div>
+      ) : posts.length > 0 && filteredPosts.length === 0 ? (
+        /* Filter returned nothing */
+        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-10 text-center">
+          <Search className="mx-auto mb-3 h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+          <p className="mb-1 font-semibold text-neutral-700 dark:text-neutral-300">
+            Sin resultados
+          </p>
+          <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+            No encontramos {isDuda ? 'dudas' : 'trabajos'} con esos filtros.
+          </p>
+          <button
+            onClick={() => {
+              setSearch('')
+              setOficio(null)
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <X className="h-4 w-4" />
+            Limpiar filtros
+          </button>
         </div>
       ) : (
         /* Empty state — cinematic hero image + CTA overlay */

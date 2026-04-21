@@ -61,6 +61,7 @@ export default async function AudioPlayerPage({
   const cursoSlug = (contenido as any).capitulos?.cursos?.slug || ''
   const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || 'Curso'
   const capituloNombre = (contenido as any).capitulos?.nombre || ''
+  const capituloId = contenido.capitulo_id as string
 
   // Generate a short-lived signed URL — content bucket is private
   let signedUrl: string
@@ -71,6 +72,22 @@ export default async function AudioPlayerPage({
     notFound()
   }
 
+  // Fetch sibling audios in the same chapter, ordered — so the player
+  // can navigate previous/next without returning to the course list.
+  const { data: siblings } = await supabase
+    .from('contenido')
+    .select('id, titulo, orden')
+    .eq('capitulo_id', capituloId)
+    .eq('tipo', 'audio')
+    .order('orden', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  const list = siblings || []
+  const currentIdx = list.findIndex((s) => s.id === id)
+  const prev = currentIdx > 0 ? list[currentIdx - 1] : null
+  const next =
+    currentIdx >= 0 && currentIdx < list.length - 1 ? list[currentIdx + 1] : null
+
   return (
     <div>
       {/* Header */}
@@ -80,7 +97,7 @@ export default async function AudioPlayerPage({
           className="mb-2 inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          {cursoNombre}
+          Volver al curso
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/20">
@@ -92,7 +109,7 @@ export default async function AudioPlayerPage({
             </h1>
             {capituloNombre && (
               <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                {capituloNombre}
+                {cursoNombre} · {capituloNombre}
               </p>
             )}
           </div>
@@ -108,6 +125,9 @@ export default async function AudioPlayerPage({
         duracionSegundos={contenido.duracion_segundos}
         initialProgress={initialProgress}
         initialPosition={initialPosition}
+        prev={prev ? { id: prev.id, titulo: prev.titulo } : null}
+        next={next ? { id: next.id, titulo: next.titulo } : null}
+        backHref={`/estudio/${cursoSlug}`}
       />
 
       {/* Description */}

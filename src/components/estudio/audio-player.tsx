@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { updateProgress } from '@/actions/estudio'
 import {
   Play,
@@ -12,6 +13,9 @@ import {
   CheckCircle2,
   Headphones,
   Gauge,
+  ChevronLeft,
+  ChevronRight,
+  List,
 } from 'lucide-react'
 import { formatSeconds } from '@/lib/utils'
 
@@ -23,6 +27,12 @@ interface AudioPlayerProps {
   duracionSegundos: number | null
   initialProgress: number
   initialPosition: string
+  /** Previous audio in the same chapter, if any */
+  prev?: { id: string; titulo: string } | null
+  /** Next audio in the same chapter, if any */
+  next?: { id: string; titulo: string } | null
+  /** Where the "back to list" button should point */
+  backHref?: string
 }
 
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -34,6 +44,9 @@ export function AudioPlayer({
   duracionSegundos,
   initialProgress,
   initialPosition,
+  prev = null,
+  next = null,
+  backHref,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -268,6 +281,62 @@ export function AudioPlayer({
           />
         </div>
       </div>
+
+      {/* Chapter navigation: previous / back / next */}
+      {(prev || next || backHref) && (
+        <div className="mt-5 flex items-stretch gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+          {prev ? (
+            <Link
+              href={`/estudio/audio/${prev.id}`}
+              className="group flex flex-1 items-center gap-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-left transition-colors hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
+              title={`Anterior: ${prev.titulo}`}
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0 text-neutral-400 group-hover:text-primary-500" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+                  Anterior
+                </p>
+                <p className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                  {prev.titulo}
+                </p>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          {backHref && (
+            <Link
+              href={backHref}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 text-xs font-medium text-neutral-600 dark:text-neutral-400 transition-colors hover:border-primary-400 dark:hover:border-primary-600 hover:text-primary-600 dark:hover:text-primary-400"
+              title="Volver a la lista del curso"
+            >
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">Curso</span>
+            </Link>
+          )}
+
+          {next ? (
+            <Link
+              href={`/estudio/audio/${next.id}`}
+              className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-right transition-colors hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
+              title={`Siguiente: ${next.titulo}`}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+                  Siguiente
+                </p>
+                <p className="truncate text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                  {next.titulo}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400 group-hover:text-primary-500" />
+            </Link>
+          ) : (
+            <div className="flex-1" />
+          )}
+        </div>
+      )}
     </div>
   )
 }
