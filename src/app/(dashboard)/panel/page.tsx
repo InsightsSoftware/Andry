@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { BookOpen, Users, ArrowRight, Shield, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { HeroVideo } from '@/components/ui/hero-video'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -30,18 +30,19 @@ export default async function DashboardPage() {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Study Mode Card — cinematic hero */}
+        {/* Study Mode Card — cinematic animated hero */}
         <Link
           href="/estudio"
           className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
-          <Image
-            src="/images/home/estudio.png"
+          <HeroVideo
+            src="/videos/home/estudio.mp4"
+            poster="/images/home/estudio.png"
             alt="Contratista estudiando concentrado"
             width={2528}
             height={1696}
             priority
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
           {/* Dark gradient for legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
@@ -66,18 +67,19 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Community Card — cinematic hero */}
+        {/* Community Card — cinematic animated hero */}
         <Link
           href="/comunidad/dudas"
           className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-accent-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
-          <Image
-            src="/images/home/comunidad.png"
+          <HeroVideo
+            src="/videos/home/comunidad.mp4"
+            poster="/images/home/comunidad.png"
             alt="Contratistas conversando en una obra"
             width={2528}
             height={1696}
             priority
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
           <div className="absolute inset-0 bg-gradient-to-br from-accent-500/25 to-transparent mix-blend-overlay" />
