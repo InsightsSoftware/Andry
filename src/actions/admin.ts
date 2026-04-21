@@ -315,6 +315,113 @@ export async function getCourses() {
   return { courses: data || [] }
 }
 
+// ── Curso CRUD ────────────────────────────────────────────────────
+
+export async function createCourse(input: {
+  nombre: string
+  slug: string
+  descripcion: string
+  orden?: number
+  activo?: boolean
+}) {
+  await requireAdmin()
+
+  const nombre = input.nombre.trim()
+  const slug = input.slug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '')
+  const descripcion = input.descripcion.trim()
+
+  if (!nombre || nombre.length < 3) return { error: 'Nombre inválido' }
+  if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+    return { error: 'Slug inválido (solo minúsculas, números, guiones)' }
+  }
+  if (!descripcion) return { error: 'Descripción obligatoria' }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('cursos')
+    .insert({
+      nombre,
+      slug,
+      descripcion,
+      orden: input.orden ?? 0,
+      activo: input.activo ?? true,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === '23505') return { error: 'Ya existe un curso con ese slug' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/contenido')
+  revalidatePath('/estudio')
+  return { success: true, curso: data }
+}
+
+export async function deleteCourse(cursoId: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin.from('cursos').delete().eq('id', cursoId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/contenido')
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
+// ── Capítulo CRUD ─────────────────────────────────────────────────
+
+export async function createChapter(input: {
+  curso_id: string
+  nombre: string
+  numero: number
+  descripcion?: string
+  pagina_inicio?: number
+  pagina_fin?: number
+}) {
+  await requireAdmin()
+
+  const nombre = input.nombre.trim()
+  if (!nombre || nombre.length < 3) return { error: 'Nombre inválido' }
+  if (!input.curso_id) return { error: 'Curso inválido' }
+  if (!Number.isFinite(input.numero) || input.numero < 1) {
+    return { error: 'Número de capítulo inválido' }
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('capitulos')
+    .insert({
+      curso_id: input.curso_id,
+      nombre,
+      numero: input.numero,
+      descripcion: input.descripcion?.trim() || null,
+      pagina_inicio: input.pagina_inicio ?? 0,
+      pagina_fin: input.pagina_fin ?? 0,
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/contenido')
+  revalidatePath('/estudio')
+  return { success: true, capitulo: data }
+}
+
+export async function deleteChapter(capituloId: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin.from('capitulos').delete().eq('id', capituloId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/contenido')
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
 export async function getChapters(cursoId: string) {
   await requireAdmin()
   const admin = createAdminClient()
