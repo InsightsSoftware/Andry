@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import type { PartnerCategoria } from '@/types/database'
 
 // ─── Validation ───────────────────────────────────────────────────
 
@@ -152,15 +151,5 @@ export async function togglePartnerActive(id: string, activo: boolean) {
   return { success: true }
 }
 
-// ─── Categoría labels (for UI) ─────────────────────────────────────
-
-export const CATEGORIA_LABELS: Record<PartnerCategoria, string> = {
-  creditos: 'Créditos comerciales',
-  contabilidad: 'Contabilidad',
-  software: 'Software / automatización',
-  seguros: 'Seguros',
-  legal: 'Legal',
-  flota: 'Flota / taxis',
-  marketing: 'Marketing',
-  otros: 'Otros',
-}
+// Note: category labels moved to src/lib/partners.ts so client components
+// can import them (server action files only export async functions).

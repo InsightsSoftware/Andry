@@ -19,9 +19,9 @@ import {
   updatePartner,
   deletePartner,
   togglePartnerActive,
-  CATEGORIA_LABELS,
   type PartnerInput,
 } from '@/actions/partners'
+import { CATEGORIA_LABELS } from '@/lib/partners'
 import type { Partner, PartnerCategoria } from '@/types/database'
 
 interface PartnersManagerProps {

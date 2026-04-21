@@ -9,18 +9,8 @@ import {
   Filter,
   X,
 } from 'lucide-react'
+import { CATEGORIA_LABELS_SHORT as CATEGORIA_LABELS } from '@/lib/partners'
 import type { Partner, PartnerCategoria } from '@/types/database'
-
-const CATEGORIA_LABELS: Record<PartnerCategoria, string> = {
-  creditos: 'Créditos',
-  contabilidad: 'Contabilidad',
-  software: 'Software',
-  seguros: 'Seguros',
-  legal: 'Legal',
-  flota: 'Flota',
-  marketing: 'Marketing',
-  otros: 'Otros',
-}
 
 function isYoutubeOrExternal(url: string): 'youtube' | 'external' | 'video' {
   if (/youtube\.com|youtu\.be/.test(url)) return 'youtube'
