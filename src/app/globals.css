@@ -386,44 +386,119 @@ body {
 
 /* ─── Hero Logo Effects ────────────────────────────────── */
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+@keyframes hero-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -12px, 0); }
 }
 
-@keyframes shine-sweep {
-  0% { left: -100%; }
-  100% { left: 200%; }
+@keyframes metallic-shine {
+  0% { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+  10% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translateX(230%) skewX(-18deg); opacity: 0; }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+@keyframes idle-breathe {
+  0%, 100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
 }
 
-@keyframes rotate-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
+/* Gentle float for the whole logo group (breaks if Tilt3D is active because
+   Tilt3D controls its inner transform, but the outer wrapper still floats). */
 .hero-logo-float {
-  /* No auto-animation — movement only via Tilt3D on hover */
+  animation: hero-float 6s ease-in-out infinite;
+  will-change: transform;
 }
 
 .hero-logo-container {
   position: relative;
   display: inline-block;
+  isolation: isolate;
 }
 
+.hero-logo-img {
+  /* Drop shadow gives the logo a subtle metallic depth */
+  filter:
+    drop-shadow(0 4px 12px rgba(147, 51, 234, 0.20))
+    drop-shadow(0 0 30px rgba(212, 168, 67, 0.10));
+}
+.dark .hero-logo-img {
+  filter:
+    drop-shadow(0 8px 24px rgba(147, 51, 234, 0.35))
+    drop-shadow(0 0 40px rgba(212, 168, 67, 0.18))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
 
-/* Logo reflection */
-.hero-logo-reflection {
-  transform: scaleY(-1);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 60%);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 60%);
-  opacity: 0.35;
-  filter: blur(1px);
+/* Metallic shine sweep — masked to the logo shape so it only
+   highlights the visible glyph, not the empty space around it. */
+.hero-shine-sweep {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 38%,
+    rgba(245, 215, 142, 0.35) 46%,
+    rgba(255, 255, 255, 0.90) 50%,
+    rgba(245, 215, 142, 0.35) 54%,
+    transparent 62%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  -webkit-mask-image: url(/logo.png);
+  mask-image: url(/logo.png);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  animation: metallic-shine 5.5s ease-in-out infinite;
+  animation-delay: 1s;
+  opacity: 0.9;
+}
+
+/* ── Idle glow — subtle halo always visible behind the logo ── */
+.hero-idle-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 160%;
+  transform: translate(-50%, -50%) scale(1);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(147, 51, 234, 0.22) 0%,
+    rgba(212, 168, 67, 0.12) 30%,
+    rgba(147, 51, 234, 0.06) 50%,
+    transparent 70%
+  );
+  filter: blur(35px);
+  pointer-events: none;
+  z-index: 0;
+  animation: idle-breathe 4.5s ease-in-out infinite;
+}
+
+.dark .hero-idle-glow {
+  width: 160%;
+  height: 190%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(147, 51, 234, 0.45) 0%,
+    rgba(212, 168, 67, 0.20) 25%,
+    rgba(147, 51, 234, 0.18) 50%,
+    transparent 72%
+  );
+  filter: blur(50px);
 }
 
 /* ── Spotlight beams radiating from center ── */

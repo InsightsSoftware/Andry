@@ -1,13 +1,11 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { HeroLogo } from '@/components/ui/hero-logo'
+import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import {
   BookOpen,
   Headphones,
   Brain,
   Trophy,
-  Users,
-  Clock,
   CheckCircle,
   ArrowRight,
   Shield,
@@ -23,18 +21,11 @@ import {
 function HeroSection() {
   return (
     <section className="relative overflow-hidden px-4 pt-16 pb-20 sm:pt-20 sm:pb-28">
-      {/* Background depth layers */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Deep ambient orbs */}
-        <div className="absolute top-[-15%] left-[5%] w-[600px] h-[600px] bg-primary-600/20 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[0%] w-[500px] h-[500px] bg-accent-500/12 rounded-full blur-[130px]" />
-        <div className="absolute top-[20%] right-[15%] w-[350px] h-[350px] bg-primary-500/10 rounded-full blur-[100px]" />
-        {/* Subtle grid overlay for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(rgba(147,51,234,0.06)_1px,transparent_1px)] [background-size:40px_40px] opacity-40" />
-      </div>
+      {/* Parallax background layers */}
+      <HeroParallaxBg />
 
       <div className="relative mx-auto max-w-5xl text-center">
-        {/* ── Large Centered Logo with 3D Tilt + Glow ── */}
+        {/* ── Large Centered Logo with 3D Tilt + Metallic Shine + Glow ── */}
         <HeroLogo />
 
         {/* Badge */}

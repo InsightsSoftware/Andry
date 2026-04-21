@@ -9,7 +9,10 @@ export function HeroLogo() {
   const [isTouchDevice, setIsTouchDevice] = useState(false)
 
   useEffect(() => {
-    setIsTouchDevice('ontouchstart' in window && window.matchMedia('(pointer: coarse)').matches)
+    setIsTouchDevice(
+      'ontouchstart' in window &&
+        window.matchMedia('(pointer: coarse)').matches
+    )
   }, [])
 
   const showGlow = isHovering || isTouchDevice
@@ -17,12 +20,17 @@ export function HeroLogo() {
   return (
     <div className="mb-10 flex flex-col items-center">
       <div
-        className="relative"
+        className="hero-logo-float relative"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        {/* Core glow — outside Tilt3D, centered on logo */}
-        <div className={`hero-core-glow ${showGlow ? 'hero-core-glow-visible' : ''}`} />
+        {/* Ambient core glow — purple + gold radial, sits behind the logo */}
+        <div
+          className={`hero-core-glow ${showGlow ? 'hero-core-glow-visible' : ''}`}
+        />
+
+        {/* Idle glow — always visible, subtle, for the "always on" luxury feel */}
+        <div className="hero-idle-glow" />
 
         <Tilt3D
           className="relative z-[2] cursor-pointer"
@@ -35,9 +43,11 @@ export function HeroLogo() {
               alt="Y Exam Prep"
               width={600}
               height={370}
-              className="relative z-[1] h-auto w-[360px] sm:w-[460px] lg:w-[560px]"
+              className="hero-logo-img relative z-[1] h-auto w-[320px] sm:w-[400px] lg:w-[480px]"
               priority
             />
+            {/* Metallic shine sweep — masked to the logo shape */}
+            <div className="hero-shine-sweep" aria-hidden="true" />
           </div>
         </Tilt3D>
       </div>
