@@ -232,7 +232,7 @@ export function TourGuide({
         className="pointer-events-auto absolute max-w-[calc(100vw-32px)] animate-in fade-in slide-in-from-bottom-2 duration-300"
         style={tooltipStyle}
       >
-        <div className="w-[340px] max-w-full rounded-2xl border border-primary-400/30 bg-neutral-900 p-5 shadow-2xl shadow-primary-900/50 backdrop-blur-sm">
+        <div className="flex max-h-[calc(100vh-32px)] w-[340px] max-w-full flex-col overflow-y-auto rounded-2xl border border-primary-400/30 bg-neutral-900 p-5 shadow-2xl shadow-primary-900/50 backdrop-blur-sm">
           {/* Step counter */}
           <div className="mb-2 flex items-center justify-between">
             <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-400">
@@ -318,22 +318,37 @@ function getTooltipStyle(
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1024
   const vh = typeof window !== 'undefined' ? window.innerHeight : 768
 
-  // Decide placement automatically if 'auto'
-  let side: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
-  if (placement === 'auto') {
-    const spaceBottom = vh - (rect.top + rect.height)
-    const spaceTop = rect.top
-    const spaceRight = vw - (rect.left + rect.width)
-    const spaceLeft = rect.left
+  // Estimated height of the tooltip card + safe margins.
+  // If none of the 4 sides has enough room, the fallback used to be
+  // "stuff it below and hope", which broke on mobile when the target
+  // was a big card near the bottom — the action buttons ended up
+  // clipped off-screen and the user couldn't continue/skip the tour.
+  // Now we center over the viewport in that case.
+  const TOOLTIP_MIN_HEIGHT = 260
+  const SAFE = 16
 
-    // Prefer vertical placement unless there's clearly more horizontal room
-    if (spaceBottom >= 260) side = 'bottom'
-    else if (spaceTop >= 260) side = 'top'
+  let side: 'top' | 'bottom' | 'left' | 'right' | 'center' = 'bottom'
+  if (placement === 'auto') {
+    const spaceBottom = vh - (rect.top + rect.height) - SAFE
+    const spaceTop = rect.top - SAFE
+    const spaceRight = vw - (rect.left + rect.width) - SAFE
+    const spaceLeft = rect.left - SAFE
+
+    if (spaceBottom >= TOOLTIP_MIN_HEIGHT) side = 'bottom'
+    else if (spaceTop >= TOOLTIP_MIN_HEIGHT) side = 'top'
     else if (spaceRight >= TOOLTIP_WIDTH + 40) side = 'right'
     else if (spaceLeft >= TOOLTIP_WIDTH + 40) side = 'left'
-    else side = 'bottom' // fallback — will scroll anyway
+    else side = 'center'
   } else {
     side = placement
+  }
+
+  if (side === 'center') {
+    return {
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+    }
   }
 
   let top: number
