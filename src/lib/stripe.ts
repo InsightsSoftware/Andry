@@ -13,6 +13,22 @@ export function getStripe(): Stripe {
   return _stripe
 }
 
+/**
+ * Is the app running in simulated-payments mode?
+ *
+ * Returns true when:
+ *  - ENABLE_SIMULATED_CHECKOUT=true is explicitly set (force simulation)
+ *  - OR STRIPE_SECRET_KEY is empty / not a real key (defaults to simulation)
+ *
+ * Single source of truth — mirrored in /api/checkout and
+ * /api/checkout/simulate. Safe to call from server only.
+ */
+export function isPaymentsSimulated(): boolean {
+  const key = process.env.STRIPE_SECRET_KEY || ''
+  if (process.env.ENABLE_SIMULATED_CHECKOUT === 'true') return true
+  return !key.startsWith('sk_')
+}
+
 export const PLANS = {
   basico: {
     name: 'Plan Básico',

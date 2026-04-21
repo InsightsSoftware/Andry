@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CreditCard, Lock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { CreditCard, Lock, CheckCircle, TestTube2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 function SimulatedCheckoutForm() {
@@ -47,13 +47,17 @@ function SimulatedCheckoutForm() {
 
   return (
     <div className="mx-auto w-full max-w-lg">
-      {/* Dev mode banner */}
-      <div className="mb-6 flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 px-4 py-3">
-        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
-        <p className="text-sm text-amber-700 dark:text-amber-400">
-          <strong>Modo desarrollo</strong> — Este es un checkout simulado.
-          En produccion se usa Stripe real.
-        </p>
+      {/* Simulation mode banner */}
+      <div className="mb-6 flex items-start gap-3 rounded-xl border border-warning-300 dark:border-warning-700 bg-warning-50 dark:bg-warning-900/20 px-4 py-3">
+        <TestTube2 className="h-5 w-5 shrink-0 text-warning-600 dark:text-warning-400 mt-0.5" />
+        <div className="text-sm text-warning-700 dark:text-warning-400">
+          <p className="font-semibold mb-0.5">Estás en modo demostración</p>
+          <p>
+            Hacé click abajo para activar tu suscripción gratis mientras
+            estamos en pruebas. No se cobra nada — los pagos reales se
+            habilitan cuando se active Stripe.
+          </p>
+        </div>
       </div>
 
       {/* Simulated Stripe card */}
@@ -120,11 +124,11 @@ function SimulatedCheckoutForm() {
             onClick={handlePay}
           >
             <CheckCircle className="h-5 w-5" />
-            Pagar {planPrice} (Simulado)
+            Activar {planName} (sin cargo)
           </Button>
 
           <p className="mt-4 text-center text-xs text-neutral-400 dark:text-neutral-500">
-            Pago simulado — no se cobra nada real
+            Mientras estamos en demo no se cobra nada real.
           </p>
         </div>
       </div>

@@ -18,6 +18,10 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      # ── Stripe (opcional en modo simulación) ──
+      # Mientras ENABLE_SIMULATED_CHECKOUT=true los pagos no tocan
+      # Stripe y estas 5 vars pueden quedar vacías en Render.
+      # Cuando se active Stripe live, pegar aquí los valores reales.
       - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: STRIPE_SECRET_KEY
@@ -28,6 +32,10 @@ services:
         sync: false
       - key: STRIPE_PRICE_PREMIUM
         sync: false
+      # ── Payments mode ──
+      # Borrar esta línea (o poner "false") cuando Stripe live esté listo.
+      - key: ENABLE_SIMULATED_CHECKOUT
+        value: "true"
       - key: AI_API_KEY
         sync: false
       - key: NEXT_PUBLIC_APP_URL

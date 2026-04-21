@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getStripe, PLANS, type PlanKey } from '@/lib/stripe'
+import { getStripe, PLANS, isPaymentsSimulated, type PlanKey } from '@/lib/stripe'
 
 export async function POST(request: Request) {
   try {
@@ -31,12 +31,10 @@ export async function POST(request: Request) {
 
     const plan = PLANS[planKey]
 
-    // DEV MODE: If Stripe keys are not real, redirect to simulated checkout
-    const stripeKey = process.env.STRIPE_SECRET_KEY || ''
-    const isDevMode =
-      process.env.ENABLE_SIMULATED_CHECKOUT === 'true' ||
-      !stripeKey.startsWith('sk_')
-    if (isDevMode) {
+    // Simulation mode: no real Stripe configured → redirect to the
+    // simulated checkout page (/pago/simular) which activates the
+    // subscription without charging anything.
+    if (isPaymentsSimulated()) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       return NextResponse.json({
         url: `${appUrl}/pago/simular?plan=${planKey}`,

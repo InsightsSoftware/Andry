@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PLANS, type PlanKey } from '@/lib/stripe'
+import { PLANS, isPaymentsSimulated, type PlanKey } from '@/lib/stripe'
 
-// Simulated checkout — only works when Stripe keys are placeholders
-// In production, this route does nothing.
+// Simulated checkout — activates a subscription without charging.
+// Only available when isPaymentsSimulated() returns true (see lib/stripe).
+// In real-Stripe production this route is disabled to prevent abuse.
 export async function POST(request: Request) {
-  // Block in production — only allow if explicitly enabled or Stripe key is a placeholder
-  const stripeKey = process.env.STRIPE_SECRET_KEY || ''
-  const isDevMode =
-    process.env.ENABLE_SIMULATED_CHECKOUT === 'true' ||
-    !stripeKey.startsWith('sk_')
-  if (!isDevMode) {
+  if (!isPaymentsSimulated()) {
     return NextResponse.json(
-      { error: 'Simulated checkout disabled in production' },
+      { error: 'El checkout simulado está deshabilitado en este entorno' },
       { status: 403 }
     )
   }
