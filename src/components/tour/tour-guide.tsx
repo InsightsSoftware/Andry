@@ -306,10 +306,10 @@ function getTooltipStyle(
   rect: TargetRect | null,
   placement: TourStep['placement'] = 'auto'
 ): React.CSSProperties {
-  // No target — center on screen
+  // No target — center on screen (slightly above middle for better feel)
   if (!rect) {
     return {
-      top: '50%',
+      top: '40%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
     }
@@ -344,8 +344,11 @@ function getTooltipStyle(
   }
 
   if (side === 'center') {
+    // 40% feels more natural than dead center — leaves room to read the
+    // spotlight below, and on mobile the tooltip doesn't feel "floating"
+    // in the middle.
     return {
-      top: '50%',
+      top: '40%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
     }
