@@ -46,8 +46,6 @@ export function HeroLogo() {
               className="hero-logo-img relative z-[1] h-auto w-[320px] sm:w-[400px] lg:w-[480px]"
               priority
             />
-            {/* Metallic shine sweep — masked to the logo shape */}
-            <div className="hero-shine-sweep" aria-hidden="true" />
           </div>
         </Tilt3D>
       </div>
