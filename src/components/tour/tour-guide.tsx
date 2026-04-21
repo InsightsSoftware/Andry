@@ -13,6 +13,10 @@ export interface TourStep {
   title: string
   body: string
   placement?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+  /** If true, on mobile (<768px) the step is shown as a centered card
+   *  without spotlight. Useful when the target is a tiny element in the
+   *  bottom nav — the tooltip would cover everything anyway. */
+  mobileCenter?: boolean
 }
 
 interface TourGuideProps {
@@ -45,6 +49,16 @@ export function TourGuide({
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [rect, setRect] = useState<TargetRect | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Track viewport size for mobile-specific step behavior
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   // Decide whether to open the tour on mount
   useEffect(() => {
@@ -79,6 +93,12 @@ export function TourGuide({
       setRect(null)
       return
     }
+    // On mobile, steps flagged `mobileCenter` render as centered cards —
+    // their targets live in the bottom nav which is too cramped to anchor.
+    if (isMobile && currentStep.mobileCenter) {
+      setRect(null)
+      return
+    }
 
     const update = () => {
       const el = document.querySelector(currentStep.target as string)
@@ -108,7 +128,7 @@ export function TourGuide({
       window.removeEventListener('scroll', resize, true)
       clearTimeout(t)
     }
-  }, [open, index, currentStep])
+  }, [open, index, currentStep, isMobile])
 
   // Lock body scroll while the tour is open
   useEffect(() => {

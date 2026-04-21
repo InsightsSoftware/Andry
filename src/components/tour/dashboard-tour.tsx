@@ -19,10 +19,11 @@ const STEPS: TourStep[] = [
     placement: 'auto',
   },
   {
-    target: '[data-tour="tab-aliados"], [data-tour="card-aliados"]',
+    target: '[data-tour="tab-aliados"]',
     title: 'Servicios para tu negocio',
-    body: 'Empresas asociadas — créditos comerciales, contabilidad, software, seguros. Todo pensado para contratistas como vos.',
+    body: 'En la sección "Aliados" tenés empresas asociadas — créditos comerciales, contabilidad, software, seguros. Todo pensado para contratistas como vos.',
     placement: 'auto',
+    mobileCenter: true,
   },
   {
     target: '[data-tour="card-comunidad"]',
@@ -33,8 +34,9 @@ const STEPS: TourStep[] = [
   {
     target: '[data-tour="tab-perfil"]',
     title: 'Tu perfil y suscripción',
-    body: 'Desde acá manejás tu plan, ves el vencimiento y cerrás sesión. También podés volver a ver este tour cuando quieras.',
+    body: 'En la sección "Perfil" manejás tu plan, ves el vencimiento y cerrás sesión. También podés volver a ver este tour cuando quieras.',
     placement: 'auto',
+    mobileCenter: true,
   },
   {
     target: null,
