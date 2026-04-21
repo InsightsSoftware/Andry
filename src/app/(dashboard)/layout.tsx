@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { BottomTabs } from '@/components/layout/bottom-tabs'
+import { DashboardTour } from '@/components/tour/dashboard-tour'
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,8 @@ export default function DashboardLayout({
         <div className="mx-auto max-w-4xl px-4 py-6">{children}</div>
       </main>
       <BottomTabs />
+      {/* Onboarding tour — renders only on /panel and only on first visit */}
+      <DashboardTour />
     </div>
   )
 }

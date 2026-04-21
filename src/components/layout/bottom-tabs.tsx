@@ -33,6 +33,14 @@ export function BottomTabs() {
             (tab.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
           const Icon = tab.icon
 
+          // Data attribute used by the onboarding tour
+          const tourKey =
+            tab.href === '/aliados'
+              ? 'tab-aliados'
+              : tab.href === '/perfil'
+                ? 'tab-perfil'
+                : undefined
+
           return (
             <Link
               key={tab.href}
@@ -40,6 +48,7 @@ export function BottomTabs() {
               role="tab"
               aria-selected={isActive}
               aria-label={tab.label}
+              data-tour={tourKey}
               className={cn(
                 'flex flex-col items-center gap-0.5 px-3 py-2.5 min-w-[64px] min-h-[48px] justify-center',
                 'transition-all duration-200',

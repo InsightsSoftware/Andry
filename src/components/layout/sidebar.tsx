@@ -75,11 +75,19 @@ export function Sidebar() {
             (link.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
           const Icon = link.icon
 
+          const tourKey =
+            link.href === '/aliados'
+              ? 'tab-aliados'
+              : link.href === '/perfil'
+                ? 'tab-perfil'
+                : undefined
+
           return (
             <Link
               key={link.href}
               href={link.href}
               aria-current={isActive ? 'page' : undefined}
+              data-tour={tourKey}
               className={cn(
                 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                 isActive

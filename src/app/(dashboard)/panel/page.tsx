@@ -33,6 +33,7 @@ export default async function DashboardPage() {
         {/* Study Mode Card — cinematic animated hero */}
         <Link
           href="/estudio"
+          data-tour="card-estudio"
           className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
           <HeroVideo
@@ -70,6 +71,7 @@ export default async function DashboardPage() {
         {/* Community Card — cinematic animated hero */}
         <Link
           href="/comunidad/dudas"
+          data-tour="card-comunidad"
           className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-accent-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
           <HeroVideo

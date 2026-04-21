@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { ManageSubscriptionButton } from '@/components/ui/manage-subscription-button'
 import { SignOutButton } from '@/components/ui/sign-out-button'
+import { ReplayTourButton } from '@/components/tour/replay-tour-button'
 
 export const metadata = { title: 'Mi Perfil' }
 
@@ -107,8 +108,9 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      {/* Sign out */}
-      <div className="mt-6 flex justify-end">
+      {/* Actions */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <ReplayTourButton />
         <SignOutButton />
       </div>
     </div>
