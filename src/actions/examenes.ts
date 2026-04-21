@@ -51,16 +51,32 @@ export async function startPractice(capituloId: string, cursoId: string) {
 
 /**
  * Start a timed exam session for a full course.
- * Selects up to 45 random questions from all chapters.
- * Time limit: 90 minutes (5400 seconds).
+ * User selects time limit (hours) and question count.
+ *
+ * @param cursoId — course to pull questions from
+ * @param horas — time limit in hours (2, 3, 4, 5, or 6)
+ * @param totalPreguntas — how many questions (15, 30, 60, 90, or 120)
  */
-export async function startExam(cursoId: string) {
+export async function startExam(
+  cursoId: string,
+  horas: number,
+  totalPreguntas: number
+) {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) return { error: 'No autenticado' }
+
+  // Validate inputs — mirror the allowed values from the UI
+  const allowedHoras = [2, 3, 4, 5, 6]
+  if (!allowedHoras.includes(horas)) {
+    return { error: 'Duración inválida' }
+  }
+  if (totalPreguntas < 10 || totalPreguntas > 200) {
+    return { error: 'Cantidad de preguntas inválida' }
+  }
 
   // Get all chapters for this course
   const { data: capitulos } = await supabase
@@ -79,13 +95,13 @@ export async function startExam(cursoId: string) {
     .from('preguntas')
     .select('id')
     .in('capitulo_id', capIds)
-    .limit(45)
+    .limit(totalPreguntas)
 
   if (qError || !preguntas?.length) {
     return { error: 'No hay preguntas disponibles para el examen' }
   }
 
-  // Create exam session with time limit
+  // Create exam session with time limit (in seconds)
   const { data: sesion, error: sError } = await supabase
     .from('sesiones_examen')
     .insert({
@@ -95,7 +111,7 @@ export async function startExam(cursoId: string) {
       curso_id: cursoId,
       total_preguntas: preguntas.length,
       respuestas_correctas: 0,
-      tiempo_limite_segundos: 5400, // 90 minutes
+      tiempo_limite_segundos: horas * 3600,
       completado: false,
     })
     .select('id')

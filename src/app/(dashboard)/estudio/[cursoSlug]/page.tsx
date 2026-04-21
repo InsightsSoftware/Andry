@@ -201,10 +201,10 @@ export default async function CursoDetailPage({
             </div>
             <div className="flex-1">
               <p className="font-semibold text-primary-700 dark:text-primary-400">
-                Simulacro de Examen
+                Examen Simulación Real
               </p>
               <p className="text-xs text-primary-600/70 dark:text-primary-400/60">
-                {totalPreguntas} preguntas · 90 min · Simula el examen real
+                {totalPreguntas} preguntas · Elegí 2 a 6 horas · Simula el examen oficial
               </p>
             </div>
           </Link>

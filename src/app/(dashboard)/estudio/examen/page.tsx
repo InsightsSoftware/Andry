@@ -3,7 +3,7 @@ import { ArrowLeft, FileCheck, Clock, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StartExamButton } from '@/components/estudio/start-exam-button'
 
-export const metadata = { title: 'Simulacro de Examen' }
+export const metadata = { title: 'Examen Simulación Real' }
 
 export default async function ExamenSelectPage() {
   const supabase = await createClient()
@@ -49,10 +49,10 @@ export default async function ExamenSelectPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          Simulacro de Examen
+          Examen Simulación Real
         </h1>
         <p className="text-neutral-500 dark:text-neutral-400">
-          Practica como si fuera el examen real con tiempo límite
+          Entrena bajo presión de tiempo como en el examen oficial de licencia
         </p>
       </div>
 
@@ -62,17 +62,17 @@ export default async function ExamenSelectPage() {
           <AlertCircle className="h-5 w-5 shrink-0 text-warning-600 dark:text-warning-400 mt-0.5" />
           <div className="text-sm">
             <p className="font-semibold text-warning-800 dark:text-warning-300 mb-1">
-              Instrucciones del simulacro
+              Instrucciones
             </p>
             <ul className="text-warning-700 dark:text-warning-400 space-y-1">
               <li className="flex items-center gap-2">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
-                Tienes 90 minutos para completar el examen
+                Elegí la duración (2 a 6 horas) y la cantidad de preguntas
               </li>
-              <li>· Hasta 45 preguntas de opción múltiple</li>
-              <li>· Puedes navegar entre preguntas libremente</li>
+              <li>· Podés marcar preguntas con 🚩 para revisarlas al final</li>
+              <li>· Navegá libremente entre preguntas con la barra lateral</li>
               <li>· Se envía automáticamente cuando se acaba el tiempo</li>
-              <li>· Necesitas 70% para aprobar</li>
+              <li>· Necesitás 70% para aprobar</li>
             </ul>
           </div>
         </div>
@@ -103,7 +103,10 @@ export default async function ExamenSelectPage() {
             </div>
             <div className="mt-4">
               {curso.questionCount > 0 ? (
-                <StartExamButton cursoId={curso.id} />
+                <StartExamButton
+                  cursoId={curso.id}
+                  maxPreguntas={curso.questionCount}
+                />
               ) : (
                 <p className="text-sm text-neutral-400 dark:text-neutral-500 italic">
                   Sin preguntas disponibles aún

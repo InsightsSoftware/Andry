@@ -6,13 +6,36 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  MinusCircle,
   BookOpen,
   RotateCcw,
+  Target,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatSeconds } from '@/lib/utils'
 
 export const metadata = { title: 'Resultados' }
+
+type PreguntaData = {
+  id: string
+  texto: string
+  opcion_a: string
+  opcion_b: string
+  opcion_c: string
+  opcion_d: string
+  respuesta_correcta: 'a' | 'b' | 'c' | 'd'
+  explicacion: string | null
+  pagina_libro: number | null
+  capitulo_id: string
+}
+
+type RespuestaData = {
+  id: string
+  pregunta_id: string
+  respuesta_seleccionada: 'a' | 'b' | 'c' | 'd'
+  es_correcta: boolean
+  created_at: string
+}
 
 export default async function ResultadosPage({
   params,
@@ -21,10 +44,12 @@ export default async function ResultadosPage({
 }) {
   const { sesionId } = await params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  // Fetch session with course info — scoped to current user
+  // Fetch session scoped to current user
   const { data: sesion } = await supabase
     .from('sesiones_examen')
     .select('*, cursos(slug, nombre)')
@@ -34,20 +59,85 @@ export default async function ResultadosPage({
 
   if (!sesion) notFound()
 
-  // Fetch all answers with question details
+  // Fetch all answers for this session
   const { data: respuestas } = await supabase
     .from('respuestas_usuario')
-    .select(
-      '*, preguntas(texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, explicacion, pagina_libro)'
-    )
+    .select('id, pregunta_id, respuesta_seleccionada, es_correcta, created_at')
     .eq('sesion_id', sesionId)
     .order('created_at')
 
-  const cursoSlug = (sesion as any).cursos?.slug || ''
-  const cursoNombre = (sesion as any).cursos?.nombre || 'Curso'
-  const score = sesion.respuestas_correctas
-  const total = sesion.total_preguntas
-  const percentage = total > 0 ? Math.round((score / total) * 100) : 0
+  const respuestasMap = new Map<string, RespuestaData>(
+    (respuestas || []).map((r) => [r.pregunta_id, r as RespuestaData])
+  )
+
+  // Fetch the pool of questions that were available for this session (so we
+  // can also show the ones the user skipped without answering).
+  let preguntasQuery = supabase
+    .from('preguntas')
+    .select(
+      'id, texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, explicacion, pagina_libro, capitulo_id'
+    )
+
+  if (sesion.capitulo_id) {
+    preguntasQuery = preguntasQuery.eq('capitulo_id', sesion.capitulo_id)
+  } else {
+    const { data: capitulos } = await supabase
+      .from('capitulos')
+      .select('id')
+      .eq('curso_id', sesion.curso_id)
+    if (capitulos?.length) {
+      preguntasQuery = preguntasQuery.in(
+        'capitulo_id',
+        capitulos.map((c) => c.id)
+      )
+    }
+  }
+
+  const { data: preguntasPool } = await preguntasQuery.limit(
+    sesion.total_preguntas
+  )
+
+  // Only keep the questions that were part of this exam: answered ones are
+  // the main source of truth, plus any pool question not yet shown counts
+  // towards the "omitted" bucket.
+  const preguntasEnExamen: PreguntaData[] = []
+  const poolById = new Map<string, PreguntaData>()
+  ;(preguntasPool || []).forEach((p) =>
+    poolById.set(p.id, p as PreguntaData)
+  )
+
+  // First, add the pool in its original order up to total_preguntas
+  for (const p of preguntasPool || []) {
+    if (preguntasEnExamen.length >= sesion.total_preguntas) break
+    preguntasEnExamen.push(p as PreguntaData)
+  }
+
+  // Ensure every answered question is represented (edge case: pool
+  // rotated but answers stored from a previous set)
+  for (const [preguntaId] of respuestasMap) {
+    if (!preguntasEnExamen.some((p) => p.id === preguntaId)) {
+      const fromPool = poolById.get(preguntaId)
+      if (fromPool) preguntasEnExamen.push(fromPool)
+    }
+  }
+
+  const cursoSlug = (sesion as { cursos?: { slug?: string } }).cursos?.slug || ''
+  const cursoNombre =
+    (sesion as { cursos?: { nombre?: string } }).cursos?.nombre || 'Curso'
+
+  // Breakdown
+  const correctas = preguntasEnExamen.filter(
+    (p) => respuestasMap.get(p.id)?.es_correcta
+  ).length
+  const incorrectas = preguntasEnExamen.filter((p) => {
+    const r = respuestasMap.get(p.id)
+    return r && !r.es_correcta
+  }).length
+  const omitidas = preguntasEnExamen.filter((p) => !respuestasMap.has(p.id))
+    .length
+
+  const total = preguntasEnExamen.length
+  const percentage = total > 0 ? Math.round((correctas / total) * 100) : 0
   const passed = percentage >= 70
   const isPractice = sesion.tipo === 'practica'
 
@@ -72,11 +162,7 @@ export default async function ResultadosPage({
       >
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-neutral-900 shadow-sm">
           <Trophy
-            className={`h-8 w-8 ${
-              passed
-                ? 'text-success-500'
-                : 'text-danger-500'
-            }`}
+            className={`h-8 w-8 ${passed ? 'text-success-500' : 'text-danger-500'}`}
           />
         </div>
 
@@ -93,7 +179,7 @@ export default async function ResultadosPage({
           {passed ? '¡Aprobado!' : 'No aprobado'}
         </p>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          {score} de {total} respuestas correctas
+          {correctas} de {total} respuestas correctas
           {!isPractice && ' · Se necesita 70% para aprobar'}
         </p>
 
@@ -126,61 +212,137 @@ export default async function ResultadosPage({
               Practicar de nuevo
             </Link>
           )}
+          {!isPractice && (
+            <Link
+              href="/estudio/examen"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 dark:bg-primary-500 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Hacer otro examen
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Breakdown cards */}
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-success-200 dark:border-success-800 bg-success-50 dark:bg-success-900/20 p-4 text-center">
+          <CheckCircle2 className="mx-auto mb-1.5 h-6 w-6 text-success-500" />
+          <div className="text-2xl font-bold text-success-700 dark:text-success-400">
+            {correctas}
+          </div>
+          <div className="text-xs text-success-700/80 dark:text-success-400/80 font-medium">
+            Correctas
+          </div>
+        </div>
+        <div className="rounded-2xl border border-danger-200 dark:border-danger-800 bg-danger-50 dark:bg-danger-900/20 p-4 text-center">
+          <XCircle className="mx-auto mb-1.5 h-6 w-6 text-danger-500" />
+          <div className="text-2xl font-bold text-danger-600 dark:text-danger-400">
+            {incorrectas}
+          </div>
+          <div className="text-xs text-danger-600/80 dark:text-danger-400/80 font-medium">
+            Incorrectas
+          </div>
+        </div>
+        <div className="rounded-2xl border border-warning-200 dark:border-warning-800 bg-warning-50 dark:bg-warning-900/20 p-4 text-center">
+          <MinusCircle className="mx-auto mb-1.5 h-6 w-6 text-warning-500" />
+          <div className="text-2xl font-bold text-warning-700 dark:text-warning-400">
+            {omitidas}
+          </div>
+          <div className="text-xs text-warning-700/80 dark:text-warning-400/80 font-medium">
+            Omitidas
+          </div>
         </div>
       </div>
 
       {/* Question review */}
-      <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-        Revisión de Respuestas
-      </h2>
+      <div className="mb-4 flex items-center gap-2">
+        <Target className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+        <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+          Revisión detallada
+        </h2>
+      </div>
 
       <div className="flex flex-col gap-4">
-        {(respuestas || []).map((resp, i) => {
-          const pregunta = (resp as any).preguntas
-          if (!pregunta) return null
+        {preguntasEnExamen.map((pregunta, i) => {
+          const respuesta = respuestasMap.get(pregunta.id)
+          const estado: 'correcta' | 'incorrecta' | 'omitida' = respuesta
+            ? respuesta.es_correcta
+              ? 'correcta'
+              : 'incorrecta'
+            : 'omitida'
 
           const opciones = [
-            { key: 'a', text: pregunta.opcion_a },
-            { key: 'b', text: pregunta.opcion_b },
-            { key: 'c', text: pregunta.opcion_c },
-            { key: 'd', text: pregunta.opcion_d },
+            { key: 'a' as const, text: pregunta.opcion_a },
+            { key: 'b' as const, text: pregunta.opcion_b },
+            { key: 'c' as const, text: pregunta.opcion_c },
+            { key: 'd' as const, text: pregunta.opcion_d },
           ]
+
+          const badgeStyles = {
+            correcta: 'bg-success-500',
+            incorrecta: 'bg-danger-500',
+            omitida: 'bg-warning-500',
+          }
+          const badgeLabel = {
+            correcta: 'Correcta',
+            incorrecta: 'Incorrecta',
+            omitida: 'Sin responder',
+          }
 
           return (
             <div
-              key={resp.id}
+              key={pregunta.id}
               className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5"
             >
               {/* Question header */}
               <div className="flex items-start gap-3 mb-3">
                 <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                    resp.es_correcta ? 'bg-success-500' : 'bg-danger-500'
-                  }`}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${badgeStyles[estado]}`}
                 >
-                  {resp.es_correcta ? (
+                  {estado === 'correcta' ? (
                     <CheckCircle2 className="h-4 w-4" />
-                  ) : (
+                  ) : estado === 'incorrecta' ? (
                     <XCircle className="h-4 w-4" />
+                  ) : (
+                    <MinusCircle className="h-4 w-4" />
                   )}
                 </div>
-                <p className="font-medium text-neutral-900 dark:text-neutral-100 text-sm leading-relaxed">
-                  {pregunta.texto}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                      #{i + 1}
+                    </span>
+                    <span
+                      className={`text-xs font-semibold ${
+                        estado === 'correcta'
+                          ? 'text-success-600 dark:text-success-400'
+                          : estado === 'incorrecta'
+                            ? 'text-danger-600 dark:text-danger-400'
+                            : 'text-warning-700 dark:text-warning-400'
+                      }`}
+                    >
+                      {badgeLabel[estado]}
+                    </span>
+                  </div>
+                  <p className="font-medium text-neutral-900 dark:text-neutral-100 text-sm leading-relaxed">
+                    {pregunta.texto}
+                  </p>
+                </div>
               </div>
 
               {/* Options review */}
               <div className="flex flex-col gap-2 mb-3 ml-10">
                 {opciones.map((op) => {
                   const isCorrect = op.key === pregunta.respuesta_correcta
-                  const isSelected = op.key === resp.respuesta_seleccionada
+                  const isSelected = op.key === respuesta?.respuesta_seleccionada
                   return (
                     <div
                       key={op.key}
                       className={`rounded-lg px-3 py-2 text-xs ${
                         isCorrect
                           ? 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-400 font-semibold'
-                          : isSelected && !resp.es_correcta
+                          : isSelected && !respuesta?.es_correcta
                             ? 'bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 line-through'
                             : 'text-neutral-500 dark:text-neutral-400'
                       }`}
@@ -203,7 +365,7 @@ export default async function ResultadosPage({
               )}
 
               {/* Page reference */}
-              {pregunta.pagina_libro > 0 && (
+              {pregunta.pagina_libro && pregunta.pagina_libro > 0 && (
                 <div className="ml-10 mt-2 flex items-center gap-1 text-[10px] text-neutral-400 dark:text-neutral-500">
                   <BookOpen className="h-3 w-3" />
                   Página {pregunta.pagina_libro}

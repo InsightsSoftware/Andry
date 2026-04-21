@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ExamRunner } from '@/components/estudio/exam-runner'
 
-export const metadata = { title: 'Simulacro de Examen' }
+export const metadata = { title: 'Examen Simulación Real' }
 
 export default async function ExamenPage({
   params,

@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileCheck } from 'lucide-react'
+import { FileCheck, Flag } from 'lucide-react'
 import { ExamQuestionCard } from './exam-question-card'
 import { ExamTimer } from './exam-timer'
 import { submitAnswer, finishSession } from '@/actions/examenes'
+import { cn } from '@/lib/utils'
 
 interface ExamRunnerProps {
   sesionId: string
@@ -21,7 +22,6 @@ interface ExamRunnerProps {
 
 export function ExamRunner({
   sesionId,
-  cursoSlug,
   tiempoLimiteSegundos,
   preguntas,
 }: ExamRunnerProps) {
@@ -36,6 +36,7 @@ export function ExamRunner({
       return initial
     }
   )
+  const [flagged, setFlagged] = useState<Set<string>>(new Set())
   const [finishing, setFinishing] = useState(false)
   const startTimeRef = useRef(Date.now())
 
@@ -48,11 +49,21 @@ export function ExamRunner({
     })
   }
 
+  const handleToggleFlag = useCallback(() => {
+    const pregunta = preguntas[currentIndex]
+    setFlagged((prev) => {
+      const next = new Set(prev)
+      if (next.has(pregunta.id)) next.delete(pregunta.id)
+      else next.add(pregunta.id)
+      return next
+    })
+  }, [preguntas, currentIndex])
+
   const handleFinish = useCallback(async () => {
     if (finishing) return
     setFinishing(true)
 
-    // Submit all unanswered questions
+    // Submit all answered questions
     const submitPromises = preguntas.map(async (p) => {
       const answer = answers.get(p.id)
       if (answer) {
@@ -75,6 +86,7 @@ export function ExamRunner({
 
   const pregunta = preguntas[currentIndex]
   const answeredCount = answers.size
+  const flaggedCount = flagged.size
   const totalCount = preguntas.length
 
   return (
@@ -84,7 +96,7 @@ export function ExamRunner({
         <div className="flex items-center gap-2">
           <FileCheck className="h-5 w-5 text-primary-600 dark:text-primary-400" />
           <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Simulacro de Examen
+            Examen Simulación Real
           </span>
         </div>
         <ExamTimer
@@ -95,26 +107,54 @@ export function ExamRunner({
 
       {/* Answer progress pills */}
       <div className="mb-4 flex flex-wrap gap-1.5">
-        {preguntas.map((p, i) => (
-          <button
-            key={p.id}
-            onClick={() => setCurrentIndex(i)}
-            className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              i === currentIndex
-                ? 'bg-primary-600 text-white dark:bg-primary-500'
-                : answers.has(p.id)
-                  ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-            }`}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {preguntas.map((p, i) => {
+          const isAnswered = answers.has(p.id)
+          const isFlagged = flagged.has(p.id)
+          const isCurrent = i === currentIndex
+          return (
+            <button
+              key={p.id}
+              onClick={() => setCurrentIndex(i)}
+              className={cn(
+                'relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-colors cursor-pointer',
+                isCurrent
+                  ? 'bg-primary-600 text-white dark:bg-primary-500 ring-2 ring-primary-300 dark:ring-primary-700 ring-offset-1 ring-offset-white dark:ring-offset-neutral-950'
+                  : isFlagged && isAnswered
+                    ? 'bg-warning-100 dark:bg-warning-900/40 text-warning-800 dark:text-warning-300 ring-1 ring-warning-400 dark:ring-warning-600'
+                    : isFlagged
+                      ? 'bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400 ring-1 ring-warning-300 dark:ring-warning-700'
+                      : isAnswered
+                        ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+              )}
+              aria-label={`Pregunta ${i + 1}${isAnswered ? ' respondida' : ''}${isFlagged ? ' marcada' : ''}`}
+            >
+              {i + 1}
+              {isFlagged && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center">
+                  <Flag className="h-2.5 w-2.5 fill-warning-500 text-warning-500" />
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Status bar */}
-      <div className="mb-4 text-xs text-neutral-500 dark:text-neutral-400 text-center">
-        {answeredCount} de {totalCount} respondidas
+      <div className="mb-4 flex items-center justify-center gap-4 text-xs text-neutral-500 dark:text-neutral-400 flex-wrap">
+        <span>
+          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+            {answeredCount}
+          </span>{' '}
+          de {totalCount} respondidas
+        </span>
+        {flaggedCount > 0 && (
+          <span className="flex items-center gap-1 text-warning-600 dark:text-warning-400">
+            <Flag className="h-3 w-3 fill-current" />
+            <span className="font-semibold">{flaggedCount}</span> marcada
+            {flaggedCount !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       {/* Question */}
@@ -132,7 +172,9 @@ export function ExamRunner({
           texto={pregunta.texto}
           opciones={pregunta.opciones}
           selectedAnswer={answers.get(pregunta.id) || null}
+          flagged={flagged.has(pregunta.id)}
           onSelect={handleSelect}
+          onToggleFlag={handleToggleFlag}
           onNext={() =>
             setCurrentIndex((prev) => Math.min(prev + 1, totalCount - 1))
           }
