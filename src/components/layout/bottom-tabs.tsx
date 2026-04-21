@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
+  Handshake,
   Users,
   User,
 } from 'lucide-react'
@@ -15,6 +16,7 @@ import {
 const tabs = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Estudio', icon: BookOpen },
+  { href: '/aliados', label: 'Aliados', icon: Handshake },
   { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: User },
 ]

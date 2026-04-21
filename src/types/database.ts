@@ -159,3 +159,30 @@ export interface MensajeAI {
   paginas_referencia: number[] | null
   created_at: string
 }
+
+export type PartnerCategoria =
+  | 'creditos'
+  | 'contabilidad'
+  | 'software'
+  | 'seguros'
+  | 'legal'
+  | 'flota'
+  | 'marketing'
+  | 'otros'
+
+export interface Partner {
+  id: string
+  nombre: string
+  slug: string
+  descripcion: string
+  categoria: PartnerCategoria
+  logo_url: string | null
+  video_url: string
+  sitio_web: string | null
+  cta_text: string
+  orden: number
+  destacado: boolean
+  activo: boolean
+  created_at: string
+  updated_at: string
+}

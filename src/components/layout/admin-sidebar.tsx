@@ -11,6 +11,7 @@ import {
   HelpCircle,
   CreditCard,
   ArrowLeft,
+  Handshake,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
@@ -19,6 +20,7 @@ const links = [
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
   { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/preguntas', label: 'Preguntas', icon: HelpCircle },
+  { href: '/admin/partners', label: 'Aliados', icon: Handshake },
   { href: '/admin/pagos', label: 'Pagos', icon: CreditCard },
 ]
 

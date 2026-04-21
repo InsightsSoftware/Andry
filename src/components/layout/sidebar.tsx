@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
+  Handshake,
   Users,
   User,
   LogOut,
@@ -22,6 +23,7 @@ import { useState, useEffect } from 'react'
 const links = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Modo Estudio', icon: BookOpen },
+  { href: '/aliados', label: 'Aliados', icon: Handshake },
   { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Mi Perfil', icon: User },
 ]
