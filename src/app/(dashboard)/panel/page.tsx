@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { BookOpen, Users, ArrowRight, Shield, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
@@ -29,46 +30,69 @@ export default async function DashboardPage() {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Study Mode Card */}
+        {/* Study Mode Card — cinematic hero */}
         <Link
           href="/estudio"
-          className="group relative flex flex-col rounded-2xl p-6 glass-card transition-all duration-300 overflow-hidden"
+          className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent pointer-events-none" />
-          <div className="relative">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 border border-primary-500/20">
-              <BookOpen className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+          <Image
+            src="/images/home/estudio.png"
+            alt="Contratista estudiando concentrado"
+            width={2528}
+            height={1696}
+            priority
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {/* Dark gradient for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
+          {/* Purple accent tint */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-transparent mix-blend-overlay" />
+
+          {/* Content */}
+          <div className="relative p-5 sm:p-6">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-primary-400/40 bg-primary-500/20 backdrop-blur-sm">
+              <BookOpen className="h-5 w-5 text-primary-200" />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-white">
+            <h2 className="mb-1.5 text-xl font-extrabold text-white drop-shadow-lg sm:text-2xl">
               Modo Estudio
             </h2>
-            <p className="mb-4 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
-              PDF interactivo, audiolibros, videos, banco de preguntas y modo examen cronometrado.
+            <p className="mb-3 text-sm text-neutral-200 drop-shadow">
+              PDF interactivo, audiolibros, videos, banco de preguntas y examen cronometrado.
             </p>
-            <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 group-hover:gap-2 transition-all">
+            <span className="inline-flex items-center gap-1 text-sm font-bold text-primary-200 transition-all group-hover:gap-2 group-hover:text-primary-100">
               Estudiar ahora
               <ArrowRight className="h-4 w-4" />
             </span>
           </div>
         </Link>
 
-        {/* Community Card */}
+        {/* Community Card — cinematic hero */}
         <Link
           href="/comunidad/dudas"
-          className="group relative flex flex-col rounded-2xl p-6 glass-card transition-all duration-300 overflow-hidden"
+          className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-accent-900/30 dark:border-neutral-800 sm:min-h-[320px]"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-transparent pointer-events-none" />
-          <div className="relative">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20">
-              <Users className="h-7 w-7 text-amber-500 dark:text-amber-400" />
+          <Image
+            src="/images/home/comunidad.png"
+            alt="Contratistas conversando en una obra"
+            width={2528}
+            height={1696}
+            priority
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent-500/25 to-transparent mix-blend-overlay" />
+
+          <div className="relative p-5 sm:p-6">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-accent-300/50 bg-accent-500/20 backdrop-blur-sm">
+              <Users className="h-5 w-5 text-accent-200" />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-white">
+            <h2 className="mb-1.5 text-xl font-extrabold text-white drop-shadow-lg sm:text-2xl">
               Comunidad
             </h2>
-            <p className="mb-4 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
-              Pregunta dudas de estudio por capítulo y encuentra trabajos con otros contratistas.
+            <p className="mb-3 text-sm text-neutral-200 drop-shadow">
+              Dudas de estudio por capítulo y trabajos con otros contratistas.
             </p>
-            <span className="inline-flex items-center gap-1 text-sm font-semibold text-amber-500 dark:text-amber-400 group-hover:gap-2 transition-all">
+            <span className="inline-flex items-center gap-1 text-sm font-bold text-accent-200 transition-all group-hover:gap-2 group-hover:text-accent-100">
               Ir a la comunidad
               <ArrowRight className="h-4 w-4" />
             </span>
