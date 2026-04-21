@@ -23,11 +23,18 @@ const OFICIOS = [
 
 type OficioKey = (typeof OFICIOS)[number]['key']
 
+interface Profile {
+  nombre_completo: string
+  es_mentor?: boolean | null
+  oficio?: string | null
+  ubicacion?: string | null
+}
+
 interface Comment {
   id: string
   contenido: string
   created_at: string
-  profiles: { nombre_completo: string } | null
+  profiles: Profile | null
 }
 
 interface Post {
@@ -39,7 +46,7 @@ interface Post {
   presupuesto: string | null
   resuelto: boolean
   created_at: string
-  profiles: { nombre_completo: string } | null
+  profiles: Profile | null
   comentarios: Comment[]
 }
 

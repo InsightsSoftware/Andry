@@ -12,8 +12,8 @@ export default async function DudasPage() {
     .select(
       `
       id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at,
-      profiles:user_id ( nombre_completo ),
-      comentarios ( id, contenido, created_at, profiles:user_id ( nombre_completo ) )
+      profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ),
+      comentarios ( id, contenido, created_at, profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ) )
     `
     )
     .eq('tipo', 'duda')
