@@ -9,6 +9,7 @@ import {
   Trash2,
   Loader2,
   Info,
+  Clock,
   X,
 } from 'lucide-react'
 import {
@@ -16,6 +17,15 @@ import {
   restoreCsvBackup,
   deleteCsvBackup,
 } from '@/actions/admin'
+
+/** Must stay in sync with CSV_BACKUP_TTL_DAYS in actions/admin.ts */
+const BACKUP_TTL_DAYS = 7
+
+function daysUntilExpiry(createdAt: string): number {
+  const ageMs = Date.now() - new Date(createdAt).getTime()
+  const ageDays = ageMs / (1000 * 60 * 60 * 24)
+  return Math.max(0, Math.ceil(BACKUP_TTL_DAYS - ageDays))
+}
 
 interface Backup {
   id: string
@@ -102,6 +112,15 @@ export function CsvBackupsList({ initialBackups }: { initialBackups: Backup[] })
 
   return (
     <div>
+      {/* Banner: TTL notice */}
+      <div className="mb-3 flex items-start gap-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/30 px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <span>
+          Los backups se guardan por <strong>{BACKUP_TTL_DAYS} días</strong> y
+          después se borran automáticamente para no llenar el almacenamiento.
+        </span>
+      </div>
+
       {message && (
         <div
           className={`mb-3 flex items-center justify-between gap-2 rounded-xl border p-3 text-sm ${
@@ -160,10 +179,30 @@ export function CsvBackupsList({ initialBackups }: { initialBackups: Backup[] })
                   </span>
                 </td>
                 <td className="hidden px-4 py-3 text-xs text-neutral-500 dark:text-neutral-400 sm:table-cell">
-                  {new Date(b.created_at).toLocaleString('es-AR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
+                  <div>
+                    {new Date(b.created_at).toLocaleString('es-AR', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
+                  </div>
+                  {(() => {
+                    const days = daysUntilExpiry(b.created_at)
+                    const color =
+                      days <= 1
+                        ? 'text-danger-500 dark:text-danger-400'
+                        : days <= 3
+                          ? 'text-warning-600 dark:text-warning-400'
+                          : 'text-neutral-400 dark:text-neutral-500'
+                    return (
+                      <div className={`mt-0.5 text-[10px] ${color}`}>
+                        {days === 0
+                          ? 'Expira hoy'
+                          : days === 1
+                            ? 'Expira mañana'
+                            : `Expira en ${days} días`}
+                      </div>
+                    )
+                  })()}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center gap-1">

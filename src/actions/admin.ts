@@ -284,6 +284,10 @@ export async function uploadQuestions(
   // Best-effort: archive the CSV for restore later. Failures here don't
   // block the upload — the questions are already in.
   if (csvText) {
+    // Opportunistic cleanup of >7d backups before adding a new one, so
+    // storage stays bounded without any external cron.
+    await cleanupOldBackups(admin)
+
     const timestamp = Date.now()
     const safeName = (csvFilename || 'preguntas.csv')
       .replace(/\.[^.]+$/, '')
@@ -317,9 +321,69 @@ export async function uploadQuestions(
 
 // ── CSV backups: list, download, restore, delete ──────────────────
 
+/**
+ * How long a backup stays around before it's auto-deleted.
+ * If you change this, also update BACKUP_TTL_DAYS in
+ * src/components/admin/csv-backups-list.tsx.
+ */
+const CSV_BACKUP_TTL_DAYS = 7
+
+/**
+ * Lazy cleanup: deletes backups older than CSV_BACKUP_TTL_DAYS, both
+ * from Storage and from the `csv_backups` table. Runs at the start of
+ * every list/create call, so the storage stays bounded without any
+ * external cron. Best-effort — errors are logged but don't bubble up.
+ */
+async function cleanupOldBackups(admin: ReturnType<typeof createAdminClient>) {
+  const cutoff = new Date(
+    Date.now() - CSV_BACKUP_TTL_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString()
+
+  const { data: old, error: listErr } = await admin
+    .from('csv_backups')
+    .select('id, archivo_path')
+    .lt('created_at', cutoff)
+
+  if (listErr) {
+    console.error('cleanupOldBackups list error:', listErr.message)
+    return 0
+  }
+  if (!old?.length) return 0
+
+  // Bulk delete storage files
+  const paths = old.map((b) => b.archivo_path).filter(Boolean) as string[]
+  if (paths.length) {
+    const { error: remErr } = await admin.storage
+      .from('contenido-cursos')
+      .remove(paths)
+    if (remErr) {
+      // Not fatal — storage might have been cleaned already. We still
+      // drop the rows below so the UI doesn't show dead entries.
+      console.error('cleanupOldBackups storage error:', remErr.message)
+    }
+  }
+
+  // Bulk delete rows
+  const ids = old.map((b) => b.id)
+  const { error: delErr } = await admin
+    .from('csv_backups')
+    .delete()
+    .in('id', ids)
+  if (delErr) {
+    console.error('cleanupOldBackups delete error:', delErr.message)
+    return 0
+  }
+
+  console.log(`cleanupOldBackups: removed ${ids.length} stale backup(s)`)
+  return ids.length
+}
+
 export async function listCsvBackups() {
   await requireAdmin()
   const admin = createAdminClient()
+
+  // Run cleanup first so the list doesn't include stale entries
+  await cleanupOldBackups(admin)
 
   const { data, error } = await admin
     .from('csv_backups')
