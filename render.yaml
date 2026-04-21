@@ -3,7 +3,10 @@ services:
     name: andry-lms
     runtime: node
     plan: starter
-    buildCommand: npm install && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
+    # --include=dev es crítico: NODE_ENV=production hace que npm install
+    # salte devDependencies por default, pero necesitamos tailwindcss,
+    # @tailwindcss/postcss y typescript en build-time.
+    buildCommand: npm install --include=dev && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
     startCommand: node .next/standalone/server.js
     envVars:
       - key: NODE_ENV
