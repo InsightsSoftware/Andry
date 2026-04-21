@@ -232,9 +232,13 @@ export async function uploadQuestions(
     respuesta_correcta: string
     explicacion?: string
     pagina_libro?: number
-  }[]
+  }[],
+  /** The raw CSV text — if provided, we archive it to Storage + record a
+   *  backup row so the admin can re-import it later (undo). */
+  csvText?: string,
+  csvFilename?: string
 ) {
-  await requireAdmin()
+  const user = await requireAdmin()
   const admin = createAdminClient()
 
   // Validate capituloId
@@ -277,8 +281,181 @@ export async function uploadQuestions(
     return { error: 'Error al subir preguntas: ' + error.message }
   }
 
+  // Best-effort: archive the CSV for restore later. Failures here don't
+  // block the upload — the questions are already in.
+  if (csvText) {
+    const timestamp = Date.now()
+    const safeName = (csvFilename || 'preguntas.csv')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 60)
+    const path = `csv-backups/${capituloId}/${safeName}_${timestamp}.csv`
+
+    const { error: upErr } = await admin.storage
+      .from('contenido-cursos')
+      .upload(path, new Blob([csvText], { type: 'text/csv;charset=utf-8' }), {
+        contentType: 'text/csv',
+        upsert: false,
+      })
+
+    if (!upErr) {
+      await admin.from('csv_backups').insert({
+        capitulo_id: capituloId,
+        archivo_path: path,
+        archivo_nombre: csvFilename || 'preguntas.csv',
+        cantidad_preguntas: rows.length,
+        subido_por: user.id,
+      })
+    } else {
+      console.error('CSV backup failed (non-fatal):', upErr.message)
+    }
+  }
+
   revalidatePath('/admin/preguntas')
   return { success: true, count: rows.length }
+}
+
+// ── CSV backups: list, download, restore, delete ──────────────────
+
+export async function listCsvBackups() {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data, error } = await admin
+    .from('csv_backups')
+    .select(
+      'id, capitulo_id, archivo_nombre, archivo_path, cantidad_preguntas, created_at, capitulos(nombre, numero, cursos(nombre))'
+    )
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (error) {
+    console.error('Error listing backups:', error)
+    return { backups: [] }
+  }
+  return { backups: data || [] }
+}
+
+export async function getCsvBackupDownloadUrl(backupId: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data: backup, error: fetchErr } = await admin
+    .from('csv_backups')
+    .select('archivo_path, archivo_nombre')
+    .eq('id', backupId)
+    .single()
+
+  if (fetchErr || !backup) return { error: 'Backup no encontrado' }
+
+  const { data, error } = await admin.storage
+    .from('contenido-cursos')
+    .createSignedUrl(backup.archivo_path, 600, {
+      download: backup.archivo_nombre,
+    })
+
+  if (error || !data?.signedUrl) {
+    return { error: 'No se pudo generar URL de descarga' }
+  }
+
+  return { success: true, url: data.signedUrl }
+}
+
+/**
+ * Restore from a backup: re-parse the archived CSV and re-insert its
+ * questions into the same chapter. By default, preserves existing
+ * questions; pass `replace=true` to delete current ones first.
+ */
+export async function restoreCsvBackup(backupId: string, replace = false) {
+  const user = await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data: backup, error: fetchErr } = await admin
+    .from('csv_backups')
+    .select('capitulo_id, archivo_path, archivo_nombre')
+    .eq('id', backupId)
+    .single()
+
+  if (fetchErr || !backup) return { error: 'Backup no encontrado' }
+
+  // Download the archived CSV
+  const { data: fileData, error: dlErr } = await admin.storage
+    .from('contenido-cursos')
+    .download(backup.archivo_path)
+
+  if (dlErr || !fileData) {
+    return { error: 'No se pudo descargar el archivo: ' + dlErr?.message }
+  }
+
+  const csvText = await fileData.text()
+
+  const { parseQuestionsCsv } = await import('@/lib/csv-parser')
+  const { parsed: questions, errors: parseErrors } = parseQuestionsCsv(csvText)
+
+  if (parseErrors.length > 0 && questions.length === 0) {
+    return {
+      error: `Error al parsear CSV: ${parseErrors[0]}`,
+    }
+  }
+
+  if (replace) {
+    const { error: delErr } = await admin
+      .from('preguntas')
+      .delete()
+      .eq('capitulo_id', backup.capitulo_id)
+    if (delErr) return { error: 'Error limpiando preguntas: ' + delErr.message }
+  }
+
+  const rows = questions.map((q) => ({
+    capitulo_id: backup.capitulo_id,
+    texto: q.texto,
+    opcion_a: q.opcion_a,
+    opcion_b: q.opcion_b,
+    opcion_c: q.opcion_c || '',
+    opcion_d: q.opcion_d || '',
+    respuesta_correcta: q.respuesta_correcta.toLowerCase(),
+    explicacion: q.explicacion || '',
+    pagina_libro: q.pagina_libro || 0,
+  }))
+
+  const { error: insErr } = await admin.from('preguntas').insert(rows)
+  if (insErr) return { error: 'Error insertando: ' + insErr.message }
+
+  // Record the restore as a fresh backup row (so you can undo an undo)
+  await admin.from('csv_backups').insert({
+    capitulo_id: backup.capitulo_id,
+    archivo_path: backup.archivo_path,
+    archivo_nombre: `[restaurado] ${backup.archivo_nombre}`,
+    cantidad_preguntas: rows.length,
+    subido_por: user.id,
+  })
+
+  revalidatePath('/admin/preguntas')
+  return { success: true, count: rows.length, replaced: replace }
+}
+
+export async function deleteCsvBackup(backupId: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data: backup } = await admin
+    .from('csv_backups')
+    .select('archivo_path')
+    .eq('id', backupId)
+    .single()
+
+  if (backup?.archivo_path) {
+    // Best-effort — if the file is already gone we still delete the row
+    await admin.storage
+      .from('contenido-cursos')
+      .remove([backup.archivo_path])
+  }
+
+  const { error } = await admin.from('csv_backups').delete().eq('id', backupId)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/preguntas')
+  return { success: true }
 }
 
 export async function deleteQuestion(questionId: string) {

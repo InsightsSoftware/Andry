@@ -10,18 +10,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { uploadQuestions, getChapters, getCourses } from '@/actions/admin'
-
-interface ParsedQuestion {
-  texto: string
-  opcion_a: string
-  opcion_b: string
-  opcion_c: string
-  opcion_d: string
-  respuesta_correcta: string
-  explicacion: string
-  pagina_libro: number
-  tipo_pregunta: string
-}
+import { parseQuestionsCsv, type ParsedQuestion } from '@/lib/csv-parser'
 
 interface Course {
   id: string
@@ -44,6 +33,7 @@ export function CSVUploader() {
   const [errors, setErrors] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState<string | null>(null)
+  const [rawCsv, setRawCsv] = useState<{ text: string; filename: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Load courses on first render
@@ -64,142 +54,6 @@ export function CSVUploader() {
     }
   }
 
-  const parseCSV = (text: string): { parsed: ParsedQuestion[]; errors: string[] } => {
-    const lines = text.split('\n').filter((l) => l.trim())
-    const parsed: ParsedQuestion[] = []
-    const errs: string[] = []
-
-    if (lines.length === 0) return { parsed, errors: ['El archivo está vacío'] }
-
-    // Detect format by checking header row
-    const headerLine = lines[0].toLowerCase()
-    const isClientFormat = headerLine.includes('question id') || headerLine.includes('question type')
-    const isLegacyFormat = headerLine.includes('texto')
-
-    // Skip header if present
-    const start = isClientFormat || isLegacyFormat ? 1 : 0
-
-    for (let i = start; i < lines.length; i++) {
-      const line = lines[i]
-      const cols = parseCSVLine(line)
-
-      if (isClientFormat) {
-        // Client format: Question ID, Question, Question Type, Option A, Option B, Option C, Option D, Correct Answer, Explanation
-        if (cols.length < 7) {
-          errs.push(`Fila ${i + 1}: Necesita al menos 7 columnas, tiene ${cols.length}`)
-          continue
-        }
-
-        const questionId = cols[0]?.trim()
-        const texto = cols[1]?.trim()
-        const tipoPregunta = cols[2]?.trim() || 'Single Choice'
-        const opcion_a = cols[3]?.trim()
-        const opcion_b = cols[4]?.trim()
-        const opcion_c = cols[5]?.trim()
-        const opcion_d = cols[6]?.trim()
-        const respuestaRaw = cols[7]?.trim() || ''
-        const explicacion = cols[8]?.trim() || ''
-
-        if (!texto) {
-          errs.push(`Fila ${i + 1}: Falta el texto de la pregunta`)
-          continue
-        }
-
-        if (!opcion_a || !opcion_b) {
-          errs.push(`Fila ${i + 1}: Se necesitan al menos 2 opciones`)
-          continue
-        }
-
-        // Handle answer: could be "C" or "A,C" for multiple choice
-        // Take the first valid answer letter for our single-answer system
-        const answerLetters = respuestaRaw.split(',').map((a) => a.trim().toLowerCase())
-        const validAnswer = answerLetters.find((a) => ['a', 'b', 'c', 'd'].includes(a))
-
-        if (!validAnswer) {
-          errs.push(
-            `Fila ${i + 1}: Respuesta correcta debe ser A, B, C o D (tiene "${respuestaRaw}")`
-          )
-          continue
-        }
-
-        if (answerLetters.length > 1) {
-          errs.push(
-            `Fila ${i + 1}: Pregunta de selección múltiple — se usará solo la primera respuesta (${validAnswer.toUpperCase()})`
-          )
-        }
-
-        parsed.push({
-          texto,
-          opcion_a,
-          opcion_b,
-          opcion_c: opcion_c || '',
-          opcion_d: opcion_d || '',
-          respuesta_correcta: validAnswer,
-          explicacion,
-          pagina_libro: 0,
-          tipo_pregunta: tipoPregunta,
-        })
-      } else {
-        // Legacy format: texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta, explicacion, pagina
-        if (cols.length < 6) {
-          errs.push(`Fila ${i + 1}: Necesita al menos 6 columnas, tiene ${cols.length}`)
-          continue
-        }
-
-        const [texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta, explicacion, pagina] =
-          cols.map((c) => c.trim())
-
-        if (!texto || !opcion_a || !opcion_b || !opcion_c || !opcion_d) {
-          errs.push(`Fila ${i + 1}: Faltan campos requeridos`)
-          continue
-        }
-
-        const resp = respuesta.toLowerCase()
-        if (!['a', 'b', 'c', 'd'].includes(resp)) {
-          errs.push(
-            `Fila ${i + 1}: Respuesta correcta debe ser a, b, c o d (tiene "${respuesta}")`
-          )
-          continue
-        }
-
-        parsed.push({
-          texto,
-          opcion_a,
-          opcion_b,
-          opcion_c,
-          opcion_d,
-          respuesta_correcta: resp,
-          explicacion: explicacion || '',
-          pagina_libro: parseInt(pagina) || 0,
-          tipo_pregunta: 'Single Choice',
-        })
-      }
-    }
-
-    return { parsed, errors: errs }
-  }
-
-  // Simple CSV line parser that handles quoted fields
-  const parseCSVLine = (line: string): string[] => {
-    const result: string[] = []
-    let current = ''
-    let inQuotes = false
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i]
-      if (char === '"') {
-        inQuotes = !inQuotes
-      } else if (char === ',' && !inQuotes) {
-        result.push(current)
-        current = ''
-      } else {
-        current += char
-      }
-    }
-    result.push(current)
-    return result
-  }
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -207,9 +61,10 @@ export function CSVUploader() {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const text = ev.target?.result as string
-      const { parsed, errors: parseErrors } = parseCSV(text)
+      const { parsed, errors: parseErrors } = parseQuestionsCsv(text)
       setQuestions(parsed)
       setErrors(parseErrors)
+      setRawCsv({ text, filename: file.name })
       if (parsed.length > 0) {
         setStep('preview')
       }
@@ -221,8 +76,16 @@ export function CSVUploader() {
     if (!selectedChapter || questions.length === 0) return
     setUploading(true)
     // Strip tipo_pregunta before sending — server doesn't need it
-    const serverQuestions = questions.map(({ tipo_pregunta, ...rest }) => rest)
-    const result = await uploadQuestions(selectedChapter, serverQuestions)
+    const serverQuestions = questions.map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ({ tipo_pregunta, ...rest }) => rest
+    )
+    const result = await uploadQuestions(
+      selectedChapter,
+      serverQuestions,
+      rawCsv?.text,
+      rawCsv?.filename
+    )
     setUploading(false)
 
     if (result.success) {
@@ -239,6 +102,7 @@ export function CSVUploader() {
     setErrors([])
     setUploadResult(null)
     setSelectedChapter('')
+    setRawCsv(null)
     if (fileRef.current) fileRef.current.value = ''
   }
 

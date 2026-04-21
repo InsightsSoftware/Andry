@@ -1,12 +1,30 @@
-import { getQuestions } from '@/actions/admin'
+import { getQuestions, listCsvBackups } from '@/actions/admin'
 import { CSVUploader } from '@/components/admin/csv-uploader'
 import { QuestionList } from '@/components/admin/question-list'
+import { CsvBackupsList } from '@/components/admin/csv-backups-list'
 
 export const metadata = { title: 'Admin - Preguntas' }
 
+type BackupRow = {
+  id: string
+  capitulo_id: string
+  archivo_nombre: string
+  cantidad_preguntas: number
+  created_at: string
+  capitulos: {
+    nombre: string
+    numero: number
+    cursos: { nombre: string } | null
+  } | null
+}
+
 export default async function AdminQuestionsPage() {
-  const result = await getQuestions()
-  const questions = result.questions as unknown as {
+  const [questionsResult, backupsResult] = await Promise.all([
+    getQuestions(),
+    listCsvBackups(),
+  ])
+
+  const questions = questionsResult.questions as unknown as {
     id: string
     texto: string
     respuesta_correcta: string
@@ -14,6 +32,7 @@ export default async function AdminQuestionsPage() {
     capitulo_id: string
     capitulos: { nombre: string; cursos: { nombre: string } | null } | null
   }[]
+  const backups = (backupsResult.backups || []) as unknown as BackupRow[]
 
   return (
     <div>
@@ -27,6 +46,20 @@ export default async function AdminQuestionsPage() {
           Subir Preguntas (CSV)
         </h2>
         <CSVUploader />
+      </div>
+
+      {/* Backups — history of uploaded CSVs, restore + undo */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200">
+            Historial de backups
+          </h2>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {backups.length} {backups.length === 1 ? 'archivo' : 'archivos'}{' '}
+            guardado{backups.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        <CsvBackupsList initialBackups={backups} />
       </div>
 
       {/* Questions list */}
