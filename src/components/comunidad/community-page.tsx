@@ -116,13 +116,13 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
           )}
           <h2 className="mb-1 font-bold text-neutral-700 dark:text-neutral-300">
             {isDuda
-              ? 'Aun no hay dudas publicadas'
-              : 'Aun no hay trabajos publicados'}
+              ? 'Aún no hay dudas publicadas'
+              : 'Aún no hay trabajos publicados'}
           </h2>
           <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
             {isDuda
-              ? 'Se el primero en hacer una pregunta sobre el material.'
-              : 'Publica tu primer trabajo o busca oportunidades.'}
+              ? 'Sé el primero en hacer una pregunta sobre el material.'
+              : 'Publicá tu primer trabajo o buscá oportunidades.'}
           </p>
           <button
             onClick={() => setShowForm(true)}

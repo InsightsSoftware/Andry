@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { ManageSubscriptionButton } from '@/components/ui/manage-subscription-button'
+import { SignOutButton } from '@/components/ui/sign-out-button'
 
 export const metadata = { title: 'Mi Perfil' }
 
@@ -104,6 +105,11 @@ export default async function ProfilePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Sign out */}
+      <div className="mt-6 flex justify-end">
+        <SignOutButton />
       </div>
     </div>
   )

@@ -108,11 +108,11 @@ export default function PricingPage() {
           </div>
         )}
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6 pt-4 sm:grid-cols-2">
           {plans.map((plan) => (
             <div
               key={plan.key}
-              className={`relative rounded-2xl p-6 sm:p-8 glass-card overflow-hidden ${
+              className={`relative rounded-2xl p-6 sm:p-8 glass-card ${
                 plan.popular
                   ? 'border-primary-500/40 glow-purple'
                   : ''
@@ -120,7 +120,11 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent pointer-events-none" />
+                  {/* Gradient overlay wrapped so overflow-hidden doesn't
+                      clip the "Más Popular" badge that sits above the card. */}
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent" />
+                  </div>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg shadow-primary-600/30">
                       <Star className="h-3 w-3 fill-current" />
