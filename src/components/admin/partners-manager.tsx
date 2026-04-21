@@ -22,6 +22,8 @@ import {
   type PartnerInput,
 } from '@/actions/partners'
 import { CATEGORIA_LABELS } from '@/lib/partners'
+import { extractPath } from '@/lib/supabase/storage'
+import { FileUploader } from '@/components/admin/file-uploader'
 import type { Partner, PartnerCategoria } from '@/types/database'
 
 interface PartnersManagerProps {
@@ -378,22 +380,39 @@ export function PartnersManager({ initialPartners }: PartnersManagerProps) {
                 />
               </Field>
 
-              {/* Video URL */}
+              {/* Video — upload OR paste a URL */}
               <Field
-                label="URL del video"
+                label="Video del aliado"
                 required
-                help="Path en Storage o URL completa (YouTube, MP4)"
+                help="Subí un MP4 o pegá una URL de YouTube / link directo"
               >
-                <input
-                  type="text"
-                  value={form.video_url}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, video_url: e.target.value }))
-                  }
-                  required
-                  placeholder="partners/insights-demo.mp4"
-                  className={inputCls}
-                />
+                <div className="space-y-2">
+                  <FileUploader
+                    tipo="video"
+                    folder="partners"
+                    currentUrl={form.video_url}
+                    onUploadComplete={(signedUrl) => {
+                      // Store the storage path (not the signed URL), because
+                      // signed URLs expire. /aliados re-signs on every view.
+                      const path = signedUrl ? extractPath(signedUrl) : ''
+                      setForm((f) => ({ ...f, video_url: path }))
+                    }}
+                  />
+                  <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                    <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
+                    <span>o pegá una URL</span>
+                    <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
+                  </div>
+                  <input
+                    type="text"
+                    value={form.video_url}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, video_url: e.target.value }))
+                    }
+                    placeholder="https://youtube.com/watch?v=... o partners/demo.mp4"
+                    className={inputCls}
+                  />
+                </div>
               </Field>
 
               {/* Logo URL + Sitio web */}
