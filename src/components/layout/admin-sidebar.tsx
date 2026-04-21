@@ -28,7 +28,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col glass-sidebar">
+    <aside className="hidden md:sticky md:top-0 md:h-screen md:w-64 md:flex md:flex-col glass-sidebar">
       <div className="flex h-32 items-center justify-between border-b border-black/5 dark:border-white/5 px-3">
         <Link href="/admin/dashboard" className="flex items-center">
           <Image
