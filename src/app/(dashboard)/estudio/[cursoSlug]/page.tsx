@@ -7,9 +7,10 @@ import {
   Headphones,
   Video,
   CheckCircle2,
-  ChevronDown,
+  Search,
   Brain,
   FileCheck,
+  ArrowRight,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatSeconds } from '@/lib/utils'
@@ -229,6 +230,16 @@ export default async function CursoDetailPage({
                 )
               : 0
 
+            // Identify the "main" PDF of the chapter — first PDF by orden.
+            // This is shown as a prominent "Guía del capítulo" card so the
+            // user can jump straight into reading without hunting through
+            // a list. Secondary PDFs (if any) still appear in the list.
+            const guiaCapitulo = items.find((i) => i.tipo === 'pdf') || null
+            const otrosContenidos = items.filter((i) => i.id !== guiaCapitulo?.id)
+            const guiaProgress = guiaCapitulo
+              ? progresoMap.get(guiaCapitulo.id)
+              : null
+
             return (
               <ChapterAccordion
                 key={capitulo.id}
@@ -238,55 +249,100 @@ export default async function CursoDetailPage({
                 completed={chapterCompleted && items.length > 0}
                 progress={chapterProgress}
                 itemCount={items.length}
+                hasGuia={guiaCapitulo !== null}
               >
                 {items.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {items.map((item) => {
-                      const config = contentTypeConfig[item.tipo as ContentType]
-                      const itemProgress = progresoMap.get(item.id)
-                      const Icon = config.icon
-
-                      return (
-                        <Link
-                          key={item.id}
-                          href={`${config.route}/${item.id}`}
-                          className="group flex items-center gap-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        >
-                          <div
-                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-neutral-900 ${config.color}`}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
-                              {item.titulo}
+                  <div className="flex flex-col gap-3">
+                    {/* ── Guía del capítulo — primary PDF, highlighted ── */}
+                    {guiaCapitulo && (
+                      <Link
+                        href={`/estudio/pdf/${guiaCapitulo.id}`}
+                        className="group relative flex items-center gap-4 overflow-hidden rounded-xl border border-danger-200 dark:border-danger-800/50 bg-gradient-to-br from-danger-50 to-danger-50/50 p-4 transition-all hover:border-danger-300 hover:shadow-md dark:from-danger-900/20 dark:to-danger-900/5 dark:hover:border-danger-700"
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-neutral-900">
+                          <FileText className="h-6 w-6 text-danger-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-danger-600 dark:text-danger-400">
+                              Guía del capítulo
                             </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-neutral-400 dark:text-neutral-500">
-                                {config.label}
-                              </span>
-                              {item.duracion_segundos && (
-                                <span className="text-xs text-neutral-400 dark:text-neutral-500">
-                                  · {formatSeconds(item.duracion_segundos)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {itemProgress?.completado ? (
-                            <CheckCircle2 className="h-5 w-5 shrink-0 text-success-500" />
-                          ) : itemProgress ? (
-                            <span className="text-xs font-medium text-primary-600 dark:text-primary-400 shrink-0">
-                              {Math.round(itemProgress.progreso_porcentaje)}%
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] font-medium text-neutral-500 dark:bg-neutral-900/70 dark:text-neutral-400">
+                              <Search className="h-2.5 w-2.5" />
+                              Buscador
                             </span>
-                          ) : null}
-                        </Link>
-                      )
-                    })}
+                          </div>
+                          <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                            {guiaCapitulo.titulo}
+                          </p>
+                          <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                            Leé, buscá por palabra clave y marcá tu progreso
+                          </p>
+                        </div>
+                        {guiaProgress?.completado ? (
+                          <CheckCircle2 className="h-6 w-6 shrink-0 text-success-500" />
+                        ) : guiaProgress ? (
+                          <span className="shrink-0 text-xs font-bold text-danger-600 dark:text-danger-400">
+                            {Math.round(guiaProgress.progreso_porcentaje)}%
+                          </span>
+                        ) : (
+                          <ArrowRight className="h-5 w-5 shrink-0 text-danger-500 transition-transform group-hover:translate-x-1" />
+                        )}
+                      </Link>
+                    )}
+
+                    {/* ── Audios, videos, y otros PDFs secundarios ── */}
+                    {otrosContenidos.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        {otrosContenidos.map((item) => {
+                          const config = contentTypeConfig[item.tipo as ContentType]
+                          const itemProgress = progresoMap.get(item.id)
+                          const Icon = config.icon
+
+                          return (
+                            <Link
+                              key={item.id}
+                              href={`${config.route}/${item.id}`}
+                              className="group flex items-center gap-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            >
+                              <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-neutral-900 ${config.color}`}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                                  {item.titulo}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                                    {config.label}
+                                  </span>
+                                  {item.duracion_segundos && (
+                                    <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                                      · {formatSeconds(item.duracion_segundos)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {itemProgress?.completado ? (
+                                <CheckCircle2 className="h-5 w-5 shrink-0 text-success-500" />
+                              ) : itemProgress ? (
+                                <span className="text-xs font-medium text-primary-600 dark:text-primary-400 shrink-0">
+                                  {Math.round(itemProgress.progreso_porcentaje)}%
+                                </span>
+                              ) : null}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+
                     {/* Practice button */}
                     {(preguntasByCapitulo.get(capitulo.id) || 0) > 0 && (
                       <Link
                         href={`/estudio/practica/${capitulo.id}`}
-                        className="flex items-center gap-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 p-3 transition-colors hover:bg-primary-100 dark:hover:bg-primary-900/30 mt-1"
+                        className="flex items-center gap-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 p-3 transition-colors hover:bg-primary-100 dark:hover:bg-primary-900/30"
                       >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-600 dark:bg-primary-500">
                           <Brain className="h-5 w-5 text-white" />

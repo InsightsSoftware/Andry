@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronDown, CheckCircle2 } from 'lucide-react'
+import { ChevronDown, CheckCircle2, FileText } from 'lucide-react'
 
 interface ChapterAccordionProps {
   numero: number
@@ -11,6 +11,10 @@ interface ChapterAccordionProps {
   completed: boolean
   progress: number
   itemCount: number
+  /** True if this chapter has at least one PDF — shows a "Guía" badge on
+   *  the collapsed header so the user sees at a glance which chapters
+   *  already have the study guide available. */
+  hasGuia?: boolean
   children: React.ReactNode
 }
 
@@ -21,6 +25,7 @@ export function ChapterAccordion({
   completed,
   progress,
   itemCount,
+  hasGuia = false,
   children,
 }: ChapterAccordionProps) {
   const [open, setOpen] = useState(false)
@@ -48,9 +53,17 @@ export function ChapterAccordion({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
-            {nombre}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+              {nombre}
+            </h3>
+            {hasGuia && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger-50 dark:bg-danger-900/30 px-2 py-0.5 text-[10px] font-semibold text-danger-600 dark:text-danger-400">
+                <FileText className="h-2.5 w-2.5" />
+                Guía
+              </span>
+            )}
+          </div>
           {descripcion && (
             <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0.5">
               {descripcion}
