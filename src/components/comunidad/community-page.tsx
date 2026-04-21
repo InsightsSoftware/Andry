@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, Briefcase, Plus } from 'lucide-react'
+import { MessageCircle, Briefcase, Plus, Sparkles } from 'lucide-react'
 import { PostForm } from './post-form'
 import { PostCard } from './post-card'
 
@@ -108,28 +109,43 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
-          {isDuda ? (
-            <MessageCircle className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-          ) : (
-            <Briefcase className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-          )}
-          <h2 className="mb-1 font-bold text-neutral-700 dark:text-neutral-300">
-            {isDuda
-              ? 'Aún no hay dudas publicadas'
-              : 'Aún no hay trabajos publicados'}
-          </h2>
-          <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-            {isDuda
-              ? 'Sé el primero en hacer una pregunta sobre el material.'
-              : 'Publicá tu primer trabajo o buscá oportunidades.'}
-          </p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700 min-h-[48px]"
-          >
-            {isDuda ? 'Publicar Duda' : 'Publicar Trabajo'}
-          </button>
+        /* Empty state — cinematic hero image + CTA overlay */
+        <div className="relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
+          <Image
+            src={isDuda ? '/images/community/dudas.png' : '/images/community/trabajos.png'}
+            alt={isDuda ? 'Contratistas estudiando juntos' : 'Contratistas cerrando un trato'}
+            width={2752}
+            height={1536}
+            priority
+            className="h-[280px] w-full object-cover sm:h-[360px]"
+          />
+          {/* Dark gradient overlay for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+
+          {/* Content overlay */}
+          <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent-400/30 bg-accent-500/10 px-3 py-1 text-xs font-semibold text-accent-300 backdrop-blur-sm">
+              <Sparkles className="h-3 w-3" />
+              {isDuda ? 'Espacio de estudio' : 'Red de contratistas'}
+            </div>
+            <h2 className="mb-2 text-2xl font-extrabold text-white sm:text-3xl">
+              {isDuda
+                ? 'Aprendé más rápido en comunidad'
+                : 'Conectá con otros contratistas'}
+            </h2>
+            <p className="mb-5 max-w-xl text-sm text-neutral-200 sm:text-base">
+              {isDuda
+                ? 'Preguntá dudas del examen, compartí tips y resolvé con gente que ya pasó por lo mismo. Sé el primero en abrir el hilo.'
+                : 'Publicá tus trabajos, encontrá subcontratistas de plomería, electricidad, HVAC. Este es tu tablero.'}
+            </p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-900/30 transition-colors hover:bg-primary-700"
+            >
+              <Plus className="h-4 w-4" />
+              {isDuda ? 'Publicar mi primera duda' : 'Publicar mi primer trabajo'}
+            </button>
+          </div>
         </div>
       )}
     </div>
