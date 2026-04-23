@@ -142,6 +142,36 @@ function parseChapterFromFolder(folderName: string): {
   return { numero: null, suggestedName: raw }
 }
 
+/**
+ * Fallback when there's no folder prefix — extract chapter from the filename
+ * itself. E.g. "cap-01-mod-02.mp3" → 1, "supp-aia-mod-a-01.mp3" → 11.
+ */
+function parseChapterFromFilename(filename: string): {
+  numero: number | null
+  suggestedName: string
+} {
+  const base = filename.toLowerCase().replace(/\.[^.]+$/, '').trim()
+
+  // cap-NN-mod-MM, cap-NN-full, cap_01_mod_01, cap01-mod01, etc.
+  const m = base.match(/^cap[\s_-]?(\d+)/)
+  if (m) {
+    const n = parseInt(m[1], 10)
+    return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
+  }
+
+  // Supplementary AIA
+  if (base.includes('aia')) {
+    return { numero: 11, suggestedName: CHAPTER_DEFAULTS[11] }
+  }
+
+  // Supplementary Circular E
+  if (base.includes('circular')) {
+    return { numero: 12, suggestedName: CHAPTER_DEFAULTS[12] }
+  }
+
+  return { numero: null, suggestedName: filename }
+}
+
 function parseModuleFromFilename(filename: string): {
   moduleNumber: number | null
   isComplete: boolean
@@ -221,6 +251,15 @@ function buildPlan(
         chapterNumber = parsed.numero
         chapterFolderIdx = i
         break
+      }
+    }
+
+    // Fallback: no chapter folder? Extract from the filename itself —
+    // common when the user drops loose files instead of a folder tree.
+    if (chapterNumber === null) {
+      const fromName = parseChapterFromFilename(file.name)
+      if (fromName.numero !== null) {
+        chapterNumber = fromName.numero
       }
     }
 
