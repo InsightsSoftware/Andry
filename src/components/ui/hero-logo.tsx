@@ -24,6 +24,9 @@ export function HeroLogo() {
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
+        {/* Floor light pool — metallic reflection under the logo */}
+        <div className="hero-logo-floor" aria-hidden />
+
         {/* Ambient core glow — purple + gold radial, sits behind the logo */}
         <div
           className={`hero-core-glow ${showGlow ? 'hero-core-glow-visible' : ''}`}
@@ -43,9 +46,12 @@ export function HeroLogo() {
               alt="Y Exam Prep"
               width={600}
               height={370}
-              className="hero-logo-img relative z-[1] h-auto w-[320px] sm:w-[400px] lg:w-[480px]"
+              className="hero-logo-img relative z-[1] h-auto w-[300px] sm:w-[360px] lg:w-[400px]"
               priority
             />
+
+            {/* Metallic shine sweep — clipped to logo silhouette */}
+            <div className="hero-shine-sweep" aria-hidden />
           </div>
         </Tilt3D>
       </div>
