@@ -9,8 +9,10 @@ import {
   Rewind,
   FastForward,
   ChevronRight,
+  ChevronDown,
   CheckCircle2,
   Headphones,
+  Check,
 } from 'lucide-react'
 import { cn, formatSeconds } from '@/lib/utils'
 import { updateProgress } from '@/actions/estudio'
@@ -62,6 +64,33 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // ── Chapter picker (custom, replaces native <select> which ignores dark mode)
+  const [chapterOpen, setChapterOpen] = useState(false)
+  const chapterBoxRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!chapterOpen) return
+    function onClick(e: MouseEvent) {
+      if (
+        chapterBoxRef.current &&
+        !chapterBoxRef.current.contains(e.target as Node)
+      ) {
+        setChapterOpen(false)
+      }
+    }
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') setChapterOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onEsc)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onEsc)
+    }
+  }, [chapterOpen])
+
+  const selectedCapitulo = capitulos.find((c) => c.id === selectedCapituloId)
 
   // ── Derived ─────────────────────────────────────────────────
   const tracksByCapitulo = useMemo(() => {
@@ -230,23 +259,75 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
         </div>
 
         {capitulos.length > 1 && (
-          <select
-            value={selectedCapituloId ?? ''}
-            onChange={(e) => {
-              setSelectedCapituloId(e.target.value)
-              setActiveTrackId(null)
-              setIsPlaying(false)
-              const el = audioRef.current
-              if (el) el.pause()
-            }}
-            className="glass-input w-full rounded-xl px-4 py-2.5 text-sm font-medium sm:w-auto cursor-pointer"
+          <div
+            ref={chapterBoxRef}
+            className="relative w-full sm:w-[380px]"
           >
-            {capitulos.map((c) => (
-              <option key={c.id} value={c.id}>
-                Cap. {c.numero} — {c.nombre}
-              </option>
-            ))}
-          </select>
+            <button
+              type="button"
+              onClick={() => setChapterOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={chapterOpen}
+              className={cn(
+                'glass-card flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer transition-all',
+                'text-neutral-900 dark:text-neutral-100',
+                chapterOpen && 'ring-2 ring-primary-500/40'
+              )}
+            >
+              <span className="truncate">
+                {selectedCapitulo
+                  ? `Cap. ${selectedCapitulo.numero} — ${selectedCapitulo.nombre}`
+                  : 'Elegí un capítulo'}
+              </span>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 shrink-0 text-neutral-500 dark:text-neutral-400 transition-transform',
+                  chapterOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            {chapterOpen && (
+              <div
+                role="listbox"
+                className="absolute right-0 top-full z-30 mt-2 w-full max-h-80 overflow-y-auto rounded-xl glass-card p-1 shadow-xl"
+              >
+                {capitulos.map((c) => {
+                  const isSel = c.id === selectedCapituloId
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSel}
+                      onClick={() => {
+                        setSelectedCapituloId(c.id)
+                        setActiveTrackId(null)
+                        setIsPlaying(false)
+                        const el = audioRef.current
+                        if (el) el.pause()
+                        setChapterOpen(false)
+                      }}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm cursor-pointer transition-colors',
+                        isSel
+                          ? 'bg-primary-500/15 text-primary-700 dark:text-primary-300 font-semibold'
+                          : 'text-neutral-700 dark:text-neutral-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
+                      )}
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary-500/10 text-[11px] font-bold text-primary-600 dark:text-primary-400">
+                        {c.numero}
+                      </span>
+                      <span className="flex-1 truncate">{c.nombre}</span>
+                      {isSel && (
+                        <Check className="h-4 w-4 shrink-0 text-primary-600 dark:text-primary-400" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
