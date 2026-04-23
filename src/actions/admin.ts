@@ -782,6 +782,54 @@ export async function deleteContent(contentId: string) {
 }
 
 /**
+ * Generate a signed upload URL so the browser can POST the file bytes
+ * DIRECTLY to Supabase Storage without round-tripping through a Next.js
+ * Route Handler. Bypasses Next.js FormData body-size limits (we were
+ * seeing 'Failed to parse body as FormData' for PDFs > 10 MB).
+ *
+ * Validation that the Route Handler used to do (MIME + size) is now
+ * enforced at the STORAGE layer via the bucket config (500 MB cap +
+ * MIME whitelist). RLS + this admin check still gate upload access.
+ */
+export async function createUploadSignedUrl(input: {
+  tipo: 'pdf' | 'audio' | 'video'
+  folder: string
+  filename: string
+}) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  // Sanitize filename — same rules as the old Route Handler so paths stay
+  // consistent with what's already in storage.
+  const ext = input.filename.split('.').pop()?.toLowerCase() || 'bin'
+  const safe = input.filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .substring(0, 60)
+  const timestamp = Date.now()
+  const jitter = Math.random().toString(36).slice(2, 7)
+  const path = `${input.folder}/${safe}_${timestamp}_${jitter}.${ext}`
+
+  const { data, error } = await admin.storage
+    .from('contenido-cursos')
+    .createSignedUploadUrl(path)
+
+  if (error || !data) {
+    console.error('createSignedUploadUrl error:', error)
+    return {
+      error: `No se pudo generar URL de subida: ${error?.message || 'desconocido'}`,
+    }
+  }
+
+  return {
+    success: true as const,
+    signedUrl: data.signedUrl,
+    token: data.token,
+    path: data.path,
+  }
+}
+
+/**
  * Bulk-reorder a list of content items. Assigns new orden values in the
  * given sequence (starts at 10, spacing of 10 so future single-item
  * inserts can slot in between without another bulk reorder).

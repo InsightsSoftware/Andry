@@ -18,7 +18,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { createChapter, createContent } from '@/actions/admin'
+import {
+  createChapter,
+  createContent,
+  createUploadSignedUrl,
+} from '@/actions/admin'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 type Tipo = 'audio' | 'video' | 'pdf' | 'mixed'
 type ResolvedTipo = 'audio' | 'video' | 'pdf'
@@ -441,22 +446,39 @@ function buildPlan(
 
 // ── Upload helpers ──────────────────────────────────────────────────
 
+/**
+ * Upload a file by asking the server for a signed upload URL and then
+ * pushing the bytes DIRECTLY to Supabase Storage from the browser. This
+ * avoids Next.js's FormData body-size limits (was choking at 10+ MB).
+ */
 async function uploadSingleFile(
   file: File,
   tipo: ResolvedTipo,
   folder: string
 ): Promise<{ path: string } | { error: string }> {
-  const fd = new FormData()
-  fd.append('file', file)
-  fd.append('tipo', tipo)
-  fd.append('folder', folder)
-
-  const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok || !data?.success) {
-    return { error: data?.error || `HTTP ${res.status}` }
+  // 1. Ask our server action for a signed upload URL
+  const signed = await createUploadSignedUrl({
+    tipo,
+    folder,
+    filename: file.name,
+  })
+  if (!('success' in signed) || !signed.success) {
+    return { error: ('error' in signed && signed.error) || 'No se pudo firmar' }
   }
-  return { path: data.path as string }
+
+  // 2. Upload directly to Supabase Storage with the Supabase JS client
+  const sb = createBrowserSupabase()
+  const { data: up, error: upErr } = await sb.storage
+    .from('contenido-cursos')
+    .uploadToSignedUrl(signed.path, signed.token, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+    })
+
+  if (upErr) {
+    return { error: upErr.message || 'Error al subir a Storage' }
+  }
+  return { path: up?.path || signed.path }
 }
 
 async function runWithConcurrency<T>(
