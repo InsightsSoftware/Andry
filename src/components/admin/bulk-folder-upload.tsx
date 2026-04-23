@@ -104,14 +104,16 @@ function parseChapterFromFolder(folderName: string): {
     .replace(/[🎧📁📂]/g, '')
     .trim()
 
-  // "cap N [audio|video|pdf|pdfs|...]" or "cap-NN ..." or just "cap N"
-  const capMatch = lower.match(/^cap[íi]?tulo?[\s_-]*(\d+)/)
+  // Matches "cap 1", "cap-01", "cap1", "cap 1 audio", "capítulo 1",
+  // "capitulo 1", "capitulos 1 audio", etc. — word "cap" with optional
+  // "ítulo/itulo" (sing. or plural), optional separator, then digits.
+  const capMatch = lower.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
   if (capMatch) {
     const n = parseInt(capMatch[1], 10)
     return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
   }
 
-  // Simple "N" prefix
+  // Simple "N something" prefix (e.g. "1 audio", "02 - intro")
   const numMatch = lower.match(/^(\d+)[\s_-]/)
   if (numMatch) {
     const n = parseInt(numMatch[1], 10)
