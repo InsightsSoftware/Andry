@@ -144,7 +144,11 @@ function parseChapterFromFolder(folderName: string): {
 
 /**
  * Fallback when there's no folder prefix — extract chapter from the filename
- * itself. E.g. "cap-01-mod-02.mp3" → 1, "supp-aia-mod-a-01.mp3" → 11.
+ * itself. Handles:
+ *   cap-01-mod-02.mp3, cap_01_mod_01.mp3, cap01-mod01.mp3     → 1
+ *   Capítulo 1.pdf, capitulo 10.pdf, Capítulo 3 guía.pdf       → 1/10/3
+ *   supp-aia-*, aia.pdf, aia-mod-a-01.mp3                      → 11
+ *   supp-circular-e-*, Circular E.pdf                          → 12
  */
 function parseChapterFromFilename(filename: string): {
   numero: number | null
@@ -152,8 +156,8 @@ function parseChapterFromFilename(filename: string): {
 } {
   const base = filename.toLowerCase().replace(/\.[^.]+$/, '').trim()
 
-  // cap-NN-mod-MM, cap-NN-full, cap_01_mod_01, cap01-mod01, etc.
-  const m = base.match(/^cap[\s_-]?(\d+)/)
+  // "cap" or "capítulo/capitulo" (singular/plural) then digits
+  const m = base.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
   if (m) {
     const n = parseInt(m[1], 10)
     return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
@@ -182,9 +186,9 @@ function parseModuleFromFilename(filename: string): {
     .replace(/\.[^.]+$/, '') // remove extension
     .trim()
 
-  // "cap-NN-full" or "cap NN full" or "capítulo N completo"
+  // "cap-NN-full" / "cap NN full" / "capítulo N completo"
   if (/full|completo/.test(base)) {
-    const capMatch = base.match(/cap[íi]?tulo?[\s_-]*(\d+)/)
+    const capMatch = base.match(/cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
     const n = capMatch ? parseInt(capMatch[1], 10) : null
     return {
       moduleNumber: null,
@@ -204,7 +208,31 @@ function parseModuleFromFilename(filename: string): {
     }
   }
 
-  // Fallback: use the filename
+  // Bare "Capítulo N" or "Cap N" — usually a single document per chapter
+  // (typical for the study-guide PDF). Treat as the main item for the cap.
+  const capAloneMatch = base.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)\s*$/)
+  if (capAloneMatch) {
+    const n = parseInt(capAloneMatch[1], 10)
+    return {
+      moduleNumber: null,
+      isComplete: true,
+      suggestedTitle: `Capítulo ${n}`,
+    }
+  }
+
+  // Known supplementaries used as single docs
+  if (/^aia\s*$/.test(base)) {
+    return { moduleNumber: null, isComplete: true, suggestedTitle: 'AIA — Documento' }
+  }
+  if (/^circular[\s_-]*e?\s*$/.test(base)) {
+    return {
+      moduleNumber: null,
+      isComplete: true,
+      suggestedTitle: 'Circular E',
+    }
+  }
+
+  // Fallback: clean up the filename for display
   return {
     moduleNumber: null,
     isComplete: false,
