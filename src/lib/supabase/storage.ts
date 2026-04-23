@@ -3,19 +3,27 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export const CONTENIDO_BUCKET = 'contenido-cursos'
 
 /**
- * Given either a legacy public URL or a storage path, returns a short-lived
- * signed URL for the content bucket.
+ * Returns a URL the browser can hit to fetch content from the bucket.
+ *
+ * The bucket is configured `public: true` (per migration 00010) — auth is
+ * enforced at the app level (middleware + subscription gate), not at the
+ * storage level. So we just return the public URL directly; no RLS dance,
+ * no TTL, no "Object not found" errors from `createSignedUrl` hitting
+ * storage.objects RLS.
  *
  * Accepts three kinds of input:
- * 1. A bare storage path (e.g. "negocios-finanzas/abc/audio_123.mp3") — signed.
- * 2. A Supabase public/signed URL → the path is extracted and re-signed.
- * 3. An external URL (e.g. test data on soundhelix.com) → returned as-is,
- *    since there's nothing for us to sign.
+ * 1. A bare storage path (e.g. "negocios-y-finanzas/abc/audio_123.mp3")
+ * 2. A Supabase public/signed URL → the path is extracted and re-wrapped.
+ * 3. An external URL (e.g. test data on soundhelix.com) → returned as-is.
+ *
+ * Name kept as `getSignedContentUrl` for callsite compatibility; the
+ * `ttlSeconds` param is now unused but accepted so existing callers
+ * don't need to change.
  */
 export async function getSignedContentUrl(
   supabase: SupabaseClient,
   urlOrPath: string,
-  ttlSeconds = 3600
+  _ttlSeconds = 3600
 ): Promise<string> {
   // External URL — not ours, hand it back as-is.
   if (isExternalUrl(urlOrPath)) {
@@ -23,18 +31,13 @@ export async function getSignedContentUrl(
   }
 
   const path = extractPath(urlOrPath)
+  const { data } = supabase.storage.from(CONTENIDO_BUCKET).getPublicUrl(path)
 
-  const { data, error } = await supabase.storage
-    .from(CONTENIDO_BUCKET)
-    .createSignedUrl(path, ttlSeconds)
-
-  if (error || !data?.signedUrl) {
-    throw new Error(
-      `No se pudo generar URL firmada para "${path}": ${error?.message || 'error desconocido'}`
-    )
+  if (!data?.publicUrl) {
+    throw new Error(`No se pudo construir URL pública para "${path}"`)
   }
 
-  return data.signedUrl
+  return data.publicUrl
 }
 
 /**
