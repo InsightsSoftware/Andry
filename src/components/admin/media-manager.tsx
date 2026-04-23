@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Headphones,
   Video as VideoIcon,
+  FileText,
   Pencil,
   Trash2,
   Check,
@@ -23,6 +24,7 @@ import {
   createContent,
 } from '@/actions/admin'
 import { FileUploader } from './file-uploader'
+import { BulkFolderUpload } from './bulk-folder-upload'
 import { formatSeconds, cn } from '@/lib/utils'
 
 export interface MediaItem {
@@ -51,7 +53,7 @@ export interface MediaCurso {
 }
 
 interface Props {
-  tipo: 'audio' | 'video'
+  tipo: 'audio' | 'video' | 'pdf'
   items: MediaItem[]
   capitulos: MediaCapitulo[]
   cursos: MediaCurso[]
@@ -87,8 +89,10 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
     return rows.filter((r) => r.capitulo_id === filterCapId)
   }, [rows, filterCapId])
 
-  const Icon = tipo === 'audio' ? Headphones : VideoIcon
-  const tipoLabel = tipo === 'audio' ? 'Audio' : 'Video'
+  const Icon =
+    tipo === 'audio' ? Headphones : tipo === 'video' ? VideoIcon : FileText
+  const tipoLabel =
+    tipo === 'audio' ? 'Audio' : tipo === 'video' ? 'Video' : 'PDF'
 
   // Group by capítulo for rendering (sorted)
   const grouped = useMemo(() => {
@@ -234,6 +238,9 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Bulk folder upload — drag a whole chapter/folder tree at once */}
+      <BulkFolderUpload tipo={tipo} capitulos={capitulos} cursos={cursos} />
 
       {/* Empty state */}
       {filtered.length === 0 && (
