@@ -99,20 +99,30 @@ const CHAPTER_DEFAULTS: Record<number, string> = {
 
 // ── Parsing helpers ─────────────────────────────────────────────────
 
+/**
+ * Lowercase + strip diacritics. Necessary because macOS/zip extraction
+ * can emit filenames in Unicode NFD form where 'í' is 'i' + U+0301
+ * (combining acute) — two codepoints, not the single U+00ED. Plain
+ * /[íi]/ regex only matches the single-codepoint form.
+ */
+function normalizeForMatch(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip combining marks
+    .toLowerCase()
+    .trim()
+}
+
 function parseChapterFromFolder(folderName: string): {
   numero: number | null
   suggestedName: string
 } {
   const raw = folderName.trim()
-  const lower = raw
-    .toLowerCase()
-    .replace(/[🎧📁📂]/g, '')
-    .trim()
+  const lower = normalizeForMatch(raw.replace(/[🎧📁📂]/g, ''))
 
-  // Matches "cap 1", "cap-01", "cap1", "cap 1 audio", "capítulo 1",
-  // "capitulo 1", "capitulos 1 audio", etc. — word "cap" with optional
-  // "ítulo/itulo" (sing. or plural), optional separator, then digits.
-  const capMatch = lower.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
+  // After accent stripping: "cap 1", "cap-01", "capitulo 1", "capitulos 1"
+  // all share base "cap" + optional "itulo(s)" + separators + digits.
+  const capMatch = lower.match(/^cap(?:itulos?)?[\s_-]*(\d+)/)
   if (capMatch) {
     const n = parseInt(capMatch[1], 10)
     return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
@@ -125,18 +135,12 @@ function parseChapterFromFolder(folderName: string): {
     return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
   }
 
-  // Known supplementaries
-  if (lower.includes('aia')) {
-    return {
-      numero: 11,
-      suggestedName: CHAPTER_DEFAULTS[11],
-    }
-  }
-  if (lower.includes('circular')) {
-    return {
-      numero: 12,
-      suggestedName: CHAPTER_DEFAULTS[12],
-    }
+  // Known supplementaries (also accent-insensitive)
+  if (lower.includes('aia')) return { numero: 11, suggestedName: CHAPTER_DEFAULTS[11] }
+  if (lower.includes('circular')) return { numero: 12, suggestedName: CHAPTER_DEFAULTS[12] }
+  if (lower.includes('suplementario') || lower.includes('suplemento')) {
+    if (lower.includes('aia')) return { numero: 11, suggestedName: CHAPTER_DEFAULTS[11] }
+    if (lower.includes('circular')) return { numero: 12, suggestedName: CHAPTER_DEFAULTS[12] }
   }
 
   return { numero: null, suggestedName: raw }
@@ -154,10 +158,10 @@ function parseChapterFromFilename(filename: string): {
   numero: number | null
   suggestedName: string
 } {
-  const base = filename.toLowerCase().replace(/\.[^.]+$/, '').trim()
+  const base = normalizeForMatch(filename.replace(/\.[^.]+$/, ''))
 
-  // "cap" or "capítulo/capitulo" (singular/plural) then digits
-  const m = base.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
+  // "cap" or "capitulo/capitulos" (accent-stripped) then digits
+  const m = base.match(/^cap(?:itulos?)?[\s_-]*(\d+)/)
   if (m) {
     const n = parseInt(m[1], 10)
     return { numero: n, suggestedName: CHAPTER_DEFAULTS[n] || `Capítulo ${n}` }
@@ -181,14 +185,11 @@ function parseModuleFromFilename(filename: string): {
   isComplete: boolean
   suggestedTitle: string
 } {
-  const base = filename
-    .toLowerCase()
-    .replace(/\.[^.]+$/, '') // remove extension
-    .trim()
+  const base = normalizeForMatch(filename.replace(/\.[^.]+$/, ''))
 
-  // "cap-NN-full" / "cap NN full" / "capítulo N completo"
+  // "cap-NN-full" / "cap NN full" / "capitulo N completo"
   if (/full|completo/.test(base)) {
-    const capMatch = base.match(/cap(?:[íi]tulos?)?[\s_-]*(\d+)/)
+    const capMatch = base.match(/cap(?:itulos?)?[\s_-]*(\d+)/)
     const n = capMatch ? parseInt(capMatch[1], 10) : null
     return {
       moduleNumber: null,
@@ -208,9 +209,9 @@ function parseModuleFromFilename(filename: string): {
     }
   }
 
-  // Bare "Capítulo N" or "Cap N" — usually a single document per chapter
-  // (typical for the study-guide PDF). Treat as the main item for the cap.
-  const capAloneMatch = base.match(/^cap(?:[íi]tulos?)?[\s_-]*(\d+)\s*$/)
+  // Bare "Capítulo N" / "Cap N" — typical for single-PDF-per-chapter
+  // study guides. Treat as the main item for the chapter.
+  const capAloneMatch = base.match(/^cap(?:itulos?)?[\s_-]*(\d+)\s*$/)
   if (capAloneMatch) {
     const n = parseInt(capAloneMatch[1], 10)
     return {
@@ -220,19 +221,15 @@ function parseModuleFromFilename(filename: string): {
     }
   }
 
-  // Known supplementaries used as single docs
+  // Known supplementaries as single docs
   if (/^aia\s*$/.test(base)) {
     return { moduleNumber: null, isComplete: true, suggestedTitle: 'AIA — Documento' }
   }
   if (/^circular[\s_-]*e?\s*$/.test(base)) {
-    return {
-      moduleNumber: null,
-      isComplete: true,
-      suggestedTitle: 'Circular E',
-    }
+    return { moduleNumber: null, isComplete: true, suggestedTitle: 'Circular E' }
   }
 
-  // Fallback: clean up the filename for display
+  // Fallback: clean up the filename for display (keep original accents)
   return {
     moduleNumber: null,
     isComplete: false,
