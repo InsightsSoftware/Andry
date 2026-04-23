@@ -20,7 +20,8 @@ import {
 import { cn } from '@/lib/utils'
 import { createChapter, createContent } from '@/actions/admin'
 
-type Tipo = 'audio' | 'video' | 'pdf'
+type Tipo = 'audio' | 'video' | 'pdf' | 'mixed'
+type ResolvedTipo = 'audio' | 'video' | 'pdf'
 
 export interface ExistingCapitulo {
   id: string
@@ -54,6 +55,9 @@ interface ParsedFile {
   isComplete: boolean // "Cap N completo" subfolder
   suggestedTitle: string
   orden: number
+  /** Resolved content type — detected per-file when parent is 'mixed',
+   * inherited from parent tipo otherwise. */
+  tipo: ResolvedTipo
 }
 
 interface ChapterPlan {
@@ -70,16 +74,41 @@ interface UploadResult {
   error?: string
 }
 
+const AUDIO_EXTS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg']
+const VIDEO_EXTS = ['.mp4', '.webm', '.mov', '.avi']
+const PDF_EXTS = ['.pdf']
+
 const ACCEPT_EXT: Record<Tipo, string[]> = {
-  audio: ['.mp3', '.wav', '.m4a', '.aac', '.ogg'],
-  video: ['.mp4', '.webm', '.mov', '.avi'],
-  pdf: ['.pdf'],
+  audio: AUDIO_EXTS,
+  video: VIDEO_EXTS,
+  pdf: PDF_EXTS,
+  mixed: [...AUDIO_EXTS, ...VIDEO_EXTS, ...PDF_EXTS],
 }
 
-const TIPO_ICON: Record<Tipo, typeof FileAudio> = {
+const TIPO_ICON: Record<ResolvedTipo, typeof FileAudio> = {
   audio: FileAudio,
   video: FileVideo,
   pdf: FileText,
+}
+
+const TIPO_LABEL: Record<ResolvedTipo, string> = {
+  audio: 'Audio',
+  video: 'Video',
+  pdf: 'PDF',
+}
+
+const TIPO_ACCENT: Record<ResolvedTipo, string> = {
+  audio: 'text-primary-500 bg-primary-500/10',
+  video: 'text-success-500 bg-success-500/10',
+  pdf: 'text-danger-500 bg-danger-500/10',
+}
+
+function detectTipoFromExt(filename: string): ResolvedTipo | null {
+  const lower = filename.toLowerCase()
+  if (AUDIO_EXTS.some((e) => lower.endsWith(e))) return 'audio'
+  if (VIDEO_EXTS.some((e) => lower.endsWith(e))) return 'video'
+  if (PDF_EXTS.some((e) => lower.endsWith(e))) return 'pdf'
+  return null
 }
 
 // Oficial names from Andry's study guide — kept in sync with
@@ -265,6 +294,12 @@ function buildPlan(
     const relativePath = path || file.name
     if (!isAcceptedFile(file.name, tipo)) continue
 
+    // Resolve file-level tipo. In 'mixed' mode each file declares its own
+    // tipo via extension; otherwise inherit the parent tipo.
+    const fileTipo: ResolvedTipo | null =
+      tipo === 'mixed' ? detectTipoFromExt(file.name) : tipo
+    if (!fileTipo) continue
+
     const parts = relativePath.split('/').filter(Boolean)
     // First segment = root folder user picked (e.g. "audios")
     // Second segment = chapter folder (e.g. "cap 1 audio")
@@ -324,6 +359,7 @@ function buildPlan(
       isComplete: effectiveIsComplete,
       suggestedTitle: effectiveTitle,
       orden,
+      tipo: fileTipo,
     }
 
     if (chapterNumber !== null) {
@@ -375,7 +411,7 @@ function buildPlan(
 
 async function uploadSingleFile(
   file: File,
-  tipo: Tipo,
+  tipo: ResolvedTipo,
   folder: string
 ): Promise<{ path: string } | { error: string }> {
   const fd = new FormData()
@@ -420,7 +456,8 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
   const [statuses, setStatuses] = useState<UploadResult[]>([])
   const [finalSummary, setFinalSummary] = useState<string | null>(null)
 
-  const TipoIcon = TIPO_ICON[tipo]
+  // Icon for the empty-dropzone state — pick a sensible default for 'mixed'
+  const HeaderIcon = tipo === 'mixed' ? FolderOpen : TIPO_ICON[tipo]
 
   // Default curso — first one (usually "negocios-y-finanzas")
   const defaultCursoId = useMemo(() => cursos[0]?.id ?? '', [cursos])
@@ -552,13 +589,16 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
         return
       }
 
-      // Build storage folder path: cursoSlug/capitulo-NN/
+      // Build storage folder path: cursoSlug/capitulo-NN/[tipo]/
+      // Adding the tipo subfolder so mixed uploads don't collide if an
+      // audio and a pdf happen to share a base filename.
       const curso = cursos.find((c) => c.id === task.chapter.cursoId)
+      const capFolder = `capitulo-${String(task.chapter.numero).padStart(2, '0')}`
       const folder = curso
-        ? `${curso.slug}/capitulo-${String(task.chapter.numero).padStart(2, '0')}`
-        : `general/capitulo-${String(task.chapter.numero).padStart(2, '0')}`
+        ? `${curso.slug}/${capFolder}/${task.file.tipo}`
+        : `general/${capFolder}/${task.file.tipo}`
 
-      const up = await uploadSingleFile(task.file.file, tipo, folder)
+      const up = await uploadSingleFile(task.file.file, task.file.tipo, folder)
       if ('error' in up) {
         setStatuses((prev) => {
           const next = [...prev]
@@ -572,7 +612,7 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
 
       const res = await createContent({
         capitulo_id: capituloId,
-        tipo,
+        tipo: task.file.tipo,
         titulo: task.file.suggestedTitle,
         archivo_url: up.path,
         orden: task.file.orden,
@@ -625,19 +665,29 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
         </h3>
       </div>
       <p className="mb-4 text-xs text-neutral-500 dark:text-neutral-400">
-        Arrastrá una carpeta con sub-carpetas tipo{' '}
-        <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">
-          cap 1 {tipo}
-        </code>
-        ,{' '}
-        <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">
-          SUPLEMENTO AIA
-        </code>{' '}
-        y sub-archivos{' '}
-        <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">
-          cap-01-mod-01.{tipo === 'pdf' ? 'pdf' : tipo === 'audio' ? 'mp3' : 'mp4'}
-        </code>
-        . Los módulos se ordenan por nombre, los capítulos por número.
+        {tipo === 'mixed' ? (
+          <>
+            Arrastrá una carpeta que mezcle audios, PDFs y videos. Cada
+            archivo se categoriza por extensión automáticamente. Estructura
+            sugerida: carpetas de capítulo tipo{' '}
+            <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">cap 1</code>
+            ,{' '}
+            <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">SUPLEMENTO AIA</code>
+            {' '}con los archivos adentro.
+          </>
+        ) : (
+          <>
+            Arrastrá una carpeta con sub-carpetas tipo{' '}
+            <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">cap 1 {tipo}</code>
+            ,{' '}
+            <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">SUPLEMENTO AIA</code>{' '}
+            y sub-archivos{' '}
+            <code className="rounded bg-neutral-100 dark:bg-neutral-800 px-1">
+              cap-01-mod-01.{tipo === 'pdf' ? 'pdf' : tipo === 'audio' ? 'mp3' : 'mp4'}
+            </code>
+            . Los módulos se ordenan por nombre, los capítulos por número.
+          </>
+        )}
       </p>
 
       {/* Idle / drop zone */}
@@ -670,7 +720,7 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
             onChange={handleChange}
             className="hidden"
           />
-          <FolderOpen
+          <HeaderIcon
             className={cn(
               'mx-auto mb-2 h-8 w-8',
               isDragging
@@ -767,23 +817,34 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
                   </span>
                 </summary>
                 <div className="pb-2">
-                  {ch.files.map((f, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 px-10 py-1 text-xs"
-                    >
-                      <TipoIcon className="h-3 w-3 text-neutral-400 shrink-0" />
-                      <span className="font-medium text-neutral-700 dark:text-neutral-300 truncate">
-                        {f.suggestedTitle}
-                      </span>
-                      <span className="text-neutral-400 dark:text-neutral-500 font-mono truncate">
-                        {f.file.name}
-                      </span>
-                      <span className="ml-auto text-neutral-400 tabular-nums shrink-0">
-                        {(f.file.size / 1024 / 1024).toFixed(1)} MB
-                      </span>
-                    </div>
-                  ))}
+                  {ch.files.map((f, i) => {
+                    const FileTipoIcon = TIPO_ICON[f.tipo]
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 px-10 py-1 text-xs"
+                      >
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0',
+                            TIPO_ACCENT[f.tipo]
+                          )}
+                        >
+                          <FileTipoIcon className="h-2.5 w-2.5" />
+                          {TIPO_LABEL[f.tipo]}
+                        </span>
+                        <span className="font-medium text-neutral-700 dark:text-neutral-300 truncate">
+                          {f.suggestedTitle}
+                        </span>
+                        <span className="text-neutral-400 dark:text-neutral-500 font-mono truncate">
+                          {f.file.name}
+                        </span>
+                        <span className="ml-auto text-neutral-400 tabular-nums shrink-0">
+                          {(f.file.size / 1024 / 1024).toFixed(1)} MB
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </details>
             ))}
