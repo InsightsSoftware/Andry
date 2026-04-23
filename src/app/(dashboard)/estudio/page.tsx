@@ -34,33 +34,17 @@ export default async function EstudioPage() {
         .order('numero')
     : { data: [] }
 
-  // Resolve the main PDF per chapter for direct-open CTA
-  const capituloIds = (capitulos || []).map((c) => c.id)
-  const { data: pdfs } = capituloIds.length
-    ? await supabase
-        .from('contenido')
-        .select('id, capitulo_id, orden, created_at')
-        .eq('tipo', 'pdf')
-        .in('capitulo_id', capituloIds)
-        .order('orden', { ascending: true })
-        .order('created_at', { ascending: true })
-    : { data: [] }
-
-  const pdfByCap = new Map<string, string>()
-  for (const p of pdfs || []) {
-    if (!pdfByCap.has(p.capitulo_id)) pdfByCap.set(p.capitulo_id, p.id)
-  }
-
   const chapterCards: ChapterCard[] = (capitulos || []).map((cap) => {
-    const pdfId = pdfByCap.get(cap.id)
     const isSupp = cap.numero >= 11
     return {
       id: cap.id,
       numero: cap.numero,
       nombre: cap.nombre,
-      href: pdfId
-        ? `/estudio/pdf/${pdfId}`
-        : `/estudio/${primaryCurso?.slug ?? ''}#cap-${cap.numero}`,
+      // Always link to the course detail with the chapter hash — the
+      // accordion opens + scrolls to it automatically on arrival.
+      href: primaryCurso
+        ? `/estudio/${primaryCurso.slug}#cap-${cap.id}`
+        : '#',
       label: isSupp
         ? cap.numero === 11
           ? 'SUPLEMENTO AIA'

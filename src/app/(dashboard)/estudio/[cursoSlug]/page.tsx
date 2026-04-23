@@ -243,6 +243,7 @@ export default async function CursoDetailPage({
             return (
               <ChapterAccordion
                 key={capitulo.id}
+                capituloId={capitulo.id}
                 numero={capitulo.numero}
                 nombre={capitulo.nombre}
                 descripcion={capitulo.descripcion}

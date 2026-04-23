@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronDown, CheckCircle2, FileText } from 'lucide-react'
 
 interface ChapterAccordionProps {
+  /** Optional: used as HTML id so links like `#cap-<id>` can scroll
+   *  to this accordion and auto-expand it. */
+  capituloId?: string
   numero: number
   nombre: string
   descripcion: string | null
@@ -19,6 +22,7 @@ interface ChapterAccordionProps {
 }
 
 export function ChapterAccordion({
+  capituloId,
   numero,
   nombre,
   descripcion,
@@ -29,9 +33,39 @@ export function ChapterAccordion({
   children,
 }: ChapterAccordionProps) {
   const [open, setOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Auto-open + scroll when URL hash matches this chapter.
+  // Handles both the initial load (coming from /estudio grid) and
+  // hash changes (if the user navigates via another link later).
+  useEffect(() => {
+    if (!capituloId) return
+    const target = `#cap-${capituloId}`
+    function maybeOpen() {
+      if (typeof window === 'undefined') return
+      if (window.location.hash === target) {
+        setOpen(true)
+        // Scroll after a tick so the accordion animation doesn't fight
+        // the scroll position.
+        requestAnimationFrame(() => {
+          wrapperRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        })
+      }
+    }
+    maybeOpen()
+    window.addEventListener('hashchange', maybeOpen)
+    return () => window.removeEventListener('hashchange', maybeOpen)
+  }, [capituloId])
 
   return (
-    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden">
+    <div
+      ref={wrapperRef}
+      id={capituloId ? `cap-${capituloId}` : undefined}
+      className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden scroll-mt-6"
+    >
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer"
