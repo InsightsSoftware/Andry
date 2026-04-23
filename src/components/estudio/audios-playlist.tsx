@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   Headphones,
   Check,
+  Volume2,
+  Volume1,
+  VolumeX,
 } from 'lucide-react'
 import { cn, formatSeconds } from '@/lib/utils'
 import { updateProgress } from '@/actions/estudio'
@@ -58,12 +61,44 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [rate, setRate] = useState(1)
+  const [volume, setVolume] = useState(0.8)
+  const [isMuted, setIsMuted] = useState(false)
   const [completedIds, setCompletedIds] = useState<Set<string>>(
     new Set(tracks.filter((t) => t.completado).map((t) => t.id))
   )
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Load persisted volume + mute from localStorage
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('yxp:volume')
+      const m = localStorage.getItem('yxp:muted')
+      if (v) {
+        const parsed = parseFloat(v)
+        if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 1) setVolume(parsed)
+      }
+      if (m === '1') setIsMuted(true)
+    } catch {
+      // localStorage unavailable — ignore
+    }
+  }, [])
+
+  // Apply volume/mute to the audio element + persist
+  useEffect(() => {
+    const el = audioRef.current
+    if (el) {
+      el.volume = volume
+      el.muted = isMuted
+    }
+    try {
+      localStorage.setItem('yxp:volume', String(volume))
+      localStorage.setItem('yxp:muted', isMuted ? '1' : '0')
+    } catch {
+      // ignore
+    }
+  }, [volume, isMuted])
 
   // ── Chapter picker (custom, replaces native <select> which ignores dark mode)
   const [chapterOpen, setChapterOpen] = useState(false)
@@ -505,6 +540,42 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
                     >
                       {rate}x
                     </button>
+                  </div>
+
+                  {/* Volume control */}
+                  <div className="mt-4 flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsMuted((v) => !v)}
+                      aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+                      title={isMuted ? 'Activar sonido' : 'Silenciar'}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                    >
+                      {isMuted || volume === 0 ? (
+                        <VolumeX className="h-4 w-4" />
+                      ) : volume < 0.5 ? (
+                        <Volume1 className="h-4 w-4" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                    </button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.02}
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value)
+                        setVolume(v)
+                        if (v > 0 && isMuted) setIsMuted(false)
+                      }}
+                      aria-label="Volumen"
+                      className="flex-1 accent-primary-600 cursor-pointer"
+                    />
+                    <span className="shrink-0 text-[10px] font-bold tabular-nums text-neutral-500 dark:text-neutral-400 w-8 text-right">
+                      {Math.round((isMuted ? 0 : volume) * 100)}%
+                    </span>
                   </div>
                 </>
               ) : (
