@@ -325,7 +325,15 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
             {chapterOpen && (
               <div
                 role="listbox"
-                className="absolute right-0 top-full z-30 mt-2 w-full max-h-80 overflow-y-auto rounded-xl glass-card p-1 shadow-xl"
+                className={cn(
+                  'absolute right-0 top-full z-50 mt-2 w-full max-h-80 overflow-y-auto rounded-xl p-1',
+                  // Solid opaque backgrounds — no glass bleed-through
+                  'bg-white dark:bg-neutral-900',
+                  'border border-neutral-200 dark:border-neutral-700',
+                  'shadow-2xl shadow-black/20 dark:shadow-black/60',
+                  // Scroll fade hint
+                  'ring-1 ring-black/5 dark:ring-white/5'
+                )}
               >
                 {capitulos.map((c) => {
                   const isSel = c.id === selectedCapituloId
@@ -347,10 +355,17 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
                         'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm cursor-pointer transition-colors',
                         isSel
                           ? 'bg-primary-500/15 text-primary-700 dark:text-primary-300 font-semibold'
-                          : 'text-neutral-700 dark:text-neutral-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
+                          : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                       )}
                     >
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary-500/10 text-[11px] font-bold text-primary-600 dark:text-primary-400">
+                      <span
+                        className={cn(
+                          'flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold',
+                          isSel
+                            ? 'bg-primary-500 text-white'
+                            : 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
+                        )}
+                      >
                         {c.numero}
                       </span>
                       <span className="flex-1 truncate">{c.nombre}</span>
