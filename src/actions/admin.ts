@@ -809,40 +809,46 @@ export async function updateContent(
 }
 
 /**
- * Fetches ALL content of a given type across every course/chapter.
- * Returns with chapter + course context baked in — used by the dedicated
- * /admin/audios and /admin/videos managers so the admin can scan all
- * uploads in one place without drilling down per course.
+ * Fetches ALL content of a given type across every course/chapter PLUS
+ * every active curso + capítulo. Used by the dedicated /admin/audios,
+ * /admin/videos and /admin/pdfs managers so:
+ *   - the list shows all existing content items of that type
+ *   - the upload dropdowns always show every available chapter, even
+ *     ones that don't yet have content of this type (otherwise the
+ *     first upload becomes impossible — the dropdown is empty).
  */
 export async function getAllContentByType(tipo: 'audio' | 'video' | 'pdf') {
   await requireAdmin()
   const admin = createAdminClient()
 
-  const { data: content, error } = await admin
-    .from('contenido')
-    .select('id, capitulo_id, tipo, titulo, descripcion, archivo_url, duracion_segundos, orden, created_at')
-    .eq('tipo', tipo)
-    .order('created_at', { ascending: false })
+  const [contentRes, cursosRes, capitulosRes] = await Promise.all([
+    admin
+      .from('contenido')
+      .select(
+        'id, capitulo_id, tipo, titulo, descripcion, archivo_url, duracion_segundos, orden, created_at'
+      )
+      .eq('tipo', tipo)
+      .order('created_at', { ascending: false }),
+    admin
+      .from('cursos')
+      .select('id, nombre, slug')
+      .eq('activo', true)
+      .order('orden'),
+    admin
+      .from('capitulos')
+      .select('id, curso_id, numero, nombre')
+      .order('numero'),
+  ])
 
-  if (error) {
-    console.error('Error fetching content by type:', error)
+  if (contentRes.error) {
+    console.error('Error fetching content by type:', contentRes.error)
     return { items: [], capitulos: [], cursos: [] }
   }
 
-  const capituloIds = Array.from(new Set((content || []).map((c) => c.capitulo_id)))
-  const { data: capitulos } = capituloIds.length
-    ? await admin.from('capitulos').select('id, curso_id, numero, nombre').in('id', capituloIds)
-    : { data: [] }
-
-  const cursoIds = Array.from(new Set((capitulos || []).map((c) => c.curso_id)))
-  const { data: cursos } = cursoIds.length
-    ? await admin.from('cursos').select('id, nombre, slug').in('id', cursoIds)
-    : { data: [] }
-
   return {
-    items: content || [],
-    capitulos: capitulos || [],
-    cursos: cursos || [],
+    items: contentRes.data || [],
+    capitulos: capitulosRes.data || [],
+    cursos: cursosRes.data || [],
   }
 }
 
