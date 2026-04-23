@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { HeroLogo } from '@/components/ui/hero-logo'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import {
@@ -79,6 +80,75 @@ function HeroSection() {
             <Star className="h-4 w-4 text-accent-500 dark:text-accent-400" />
             100% en español
           </span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ForYouSection() {
+  const cards = [
+    {
+      src: '/landing/contractor-working.jpg',
+      alt: 'Contratista eléctrico hispano trabajando en una obra en Florida',
+      tag: 'En la obra',
+      title: 'El que mejor sabe construir',
+      desc: 'Sabés instalar, cablear, inspeccionar. Tenés años de oficio en las manos — lo que te falta es pasar el papel del examen.',
+    },
+    {
+      src: '/landing/contractor-studying.jpg',
+      alt: 'Contratista hispano estudiando desde su celular después del trabajo',
+      tag: 'En tu tiempo',
+      title: 'Estudiá donde y cuando puedas',
+      desc: 'Mobile-first pensado para el obrero que labura todo el día. Manejando, en el break de la obra, o en casa después de la jornada.',
+    },
+  ]
+
+  return (
+    <section className="px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-10 text-center">
+          <h2 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
+            Pensado para el{' '}
+            <span className="text-gold">contratista hispano</span>
+          </h2>
+          <p className="mx-auto max-w-2xl text-neutral-600 dark:text-neutral-400">
+            Construís de verdad. Ahora necesitás una plataforma que respete tu tiempo
+            y tu forma de aprender — en español, en tu celular, a tu ritmo.
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          {cards.map((c) => (
+            <div
+              key={c.tag}
+              className="group relative overflow-hidden rounded-2xl glass-card cursor-default"
+            >
+              <div className="relative aspect-[3/2] overflow-hidden">
+                <Image
+                  src={c.src}
+                  alt={c.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                {/* Dark gradient overlay for copy contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/85 via-neutral-950/30 to-transparent" />
+                {/* Tag pill */}
+                <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/15">
+                  {c.tag}
+                </span>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">
+                  {c.title}
+                </h3>
+                <p className="mt-1.5 text-sm text-white/85 leading-relaxed">
+                  {c.desc}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -418,6 +488,7 @@ export default function LandingPage() {
   return (
     <>
       <HeroSection />
+      <ForYouSection />
       <ProblemSection />
       <ServicesSection />
       <HowItWorksSection />
