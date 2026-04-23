@@ -782,6 +782,39 @@ export async function deleteContent(contentId: string) {
 }
 
 /**
+ * Bulk-reorder a list of content items. Assigns new orden values in the
+ * given sequence (starts at 10, spacing of 10 so future single-item
+ * inserts can slot in between without another bulk reorder).
+ * Used by the drag-and-drop reordering in MediaManager.
+ */
+export async function reorderContent(orderedIds: string[]) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const updates = orderedIds.map((id, idx) => ({ id, orden: (idx + 1) * 10 }))
+  for (const u of updates) {
+    const { error } = await admin
+      .from('contenido')
+      .update({ orden: u.orden })
+      .eq('id', u.id)
+    if (error) {
+      console.error('Error reordering content:', error)
+      return { error: `Error al reordenar (${u.id}): ${error.message}` }
+    }
+  }
+
+  revalidatePath('/admin/contenido')
+  revalidatePath('/admin/audios')
+  revalidatePath('/admin/videos')
+  revalidatePath('/admin/pdfs')
+  revalidatePath('/estudio')
+  revalidatePath('/estudio/audios')
+  revalidatePath('/estudio/videos')
+  revalidatePath('/estudio/pdfs')
+  return { success: true }
+}
+
+/**
  * Update an existing content row (title, description, duration, order).
  * Used by the dedicated /admin/audios and /admin/videos managers to let
  * the admin rename auto-seeded "Módulo N" titles to descriptive ones.

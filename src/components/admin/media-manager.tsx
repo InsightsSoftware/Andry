@@ -17,11 +17,13 @@ import {
   BookOpen,
   Clock,
   Hash,
+  GripVertical,
 } from 'lucide-react'
 import {
   updateContent,
   deleteContent,
   createContent,
+  reorderContent,
 } from '@/actions/admin'
 import { FileUploader } from './file-uploader'
 import { BulkFolderUpload } from './bulk-folder-upload'
@@ -83,6 +85,52 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
 
   const capMap = useMemo(() => new Map(capitulos.map((c) => [c.id, c])), [capitulos])
   const cursoMap = useMemo(() => new Map(cursos.map((c) => [c.id, c])), [cursos])
+
+  // Drag-and-drop reorder state
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [savingReorder, setSavingReorder] = useState<string | null>(null) // chapter id
+
+  function arrayMove<T>(arr: T[], from: number, to: number): T[] {
+    const copy = [...arr]
+    const [item] = copy.splice(from, 1)
+    copy.splice(to, 0, item)
+    return copy
+  }
+
+  async function handleDropOnChapter(
+    capituloId: string,
+    fromId: string,
+    toId: string
+  ) {
+    const chapterRows = rows
+      .filter((r) => r.capitulo_id === capituloId)
+      .sort((a, b) => a.orden - b.orden)
+    const fromIdx = chapterRows.findIndex((r) => r.id === fromId)
+    const toIdx = chapterRows.findIndex((r) => r.id === toId)
+    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return
+
+    const reordered = arrayMove(chapterRows, fromIdx, toIdx)
+    // Optimistic: assign local orden so UI updates immediately
+    const optimisticOrden = new Map<string, number>()
+    reordered.forEach((r, i) => optimisticOrden.set(r.id, (i + 1) * 10))
+    setRows((prev) =>
+      prev.map((r) =>
+        r.capitulo_id === capituloId && optimisticOrden.has(r.id)
+          ? { ...r, orden: optimisticOrden.get(r.id)! }
+          : r
+      )
+    )
+
+    setSavingReorder(capituloId)
+    const res = await reorderContent(reordered.map((r) => r.id))
+    if (res && 'error' in res && res.error) {
+      alert(res.error)
+    } else {
+      router.refresh()
+    }
+    setSavingReorder(null)
+  }
 
   const filtered = useMemo(() => {
     if (!filterCapId) return rows
@@ -264,57 +312,114 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
       )}
 
       {/* Grouped list */}
-      {grouped.map(({ capId, cap, rows }) => (
+      {grouped.map(({ capId, cap, rows: chapterRows }) => (
         <section key={capId}>
           <h2 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             <BookOpen className="h-3.5 w-3.5" />
             {cap ? `Cap. ${cap.numero} — ${cap.nombre}` : 'Sin capítulo'}
             <span className="ml-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold">
-              {rows.length}
+              {chapterRows.length}
             </span>
+            {savingReorder === capId && (
+              <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-primary-500">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Guardando orden…
+              </span>
+            )}
           </h2>
 
           <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-            {rows.map((item, i) => {
+            {chapterRows.map((item, i) => {
               const isEditing = editingId === item.id
               const isSaving = savingId === item.id
               const isDeleting = deletingId === item.id
+              const isDragging = dragId === item.id
+              const isDragOver = dragOverId === item.id && dragId !== item.id
+              const fileBasename = item.archivo_url
+                .split('/')
+                .pop()
+                ?.replace(/^\d+_?/, '') // strip timestamp prefix if present
               return (
                 <div
                   key={item.id}
+                  draggable={!isEditing && !filterCapId}
+                  onDragStart={() => setDragId(item.id)}
+                  onDragEnd={() => {
+                    setDragId(null)
+                    setDragOverId(null)
+                  }}
+                  onDragOver={(e) => {
+                    if (!dragId || dragId === item.id) return
+                    const fromRow = rows.find((r) => r.id === dragId)
+                    if (fromRow?.capitulo_id !== item.capitulo_id) return
+                    e.preventDefault()
+                    setDragOverId(item.id)
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverId === item.id) setDragOverId(null)
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (!dragId || dragId === item.id) return
+                    handleDropOnChapter(item.capitulo_id, dragId, item.id)
+                    setDragId(null)
+                    setDragOverId(null)
+                  }}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 text-sm',
-                    i !== 0 && 'border-t border-neutral-100 dark:border-neutral-800'
+                    'flex items-start gap-3 px-3 py-3 text-sm transition-colors',
+                    i !== 0 && 'border-t border-neutral-100 dark:border-neutral-800',
+                    isDragging && 'opacity-40',
+                    isDragOver &&
+                      'bg-primary-50/70 dark:bg-primary-900/20 ring-2 ring-inset ring-primary-400'
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0 text-primary-500" />
-
-                  {isEditing ? (
-                    <input
-                      autoFocus
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') saveEdit(item)
-                        if (e.key === 'Escape') setEditingId(null)
-                      }}
-                      className="flex-1 min-w-0 rounded-lg border border-primary-400 bg-white dark:bg-neutral-950 px-2.5 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-                    />
-                  ) : (
-                    <span className="flex-1 min-w-0 truncate font-medium text-neutral-900 dark:text-neutral-100">
-                      {item.titulo}
+                  {/* Drag handle — hidden when the chapter filter is active
+                      (reorder within a single chapter only makes sense when
+                      we see the full group) */}
+                  {!filterCapId && (
+                    <span
+                      className="mt-0.5 cursor-grab active:cursor-grabbing text-neutral-300 dark:text-neutral-600 hover:text-primary-500 shrink-0"
+                      title="Arrastrá para reordenar"
+                    >
+                      <GripVertical className="h-4 w-4" />
                     </span>
                   )}
 
+                  <Icon className="h-4 w-4 shrink-0 text-primary-500 mt-0.5" />
+
+                  <div className="flex-1 min-w-0">
+                    {isEditing ? (
+                      <input
+                        autoFocus
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEdit(item)
+                          if (e.key === 'Escape') setEditingId(null)
+                        }}
+                        className="w-full rounded-lg border border-primary-400 bg-white dark:bg-neutral-950 px-2.5 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                      />
+                    ) : (
+                      <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">
+                        {item.titulo}
+                      </p>
+                    )}
+                    {!isEditing && fileBasename && (
+                      <p className="mt-0.5 truncate text-[11px] font-mono text-neutral-400 dark:text-neutral-500">
+                        {fileBasename}
+                      </p>
+                    )}
+                  </div>
+
                   {item.duracion_segundos && !isEditing && (
-                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 shrink-0">
+                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 shrink-0 mt-0.5">
                       <Clock className="h-3 w-3" />
                       {formatSeconds(item.duracion_segundos)}
                     </span>
                   )}
 
                   {!isEditing && (
-                    <span className="hidden md:inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 shrink-0">
+                    <span className="hidden md:inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5">
                       <Hash className="h-3 w-3" />
                       {item.orden}
                     </span>

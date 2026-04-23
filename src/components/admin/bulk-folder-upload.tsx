@@ -230,6 +230,41 @@ function parseModuleFromFilename(filename: string): {
     }
   }
 
+  // Supplementary AIA with letter+number: "supp-aia-mod-a-01" →
+  // Módulo A parte 1. Compose orden = letter_ordinal*100 + num so
+  // items sort A-01, A-02, A-07, B-02, C-01 naturally.
+  const aiaLetterMatch = base.match(/supp[\s_-]*aia[\s_-]*mod[\s_-]*([a-z])[\s_-]*(\d+)/)
+  if (aiaLetterMatch) {
+    const letter = aiaLetterMatch[1].toUpperCase()
+    const num = parseInt(aiaLetterMatch[2], 10)
+    const letterOrd = letter.charCodeAt(0) - 'A'.charCodeAt(0) + 1
+    return {
+      moduleNumber: letterOrd * 100 + num,
+      isComplete: false,
+      suggestedTitle: `AIA — Módulo ${letter}, parte ${num}`,
+    }
+  }
+
+  // AIA final module — deterministic last slot
+  if (/supp[\s_-]*aia[\s_-]*mod[\s_-]*final/.test(base)) {
+    return {
+      moduleNumber: 9999,
+      isComplete: false,
+      suggestedTitle: 'AIA — Módulo Final',
+    }
+  }
+
+  // Circular E section: "supp-circular-e-mod-s-NN"
+  const circularMatch = base.match(/supp[\s_-]*circular[\s_-]*e[\s_-]*mod[\s_-]*s[\s_-]*(\d+)/)
+  if (circularMatch) {
+    const num = parseInt(circularMatch[1], 10)
+    return {
+      moduleNumber: num,
+      isComplete: false,
+      suggestedTitle: `Circular E — Sección ${num}`,
+    }
+  }
+
   // "cap-NN-mod-MM"
   const modMatch = base.match(/mod[\s_-]*(\d+)/)
   if (modMatch) {
@@ -371,23 +406,20 @@ function buildPlan(
     }
   }
 
-  // Sort files within each chapter: completo first, then by module number,
-  // then alphabetical as final tiebreaker
+  // Sort files within each chapter for PREVIEW display only (completo
+  // first, then by module number, then alphabetical).
+  //
+  // IMPORTANT: we DO NOT re-number orden here. The parser already assigned
+  // orden = moduleNumber (e.g. 'cap-01-mod-02' → orden 2), which stays
+  // stable across multiple bulk uploads. Re-numbering locally would make
+  // new uploads reuse low numbers that conflict with existing DB rows —
+  // that was the ordering bug.
   for (const arr of byChapter.values()) {
     arr.sort((a, b) => {
       if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1
       if (a.orden !== b.orden) return a.orden - b.orden
       return a.file.name.localeCompare(b.file.name)
     })
-    // Re-number orden sequentially for modules (keeps DB orden clean)
-    let idx = 0
-    for (const pf of arr) {
-      if (pf.isComplete) pf.orden = 0
-      else {
-        idx += 1
-        pf.orden = idx
-      }
-    }
   }
 
   // Build final plan
