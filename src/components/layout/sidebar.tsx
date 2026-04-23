@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
+  Headphones,
+  Video,
   Handshake,
   Users,
   User,
@@ -20,9 +22,26 @@ import { useState, useEffect } from 'react'
 
 // IA removed from the MVP nav — will return in Fase 2 as part of the
 // "Plan Plus" upsell. The /ia route still exists, just hidden.
-const links = [
+//
+// `excludePrefixes` keeps Modo Estudio from lighting up when the user is on
+// /estudio/audios or /estudio/videos (those have their own sidebar links).
+type NavLink = {
+  href: string
+  label: string
+  icon: typeof LayoutDashboard
+  excludePrefixes?: string[]
+}
+
+const links: NavLink[] = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/estudio', label: 'Modo Estudio', icon: BookOpen },
+  {
+    href: '/estudio',
+    label: 'Modo Estudio',
+    icon: BookOpen,
+    excludePrefixes: ['/estudio/audios', '/estudio/videos'],
+  },
+  { href: '/estudio/audios', label: 'Audios', icon: Headphones },
+  { href: '/estudio/videos', label: 'Videos', icon: Video },
   { href: '/aliados', label: 'Aliados', icon: Handshake },
   { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Mi Perfil', icon: User },
@@ -70,9 +89,15 @@ export function Sidebar() {
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
         {links.map((link) => {
+          const excluded = (link.excludePrefixes || []).some((p) =>
+            pathname.startsWith(p)
+          )
           const isActive =
-            pathname === link.href || pathname.startsWith(link.href + '/') ||
-            (link.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
+            !excluded &&
+            (pathname === link.href ||
+              pathname.startsWith(link.href + '/') ||
+              (link.href === '/comunidad/dudas' &&
+                pathname.startsWith('/comunidad/')))
           const Icon = link.icon
 
           const tourKey =
