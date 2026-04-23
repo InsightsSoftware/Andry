@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {
   BookOpen,
   ArrowRight,
+  FileText,
   Headphones,
   Video,
 } from 'lucide-react'
@@ -17,17 +18,23 @@ export default async function EstudioPage() {
     .eq('activo', true)
     .order('orden')
 
-  // Quick stats for the audio/video shortcuts (so mobile users — who don't
-  // see the desktop sidebar — can still discover these sections).
-  const { count: totalAudios } = await supabase
-    .from('contenido')
-    .select('id', { count: 'exact', head: true })
-    .eq('tipo', 'audio')
-
-  const { count: totalVideos } = await supabase
-    .from('contenido')
-    .select('id', { count: 'exact', head: true })
-    .eq('tipo', 'video')
+  // Quick stats for the pdf/audio/video shortcuts (so mobile users — who
+  // don't see the desktop sidebar — can still discover these sections).
+  const [{ count: totalPdfs }, { count: totalAudios }, { count: totalVideos }] =
+    await Promise.all([
+      supabase
+        .from('contenido')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'pdf'),
+      supabase
+        .from('contenido')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'audio'),
+      supabase
+        .from('contenido')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'video'),
+    ])
 
   return (
     <div>
@@ -38,10 +45,30 @@ export default async function EstudioPage() {
         Selecciona un curso para comenzar a estudiar
       </p>
 
-      {/* Quick access — Audios / Videos.
-          Prominent on mobile (where sidebar is hidden). On desktop acts as a
-          redundant entry point so the sections feel first-class. */}
-      <div className="mb-6 grid gap-3 sm:grid-cols-2">
+      {/* Quick access — PDFs / Audios / Videos.
+          Prominent on mobile (where sidebar is hidden). On desktop acts as
+          a redundant entry point so the sections feel first-class. */}
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <Link
+          href="/estudio/pdfs"
+          className="group relative overflow-hidden rounded-2xl border border-danger-200 dark:border-danger-800/60 bg-gradient-to-br from-danger-50 to-danger-100/40 dark:from-danger-900/30 dark:to-danger-900/5 p-5 transition-all hover:shadow-lg hover:border-danger-300 dark:hover:border-danger-700 cursor-pointer"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-neutral-900 shadow-sm">
+              <FileText className="h-6 w-6 text-danger-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                PDFs
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {totalPdfs ?? 0} guías disponibles
+              </p>
+            </div>
+            <ArrowRight className="h-5 w-5 shrink-0 text-danger-500 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </Link>
+
         <Link
           href="/estudio/audios"
           className="group relative overflow-hidden rounded-2xl border border-primary-200 dark:border-primary-800/60 bg-gradient-to-br from-primary-50 to-primary-100/40 dark:from-primary-900/30 dark:to-primary-900/5 p-5 transition-all hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-700 cursor-pointer"

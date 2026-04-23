@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
+  FileText,
   Headphones,
   Video,
   Handshake,
@@ -38,8 +39,13 @@ const links: NavLink[] = [
     href: '/estudio',
     label: 'Modo Estudio',
     icon: BookOpen,
-    excludePrefixes: ['/estudio/audios', '/estudio/videos'],
+    excludePrefixes: [
+      '/estudio/pdfs',
+      '/estudio/audios',
+      '/estudio/videos',
+    ],
   },
+  { href: '/estudio/pdfs', label: 'PDFs', icon: FileText },
   { href: '/estudio/audios', label: 'Audios', icon: Headphones },
   { href: '/estudio/videos', label: 'Videos', icon: Video },
   { href: '/aliados', label: 'Aliados', icon: Handshake },
