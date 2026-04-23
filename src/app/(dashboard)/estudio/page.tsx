@@ -4,6 +4,7 @@ import {
   FileText,
   Headphones,
   Video,
+  BookOpen,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ChapterGrid, type ChapterCard } from '@/components/estudio/chapter-grid'
@@ -13,50 +14,24 @@ export const metadata = { title: 'Modo Estudio' }
 export default async function EstudioPage() {
   const supabase = await createClient()
 
-  // Primary course — show its chapters as the main grid. For now there's
-  // one live course (negocios-y-finanzas); if multiple become active we
-  // can add a course switcher.
+  // All active courses — each gets its own chapter grid section below.
   const { data: cursos } = await supabase
     .from('cursos')
     .select('id, nombre, slug, descripcion')
     .eq('activo', true)
     .order('orden')
 
-  const primaryCurso =
-    cursos?.find((c) => c.slug === 'negocios-y-finanzas') ?? cursos?.[0] ?? null
-
-  // Chapters of the primary course
-  const { data: capitulos } = primaryCurso
+  // All chapters for all courses — single query, group client-side
+  const cursoIds = (cursos || []).map((c) => c.id)
+  const { data: capitulos } = cursoIds.length
     ? await supabase
         .from('capitulos')
-        .select('id, numero, nombre')
-        .eq('curso_id', primaryCurso.id)
+        .select('id, curso_id, numero, nombre')
+        .in('curso_id', cursoIds)
         .order('numero')
     : { data: [] }
 
-  const chapterCards: ChapterCard[] = (capitulos || []).map((cap) => {
-    const isSupp = cap.numero >= 11
-    return {
-      id: cap.id,
-      numero: cap.numero,
-      nombre: cap.nombre,
-      // Always link to the course detail with the chapter hash — the
-      // accordion opens + scrolls to it automatically on arrival.
-      href: primaryCurso
-        ? `/estudio/${primaryCurso.slug}#cap-${cap.id}`
-        : '#',
-      label: isSupp
-        ? cap.numero === 11
-          ? 'SUPLEMENTO AIA'
-          : cap.numero === 12
-            ? 'SUPLEMENTO CIRCULAR E'
-            : `SUPLEMENTO ${cap.numero}`
-        : `CAPÍTULO ${String(cap.numero).padStart(2, '0')}`,
-    }
-  })
-
-  // Quick stats for the pdf/audio/video shortcuts (so mobile users — who
-  // don't see the desktop sidebar — can still discover these sections).
+  // Quick stats for the pdf/audio/video shortcuts (global across courses)
   const [{ count: totalPdfs }, { count: totalAudios }, { count: totalVideos }] =
     await Promise.all([
       supabase
@@ -73,18 +48,53 @@ export default async function EstudioPage() {
         .eq('tipo', 'video'),
     ])
 
+  // Group chapters by course
+  const chaptersByCurso = new Map<string, typeof capitulos>()
+  for (const cap of capitulos || []) {
+    const arr = chaptersByCurso.get(cap.curso_id) ?? []
+    arr.push(cap)
+    chaptersByCurso.set(cap.curso_id, arr)
+  }
+
+  function makeCards(
+    caps: NonNullable<typeof capitulos>,
+    cursoSlug: string
+  ): ChapterCard[] {
+    return caps.map((cap) => {
+      const isSupp = cap.numero >= 11
+      return {
+        id: cap.id,
+        numero: cap.numero,
+        nombre: cap.nombre,
+        href: `/estudio/${cursoSlug}#cap-${cap.id}`,
+        label: isSupp
+          ? cap.numero === 11
+            ? 'SUPLEMENTO AIA'
+            : cap.numero === 12
+              ? 'SUPLEMENTO CIRCULAR E'
+              : `SUPLEMENTO ${cap.numero}`
+          : `CAPÍTULO ${String(cap.numero).padStart(2, '0')}`,
+      }
+    })
+  }
+
+  const cursosList = cursos || []
+  const multiCourse = cursosList.length > 1
+
   return (
     <div>
       <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
         Modo Estudio
       </h1>
       <p className="mb-6 text-neutral-500 dark:text-neutral-400">
-        {primaryCurso
-          ? primaryCurso.nombre
-          : 'Selecciona un curso para comenzar a estudiar'}
+        {cursosList.length === 0
+          ? 'Los cursos se están preparando.'
+          : multiCourse
+            ? `${cursosList.length} cursos activos`
+            : cursosList[0].nombre}
       </p>
 
-      {/* Quick access — PDFs / Audios / Videos */}
+      {/* Quick access — PDFs / Audios / Videos (global) */}
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <Link
           href="/estudio/pdfs"
@@ -147,14 +157,58 @@ export default async function EstudioPage() {
         </Link>
       </div>
 
-      {/* Chapter grid — the main "Guía" view matching the reference design */}
-      <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-        Guía de estudio
-      </h2>
-      <ChapterGrid
-        chapters={chapterCards}
-        courseName={primaryCurso?.nombre}
-      />
+      {/* Empty state */}
+      {cursosList.length === 0 && (
+        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
+          <BookOpen className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
+          <p className="text-neutral-500 dark:text-neutral-400">
+            Los cursos se están preparando. Pronto tendrás contenido disponible.
+          </p>
+        </div>
+      )}
+
+      {/* One section per active course */}
+      {cursosList.map((curso, idx) => {
+        const caps = chaptersByCurso.get(curso.id) ?? []
+        const cards = makeCards(caps, curso.slug)
+
+        return (
+          <section
+            key={curso.id}
+            className={idx > 0 ? 'mt-10 pt-8 border-t border-neutral-200 dark:border-neutral-800' : ''}
+          >
+            {multiCourse ? (
+              <div className="mb-4 flex items-baseline justify-between">
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  {curso.nombre}
+                </h2>
+                <Link
+                  href={`/estudio/${curso.slug}`}
+                  className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 inline-flex items-center gap-1"
+                >
+                  Ver curso completo
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            ) : (
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                Guía de estudio
+              </h2>
+            )}
+
+            {cards.length > 0 ? (
+              <ChapterGrid chapters={cards} courseName={curso.nombre} />
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-8 text-center">
+                <BookOpen className="mx-auto mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Sin capítulos todavía en este curso.
+                </p>
+              </div>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }
