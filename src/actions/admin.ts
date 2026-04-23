@@ -749,7 +749,101 @@ export async function deleteContent(contentId: string) {
   }
 
   revalidatePath('/admin/contenido')
+  revalidatePath('/admin/audios')
+  revalidatePath('/admin/videos')
+  revalidatePath('/estudio/audios')
+  revalidatePath('/estudio/videos')
   return { success: true }
+}
+
+/**
+ * Update an existing content row (title, description, duration, order).
+ * Used by the dedicated /admin/audios and /admin/videos managers to let
+ * the admin rename auto-seeded "Módulo N" titles to descriptive ones.
+ */
+export async function updateContent(
+  contentId: string,
+  patch: {
+    titulo?: string
+    descripcion?: string | null
+    duracion_segundos?: number | null
+    orden?: number
+  }
+) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  // Strip undefined keys so we don't accidentally null out unspecified columns
+  const clean: Record<string, unknown> = {}
+  if (patch.titulo !== undefined) {
+    const t = patch.titulo.trim()
+    if (!t) return { error: 'El título no puede estar vacío' }
+    clean.titulo = t
+  }
+  if (patch.descripcion !== undefined) {
+    clean.descripcion = patch.descripcion?.trim() || null
+  }
+  if (patch.duracion_segundos !== undefined) {
+    clean.duracion_segundos = patch.duracion_segundos
+  }
+  if (patch.orden !== undefined) {
+    clean.orden = patch.orden
+  }
+
+  const { error } = await admin
+    .from('contenido')
+    .update(clean)
+    .eq('id', contentId)
+
+  if (error) {
+    console.error('Error updating content:', error)
+    return { error: 'Error al actualizar contenido' }
+  }
+
+  revalidatePath('/admin/contenido')
+  revalidatePath('/admin/audios')
+  revalidatePath('/admin/videos')
+  revalidatePath('/estudio/audios')
+  revalidatePath('/estudio/videos')
+  return { success: true }
+}
+
+/**
+ * Fetches ALL content of a given type across every course/chapter.
+ * Returns with chapter + course context baked in — used by the dedicated
+ * /admin/audios and /admin/videos managers so the admin can scan all
+ * uploads in one place without drilling down per course.
+ */
+export async function getAllContentByType(tipo: 'audio' | 'video' | 'pdf') {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data: content, error } = await admin
+    .from('contenido')
+    .select('id, capitulo_id, tipo, titulo, descripcion, archivo_url, duracion_segundos, orden, created_at')
+    .eq('tipo', tipo)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching content by type:', error)
+    return { items: [], capitulos: [], cursos: [] }
+  }
+
+  const capituloIds = Array.from(new Set((content || []).map((c) => c.capitulo_id)))
+  const { data: capitulos } = capituloIds.length
+    ? await admin.from('capitulos').select('id, curso_id, numero, nombre').in('id', capituloIds)
+    : { data: [] }
+
+  const cursoIds = Array.from(new Set((capitulos || []).map((c) => c.curso_id)))
+  const { data: cursos } = cursoIds.length
+    ? await admin.from('cursos').select('id, nombre, slug').in('id', cursoIds)
+    : { data: [] }
+
+  return {
+    items: content || [],
+    capitulos: capitulos || [],
+    cursos: cursos || [],
+  }
 }
 
 // ── Payments ───────────────────────────────────────────────────────
