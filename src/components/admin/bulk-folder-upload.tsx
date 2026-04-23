@@ -82,19 +82,22 @@ const TIPO_ICON: Record<Tipo, typeof FileAudio> = {
   pdf: FileText,
 }
 
+// Oficial names from Andry's study guide — kept in sync with
+// scripts/rename-chapters.mjs (DB migration) and OFFICIAL_CHAPTER_NAMES
+// in src/lib/chapters.ts (used by /estudio to render the grid).
 const CHAPTER_DEFAULTS: Record<number, string> = {
-  1: 'Introducción al Negocio de Contratistas',
-  2: 'Regulaciones y Licencias de Florida',
-  3: 'Contabilidad y Finanzas Básicas',
-  4: 'Seguros y Fianzas',
-  5: 'Contratos y Obligaciones Legales',
-  6: 'Gestión de Proyectos',
-  7: 'Impuestos y Retenciones',
-  8: 'Seguridad Laboral (OSHA)',
-  9: 'Relaciones Laborales y RRHH',
-  10: 'Estrategia y Crecimiento del Negocio',
-  11: 'Material Suplementario: AIA',
-  12: 'Material Suplementario: Circular E',
+  1: 'Planificación y Organización del Negocio',
+  2: 'Licencias',
+  3: 'Gestión Financiera',
+  4: 'Gestión de Riesgo',
+  5: 'Leyes Laborales y Regulaciones de Empleo',
+  6: 'Compensación Laboral',
+  7: 'Seguridad OSHA',
+  8: 'Contratos de Construcción y Responsabilidad',
+  9: 'Ley de Gravámenes de Construcción',
+  10: 'Gestión de Proyectos',
+  11: 'Suplemento AIA',
+  12: 'Suplemento Circular E',
 }
 
 // ── Parsing helpers ─────────────────────────────────────────────────
