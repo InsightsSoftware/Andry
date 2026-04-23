@@ -711,15 +711,33 @@ export async function createContent(contentData: {
   await requireAdmin()
   const admin = createAdminClient()
 
-  // Validate URL — only allow https:// URLs (Supabase storage or trusted CDN)
-  try {
-    const url = new URL(contentData.archivo_url)
-    if (!['https:'].includes(url.protocol)) {
-      return { error: 'Solo se permiten URLs con HTTPS' }
-    }
-  } catch {
-    return { error: 'URL de archivo inválida' }
+  // Validate archivo_url. This column stores one of:
+  //   - a bare storage path (e.g. "negocios-y-finanzas/capitulo-01/audio/x.mp3")
+  //     produced by the bulk uploader / single-file uploader via /api/admin/upload
+  //   - an https:// URL (external trusted source)
+  //
+  // Reject empty strings and explicit http:// (non-TLS external), everything
+  // else is passed through — getSignedContentUrl() at read-time handles the
+  // bare-path case and treats external URLs correctly.
+  const urlOrPath = contentData.archivo_url.trim()
+  if (!urlOrPath) {
+    return { error: 'Falta el archivo' }
   }
+  if (urlOrPath.toLowerCase().startsWith('http://')) {
+    return { error: 'Solo se permiten URLs con HTTPS' }
+  }
+  if (urlOrPath.includes('://')) {
+    try {
+      const url = new URL(urlOrPath)
+      if (url.protocol !== 'https:') {
+        return { error: 'Solo se permiten URLs con HTTPS' }
+      }
+    } catch {
+      return { error: 'URL de archivo inválida' }
+    }
+  }
+  // Otherwise treated as a bare storage path — no extra validation here,
+  // the API route that produced it has already validated size + MIME type.
 
   // Validate content type
   if (!['pdf', 'audio', 'video'].includes(contentData.tipo)) {
@@ -734,6 +752,13 @@ export async function createContent(contentData: {
   }
 
   revalidatePath('/admin/contenido')
+  revalidatePath('/admin/audios')
+  revalidatePath('/admin/videos')
+  revalidatePath('/admin/pdfs')
+  revalidatePath('/estudio')
+  revalidatePath('/estudio/audios')
+  revalidatePath('/estudio/videos')
+  revalidatePath('/estudio/pdfs')
   return { success: true }
 }
 
