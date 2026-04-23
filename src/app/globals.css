@@ -712,6 +712,32 @@ body {
   filter: blur(24px);
 }
 
+/* ── Ken Burns — continuous subtle zoom + pan for hero imagery ──
+   Two variants so side-by-side cards don't move in sync (anti-pattern).
+   Paused on hover via `[animation-play-state:paused]` Tailwind arbitrary
+   property, falling back to the hover scale transform. */
+
+@keyframes ken-burns-a {
+  0%, 100% { transform: scale(1.06) translate(0%, 0%); }
+  50%      { transform: scale(1.14) translate(-1.5%, -1%); }
+}
+
+@keyframes ken-burns-b {
+  0%, 100% { transform: scale(1.06) translate(0%, 0%); }
+  50%      { transform: scale(1.14) translate(1.5%, 1%); }
+}
+
+.ken-burns-a {
+  animation: ken-burns-a 22s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.ken-burns-b {
+  animation: ken-burns-b 26s ease-in-out infinite;
+  transform-origin: center center;
+  animation-delay: -8s; /* de-sync from ken-burns-a */
+}
+
 /* Parallax layers */
 .parallax-container {
   perspective: 1000px;
