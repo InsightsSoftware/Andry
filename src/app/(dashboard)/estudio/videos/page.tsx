@@ -7,6 +7,7 @@ import {
   PlayCircle,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { getSignedContentUrl } from '@/lib/supabase/storage'
 import { formatSeconds } from '@/lib/utils'
 
 export const metadata = { title: 'Videos' }
@@ -56,6 +57,20 @@ export default async function VideosPage() {
   const cursoMap = new Map((cursos || []).map((c) => [c.id, c]))
   const progresoMap = new Map(
     (progreso || []).map((p) => [p.contenido_id, p])
+  )
+
+  // Resolve public URLs so the card can use <video preload="metadata"> to
+  // auto-preview the first frame as thumbnail.
+  const urlMap = new Map<string, string>()
+  await Promise.all(
+    (videos || []).map(async (v) => {
+      try {
+        const url = await getSignedContentUrl(supabase, v.archivo_url, 3600)
+        urlMap.set(v.id, url)
+      } catch {
+        // Skip if URL cannot be generated — card falls back to placeholder.
+      }
+    })
   )
 
   type Group = {
@@ -166,25 +181,42 @@ export default async function VideosPage() {
                 {grupo.items.map((video) => {
                   const cap = capituloMap.get(video.capitulo_id)
                   const progress = progresoMap.get(video.id)
+                  const publicUrl = urlMap.get(video.id)
                   return (
                     <Link
                       key={video.id}
                       href={`/estudio/video/${video.id}`}
                       className="group overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 transition-all hover:border-success-300 dark:hover:border-success-700 hover:shadow-md cursor-pointer"
                     >
-                      {/* Thumbnail area — placeholder with play icon (real thumbnails
-                          come later when Andry uploads video poster frames) */}
-                      <div className="relative aspect-video bg-gradient-to-br from-success-500/10 via-success-600/5 to-neutral-100 dark:from-success-900/30 dark:via-success-950/20 dark:to-neutral-900 flex items-center justify-center">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 dark:bg-neutral-900/90 shadow-lg group-hover:scale-110 transition-transform">
-                          <PlayCircle className="h-8 w-8 text-success-600 dark:text-success-400" />
+                      {/* Thumbnail area — auto-preview from the video first
+                          frame via <video preload="metadata">. The #t=1
+                          fragment seeks past any initial black frames. */}
+                      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-success-500/10 via-success-600/5 to-neutral-100 dark:from-success-900/30 dark:via-success-950/20 dark:to-neutral-900">
+                        {publicUrl && (
+                          <video
+                            src={`${publicUrl}#t=1`}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            aria-hidden="true"
+                            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+                          />
+                        )}
+                        {/* Subtle darkening for play button contrast */}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                        {/* Play button overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 dark:bg-neutral-900/90 shadow-lg group-hover:scale-110 transition-transform">
+                            <PlayCircle className="h-8 w-8 text-success-600 dark:text-success-400" />
+                          </div>
                         </div>
                         {video.duracion_segundos && (
-                          <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white">
+                          <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white z-10">
                             {formatSeconds(video.duracion_segundos)}
                           </span>
                         )}
                         {progress?.completado && (
-                          <span className="absolute top-2 right-2 rounded-full bg-success-500 p-1">
+                          <span className="absolute top-2 right-2 rounded-full bg-success-500 p-1 z-10">
                             <CheckCircle2 className="h-4 w-4 text-white" />
                           </span>
                         )}

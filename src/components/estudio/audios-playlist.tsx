@@ -43,6 +43,23 @@ export interface CapituloOption {
   nombre: string
 }
 
+// 6 predefined gradients (purple/gold brand-aligned). Stable per track so
+// each cover art looks consistent across reloads.
+const COVER_GRADIENTS = [
+  'linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #d4a843 100%)',
+  'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #c9a23c 100%)',
+  'linear-gradient(135deg, #9333ea 0%, #d4a843 100%)',
+  'linear-gradient(135deg, #6b21a8 0%, #c084fc 50%, #f5d78e 100%)',
+  'linear-gradient(135deg, #1e293b 0%, #7c3aed 60%, #d4a843 100%)',
+  'linear-gradient(135deg, #a855f7 0%, #9333ea 45%, #d4a843 100%)',
+]
+
+function coverGradientFor(id: string): string {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return COVER_GRADIENTS[h % COVER_GRADIENTS.length]
+}
+
 interface Props {
   tracks: Track[]
   capitulos: CapituloOption[]
@@ -408,25 +425,49 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
                   type="button"
                   onClick={() => selectTrack(t.id)}
                   className={cn(
-                    'group w-full text-left rounded-xl border p-4 transition-all cursor-pointer',
-                    'flex items-center gap-3',
+                    'group w-full text-left rounded-xl border p-3 transition-all cursor-pointer',
+                    'flex items-center gap-4',
                     isActive
                       ? 'border-primary-500 dark:border-primary-400 bg-primary-50/60 dark:bg-primary-900/20 shadow-sm'
                       : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm'
                   )}
                 >
+                  {/* Cover art — 64px square with gradient + module number.
+                      Replaceable with a real image once admin upload lands. */}
                   <div
-                    className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
-                      isActive
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50'
-                    )}
+                    className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
+                    style={{ background: coverGradientFor(t.id) }}
                   >
-                    {isActive && isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4 translate-x-[1px]" />
+                    {/* Big faint module number as art */}
+                    <span className="absolute inset-0 flex items-center justify-center text-3xl font-black text-white/20 select-none">
+                      {i + 1}
+                    </span>
+                    {/* Play/pause overlay — always visible, intensifies on hover */}
+                    <div
+                      className={cn(
+                        'absolute inset-0 flex items-center justify-center transition-all',
+                        isActive
+                          ? 'bg-black/20'
+                          : 'bg-black/10 group-hover:bg-black/30'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md transition-transform',
+                          'group-hover:scale-110'
+                        )}
+                      >
+                        {isActive && isPlaying ? (
+                          <Pause className="h-4 w-4 text-primary-700" />
+                        ) : (
+                          <Play className="h-4 w-4 translate-x-[1px] text-primary-700" />
+                        )}
+                      </div>
+                    </div>
+                    {isDone && (
+                      <span className="absolute right-1 top-1 rounded-full bg-success-500 p-0.5 shadow-sm">
+                        <CheckCircle2 className="h-3 w-3 text-white" />
+                      </span>
                     )}
                   </div>
 
@@ -444,13 +485,21 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
                     >
                       {t.titulo}
                     </p>
+                    {t.duracionSegundos && (
+                      <p className="mt-0.5 text-[11px] font-medium tabular-nums text-neutral-500 dark:text-neutral-400">
+                        {formatSeconds(t.duracionSegundos)}
+                      </p>
+                    )}
                   </div>
 
-                  {isDone ? (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-success-500" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 shrink-0 text-neutral-400 dark:text-neutral-500 group-hover:text-primary-500 transition-colors" />
-                  )}
+                  <ChevronRight
+                    className={cn(
+                      'h-5 w-5 shrink-0 transition-colors',
+                      isActive
+                        ? 'text-primary-500 dark:text-primary-400'
+                        : 'text-neutral-400 dark:text-neutral-500 group-hover:text-primary-500'
+                    )}
+                  />
                 </button>
               </div>
             )
