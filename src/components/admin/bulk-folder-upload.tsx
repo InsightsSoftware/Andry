@@ -598,11 +598,14 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
       }
     }
 
-    // Now upload + create contenido concurrently (2 at a time)
+    // Upload + create contenido SEQUENTIALLY. Large files (10-25MB PDFs,
+    // 300MB videos) can saturate Render's egress when run in parallel and
+    // cause intermittent 500s. Sequential keeps memory + bandwidth
+    // predictable. Small audios still fly fast (~1-2s each).
     let doneCount = 0
     let errorCount = 0
 
-    await runWithConcurrency(flatTasks, 2, async (task, i) => {
+    await runWithConcurrency(flatTasks, 1, async (task, i) => {
       setStatuses((prev) => {
         const next = [...prev]
         next[i] = { ...next[i], status: 'uploading' }

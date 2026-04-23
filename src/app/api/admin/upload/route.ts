@@ -4,6 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { apiLimiter } from '@/lib/rate-limit'
 import { CONTENIDO_BUCKET, getSignedContentUrl } from '@/lib/supabase/storage'
 
+// Allow long uploads for large PDFs/videos. Render is fine with this;
+// default Next.js/app-router cap is 30s otherwise.
+export const maxDuration = 300
+export const runtime = 'nodejs'
+
 // Max file sizes by type
 const MAX_SIZES: Record<string, number> = {
   pdf: 100 * 1024 * 1024,   // 100MB for PDFs
@@ -92,7 +97,9 @@ export async function POST(request: Request) {
       .replace(/[^a-zA-Z0-9_-]/g, '_') // sanitize
       .substring(0, 60) // limit length
     const timestamp = Date.now()
-    const filePath = `${folder}/${safeName}_${timestamp}.${ext}`
+    // Add jitter so concurrent uploads of same basename don't collide
+    const jitter = Math.random().toString(36).slice(2, 7)
+    const filePath = `${folder}/${safeName}_${timestamp}_${jitter}.${ext}`
 
     // 6. Upload to Supabase Storage using admin client
     const adminSupabase = createAdminClient()
@@ -162,9 +169,18 @@ export async function POST(request: Request) {
       type: file.type,
     })
   } catch (error) {
+    // Surface the actual error message to the client so bulk uploaders
+    // can show what really went wrong (file too large, network, etc.)
+    // instead of an opaque "Error interno del servidor".
+    const msg =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+          ? error
+          : 'Error desconocido'
     console.error('Upload error:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: `Error al subir: ${msg}` },
       { status: 500 }
     )
   }
