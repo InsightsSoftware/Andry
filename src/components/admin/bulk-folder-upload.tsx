@@ -41,6 +41,11 @@ interface Props {
   cursos: ExistingCurso[]
 }
 
+interface FileWithPath {
+  file: File
+  path: string
+}
+
 interface ParsedFile {
   file: File
   relativePath: string
@@ -183,24 +188,23 @@ function isAcceptedFile(filename: string, tipo: Tipo): boolean {
 }
 
 /**
- * Takes a list of File objects with webkitRelativePath and produces a plan
- * organized by chapter. Non-matching files are skipped.
+ * Takes a list of { file, path } and produces a plan organized by chapter.
+ * Non-matching files are skipped.
  */
 function buildPlan(
-  files: File[],
+  entries: FileWithPath[],
   tipo: Tipo,
   existingCapitulos: ExistingCapitulo[],
   defaultCursoId: string
-): ChapterPlan[] {
+): { plan: ChapterPlan[]; unknownPaths: string[] } {
   const capMap = new Map<number, ExistingCapitulo>()
   for (const c of existingCapitulos) capMap.set(c.numero, c)
 
   const byChapter = new Map<number, ParsedFile[]>()
-  const unknownChapter: ParsedFile[] = []
+  const unknownPaths: string[] = []
 
-  for (const file of files) {
-    const relativePath = (file as File & { webkitRelativePath?: string })
-      .webkitRelativePath || file.name
+  for (const { file, path } of entries) {
+    const relativePath = path || file.name
     if (!isAcceptedFile(file.name, tipo)) continue
 
     const parts = relativePath.split('/').filter(Boolean)
@@ -260,7 +264,7 @@ function buildPlan(
       arr.push(parsedFile)
       byChapter.set(chapterNumber, arr)
     } else {
-      unknownChapter.push(parsedFile)
+      unknownPaths.push(relativePath)
     }
   }
 
@@ -297,7 +301,7 @@ function buildPlan(
     })
   }
 
-  return plan
+  return { plan, unknownPaths }
 }
 
 // ── Upload helpers ──────────────────────────────────────────────────
@@ -343,6 +347,7 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const [plan, setPlan] = useState<ChapterPlan[] | null>(null)
   const [unknownCount, setUnknownCount] = useState(0)
+  const [unknownPaths, setUnknownPaths] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0, errors: 0 })
   const [statuses, setStatuses] = useState<UploadResult[]>([])
@@ -353,14 +358,21 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
   // Default curso — first one (usually "negocios-y-finanzas")
   const defaultCursoId = useMemo(() => cursos[0]?.id ?? '', [cursos])
 
-  const processFiles = useCallback(
-    (fileList: FileList) => {
+  const processEntries = useCallback(
+    (entries: FileWithPath[]) => {
       setFinalSummary(null)
-      const files = Array.from(fileList)
-      const built = buildPlan(files, tipo, capitulos, defaultCursoId)
+      const { plan: built, unknownPaths: paths } = buildPlan(
+        entries,
+        tipo,
+        capitulos,
+        defaultCursoId
+      )
       const acceptedCount = built.reduce((acc, p) => acc + p.files.length, 0)
-      const totalAccepted = files.filter((f) => isAcceptedFile(f.name, tipo)).length
+      const totalAccepted = entries.filter((e) =>
+        isAcceptedFile(e.file.name, tipo)
+      ).length
       setUnknownCount(totalAccepted - acceptedCount)
+      setUnknownPaths(paths)
       setPlan(built)
     },
     [tipo, capitulos, defaultCursoId]
@@ -373,8 +385,8 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
       const items = e.dataTransfer.items
       if (!items?.length) return
 
-      // Walk FileSystem entries to get webkitRelativePath-equivalents
-      const collected: File[] = []
+      // Walk FileSystem entries and collect { file, path } pairs
+      const collected: FileWithPath[] = []
       await Promise.all(
         Array.from(items).map((item) => {
           const entry = (item as DataTransferItem & {
@@ -386,31 +398,31 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
       )
 
       if (collected.length === 0) {
-        // Fallback: use plain files (no folder structure)
+        // Fallback: plain drop without folder structure
         const plain = Array.from(e.dataTransfer.files || [])
-        if (plain.length) {
-          const dt = new DataTransfer()
-          plain.forEach((f) => dt.items.add(f))
-          processFiles(dt.files)
-        }
+        processEntries(plain.map((f) => ({ file: f, path: f.name })))
         return
       }
 
-      // Rebuild a FileList-like array with webkitRelativePath set
-      const dt = new DataTransfer()
-      for (const f of collected) dt.items.add(f)
-      processFiles(dt.files)
+      processEntries(collected)
     },
-    [processFiles]
+    [processEntries]
   )
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.length) return
-      processFiles(e.target.files)
+      const arr = Array.from(e.target.files).map((f) => ({
+        file: f,
+        // <input webkitdirectory> sets webkitRelativePath natively
+        path:
+          (f as File & { webkitRelativePath?: string }).webkitRelativePath ||
+          f.name,
+      }))
+      processEntries(arr)
       e.target.value = ''
     },
-    [processFiles]
+    [processEntries]
   )
 
   async function confirmUpload() {
@@ -637,6 +649,33 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
             </button>
           </div>
 
+          {/* Debug panel — shows when nothing matched so user can see
+              exactly what paths the parser saw and why they didn't match. */}
+          {plan.length === 0 && unknownPaths.length > 0 && (
+            <details className="mb-3 rounded-xl border border-warning-300 dark:border-warning-700 bg-warning-50 dark:bg-warning-900/20 text-xs">
+              <summary className="cursor-pointer px-3 py-2 font-semibold text-warning-700 dark:text-warning-300">
+                No se detectó ningún capítulo — click para ver los paths que
+                recibí
+              </summary>
+              <div className="px-3 pb-3 font-mono text-[11px] text-neutral-600 dark:text-neutral-400 max-h-48 overflow-y-auto">
+                {unknownPaths.slice(0, 20).map((p, i) => (
+                  <div key={i} className="truncate">{p}</div>
+                ))}
+                {unknownPaths.length > 20 && (
+                  <div className="mt-1 text-neutral-500">
+                    … y {unknownPaths.length - 20} más
+                  </div>
+                )}
+                <p className="mt-2 font-sans text-neutral-500 dark:text-neutral-400">
+                  Esperaba carpetas tipo <code>cap 1 audio</code>,{' '}
+                  <code>cap-02</code>, <code>SUPLEMENTO AIA</code>,{' '}
+                  <code>SUPLEMENTO CIRCULAR E</code>. Si los paths no tienen
+                  esa estructura, renombrá las carpetas o avisá qué patrón usás.
+                </p>
+              </div>
+            </details>
+          )}
+
           <div className="mb-4 max-h-80 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
             {plan.map((ch) => (
               <details key={ch.numero} className="group border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
@@ -783,31 +822,25 @@ export function BulkFolderUpload({ tipo, capitulos, cursos }: Props) {
   )
 }
 
-// ── Utility: walk a FileSystemEntry tree and collect files with path ─
+// ── Utility: walk a FileSystemEntry tree and collect {file, path} pairs ─
 
 async function walkEntry(
   entry: FileSystemEntry,
   pathPrefix: string
-): Promise<File[]> {
+): Promise<FileWithPath[]> {
   if (entry.isFile) {
     const fileEntry = entry as FileSystemFileEntry
     return new Promise((resolve) => {
       fileEntry.file((f) => {
-        // Rebuild webkitRelativePath so buildPlan works the same way as
-        // when using <input webkitdirectory>.
         const finalPath = pathPrefix ? `${pathPrefix}/${f.name}` : f.name
-        Object.defineProperty(f, 'webkitRelativePath', {
-          value: finalPath,
-          configurable: true,
-        })
-        resolve([f])
+        resolve([{ file: f, path: finalPath }])
       })
     })
   }
   if (entry.isDirectory) {
     const dirEntry = entry as FileSystemDirectoryEntry
     const reader = dirEntry.createReader()
-    const out: File[] = []
+    const out: FileWithPath[] = []
     const newPrefix = pathPrefix
       ? `${pathPrefix}/${entry.name}`
       : entry.name
