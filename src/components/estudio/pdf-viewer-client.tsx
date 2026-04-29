@@ -64,18 +64,18 @@ export function PDFViewerClient({
         el.style.color = '#fff'
         el.style.outline = '2px solid #ea580c'
 
-        // Usar offsetTop acumulado — funciona aunque el elemento esté fuera
-        // del viewport (getBoundingClientRect falla en esos casos)
         const container = scrollRef.current
         if (container) {
-          let offsetTop = 0
-          let node: HTMLElement | null = el
-          while (node && node !== container) {
-            offsetTop += node.offsetTop
-            node = node.offsetParent as HTMLElement | null
-          }
+          const containerRect = container.getBoundingClientRect()
+          const elRect = el.getBoundingClientRect()
+          // Absolute position within the scroll container, regardless of viewport
+          const targetTop =
+            container.scrollTop +
+            (elRect.top - containerRect.top) -
+            container.clientHeight / 2 +
+            el.offsetHeight / 2
           container.scrollTo({
-            top: offsetTop - container.clientHeight / 2 + el.offsetHeight / 2,
+            top: Math.max(0, targetTop),
             behavior: 'smooth',
           })
         }
