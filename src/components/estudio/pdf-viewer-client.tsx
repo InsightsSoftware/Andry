@@ -63,22 +63,7 @@ export function PDFViewerClient({
         el.style.backgroundColor = '#f97316'
         el.style.color = '#fff'
         el.style.outline = '2px solid #ea580c'
-
-        const container = scrollRef.current
-        if (container) {
-          const containerRect = container.getBoundingClientRect()
-          const elRect = el.getBoundingClientRect()
-          // Absolute position within the scroll container, regardless of viewport
-          const targetTop =
-            container.scrollTop +
-            (elRect.top - containerRect.top) -
-            container.clientHeight / 2 +
-            el.offsetHeight / 2
-          container.scrollTo({
-            top: Math.max(0, targetTop),
-            behavior: 'smooth',
-          })
-        }
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
       } else {
         el.style.backgroundColor = '#fbbf24'
         el.style.color = '#000'
