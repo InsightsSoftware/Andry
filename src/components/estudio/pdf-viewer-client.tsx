@@ -64,17 +64,20 @@ export function PDFViewerClient({
         el.style.color = '#fff'
         el.style.outline = '2px solid #ea580c'
 
-        // Scroll SOLO dentro del contenedor del PDF — no scrollea la ventana
+        // Usar offsetTop acumulado — funciona aunque el elemento esté fuera
+        // del viewport (getBoundingClientRect falla en esos casos)
         const container = scrollRef.current
         if (container) {
-          const elRect = el.getBoundingClientRect()
-          const containerRect = container.getBoundingClientRect()
-          const targetTop =
-            container.scrollTop +
-            (elRect.top - containerRect.top) -
-            container.clientHeight / 2 +
-            elRect.height / 2
-          container.scrollTo({ top: targetTop, behavior: 'smooth' })
+          let offsetTop = 0
+          let node: HTMLElement | null = el
+          while (node && node !== container) {
+            offsetTop += node.offsetTop
+            node = node.offsetParent as HTMLElement | null
+          }
+          container.scrollTo({
+            top: offsetTop - container.clientHeight / 2 + el.offsetHeight / 2,
+            behavior: 'smooth',
+          })
         }
       } else {
         el.style.backgroundColor = '#fbbf24'
@@ -84,15 +87,14 @@ export function PDFViewerClient({
     })
   }, [])
 
-  // Collect marks with retry — react-pdf renders text layers lazily,
-  // so marks might not exist immediately after searchText changes.
+  // Collect marks con retry — react-pdf renderiza text layers de forma lazy.
+  // Reintenta hasta que aparezcan marks o se agoten los intentos (max ~3s).
   const collectAndJump = useCallback(
     (attempt = 0) => {
       const marks = Array.from(
         scrollRef.current?.querySelectorAll('mark') ?? []
       )
-      if (marks.length === 0 && attempt < 8) {
-        // Retry up to 8 times (max ~2s total) while text layers render
+      if (marks.length === 0 && attempt < 12) {
         setTimeout(() => collectAndJump(attempt + 1), 250)
         return
       }
@@ -104,7 +106,7 @@ export function PDFViewerClient({
     [activateMatch]
   )
 
-  // After search text changes, collect marks from DOM and jump to first
+  // Cuando cambia el texto de búsqueda, esperar el re-render y saltar
   useEffect(() => {
     if (!searchText.trim()) {
       marksRef.current = []
@@ -112,8 +114,7 @@ export function PDFViewerClient({
       setMatchIndex(0)
       return
     }
-    // Initial delay for react-pdf to apply customTextRenderer
-    const timer = setTimeout(() => collectAndJump(0), 300)
+    const timer = setTimeout(() => collectAndJump(0), 400)
     return () => clearTimeout(timer)
   }, [searchText, collectAndJump])
 
