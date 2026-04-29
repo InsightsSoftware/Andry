@@ -3,27 +3,25 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export const CONTENIDO_BUCKET = 'contenido-cursos'
 
 /**
- * Returns a URL the browser can hit to fetch content from the bucket.
+ * Returns a SIGNED URL the browser can hit to fetch content from the bucket.
  *
- * The bucket is configured `public: true` (per migration 00010) — auth is
- * enforced at the app level (middleware + subscription gate), not at the
- * storage level. So we just return the public URL directly; no RLS dance,
- * no TTL, no "Object not found" errors from `createSignedUrl` hitting
- * storage.objects RLS.
+ * El bucket es PRIVADO. Solo users con `profiles.subscription_status = 'active'`
+ * y `subscription_expires_at > now()` (o admins/mentores) pueden generar URLs
+ * via la storage policy. Si la policy rechaza, `createSignedUrl` devuelve un
+ * error y este helper tira `Error("…subscription required…")`.
  *
- * Accepts three kinds of input:
- * 1. A bare storage path (e.g. "negocios-y-finanzas/abc/audio_123.mp3")
- * 2. A Supabase public/signed URL → the path is extracted and re-wrapped.
- * 3. An external URL (e.g. test data on soundhelix.com) → returned as-is.
+ * El TTL corto (5 min default) limita el daño si un URL se filtra: aunque un
+ * usuario lo comparta en WhatsApp, el link expira rápido.
  *
- * Name kept as `getSignedContentUrl` for callsite compatibility; the
- * `ttlSeconds` param is now unused but accepted so existing callers
- * don't need to change.
+ * Acepta tres tipos de input:
+ * 1. Path crudo (e.g. "negocios-y-finanzas/abc/audio_123.mp3")
+ * 2. URL pública/firmada de Supabase → extraemos el path y re-firmamos.
+ * 3. URL externa (ej: test data) → la devolvemos sin tocar.
  */
 export async function getSignedContentUrl(
   supabase: SupabaseClient,
   urlOrPath: string,
-  _ttlSeconds = 3600
+  ttlSeconds = 300 // 5 minutos por default — corto a propósito
 ): Promise<string> {
   // External URL — not ours, hand it back as-is.
   if (isExternalUrl(urlOrPath)) {
@@ -31,13 +29,19 @@ export async function getSignedContentUrl(
   }
 
   const path = extractPath(urlOrPath)
-  const { data } = supabase.storage.from(CONTENIDO_BUCKET).getPublicUrl(path)
+  const { data, error } = await supabase.storage
+    .from(CONTENIDO_BUCKET)
+    .createSignedUrl(path, ttlSeconds)
 
-  if (!data?.publicUrl) {
-    throw new Error(`No se pudo construir URL pública para "${path}"`)
+  if (error || !data?.signedUrl) {
+    // Si la policy de storage rechaza, llegamos acá. Probable causa: el
+    // user no tiene subscription activa, o no está logueado.
+    throw new Error(
+      `No se pudo firmar URL para "${path}": ${error?.message ?? 'sin signedUrl'}`
+    )
   }
 
-  return data.publicUrl
+  return data.signedUrl
 }
 
 /**

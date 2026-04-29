@@ -103,6 +103,35 @@ function HeroSection() {
             100% en español
           </span>
         </div>
+
+        {/* ── Video de venta — slot para que Andry pegue su video ── */}
+        <div className="mt-16 mx-auto max-w-3xl">
+          <div className="relative overflow-hidden rounded-2xl shadow-2xl shadow-primary-900/30 ring-1 ring-white/10">
+            {/* Placeholder — reemplazar src con URL del video real de Andry */}
+            <div className="aspect-video w-full bg-neutral-900 flex items-center justify-center">
+              <div className="text-center">
+                <Video className="mx-auto mb-3 h-12 w-12 text-primary-400/60" />
+                <p className="text-sm font-medium text-neutral-400">
+                  Video de presentación
+                </p>
+                <p className="mt-1 text-xs text-neutral-600">
+                  Próximamente
+                </p>
+              </div>
+            </div>
+            {/* Cuando tengamos el video: reemplazar el div de arriba por:
+            <iframe
+              src="https://www.youtube.com/embed/VIDEO_ID"
+              title="Y Exam Prep — Tu licencia de contratista en Florida"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="aspect-video w-full"
+            /> */}
+          </div>
+          <p className="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-600">
+            Mirá cómo funciona la plataforma en 2 minutos
+          </p>
+        </div>
       </div>
     </section>
   )

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"C:\\\\Users\\\\valen\\\\.claude\\\\skills\" \"C:\\\\Users\\\\valen\\\\.claude\\\\commands\")",
+      "Bash(cp -r \"C:\\\\Users\\\\valen\\\\OneDrive\\\\Escritorio\\\\Clientes Insights Software\\\\Andry\\\\.claude\\\\skills\\\\ui-ux-pro-max\" \"C:\\\\Users\\\\valen\\\\.claude\\\\skills/\")",
+      "Bash(cp -r \"C:\\\\Users\\\\valen\\\\OneDrive\\\\Escritorio\\\\Clientes Insights Software\\\\Andry\\\\.claude\\\\skills\\\\3d-web-experience\" \"C:\\\\Users\\\\valen\\\\.claude\\\\skills/\")",
+      "Bash(cp -r \"C:\\\\Users\\\\valen\\\\OneDrive\\\\Escritorio\\\\Clientes Insights Software\\\\Andry\\\\.claude\\\\skills\\\\react-best-practices\" \"C:\\\\Users\\\\valen\\\\.claude\\\\skills/\")",
+      "Bash(cp -r \"C:\\\\Users\\\\valen\\\\OneDrive\\\\Escritorio\\\\Clientes Insights Software\\\\Andry\\\\.claude\\\\skills\\\\senior-fullstack\" \"C:\\\\Users\\\\valen\\\\.claude\\\\skills/\")"
+    ]
+  }
+}

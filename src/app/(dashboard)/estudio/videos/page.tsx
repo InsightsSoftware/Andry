@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import {
   Video as VideoIcon,
-  BookOpen,
   ArrowRight,
   CheckCircle2,
   PlayCircle,
+  Building2,
+  ChevronRight,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getSignedContentUrl } from '@/lib/supabase/storage'
@@ -103,11 +104,6 @@ export default async function VideosPage() {
   }
 
   const total = videos?.length || 0
-  const completados = (progreso || []).filter((p) => p.completado).length
-  const totalDuracion = (videos || []).reduce(
-    (acc, v) => acc + (v.duracion_segundos || 0),
-    0
-  )
 
   return (
     <div>
@@ -118,145 +114,120 @@ export default async function VideosPage() {
         </div>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            Videos
+            Videos de Aliados
           </h1>
           <p className="mt-1 text-neutral-500 dark:text-neutral-400">
-            Explicaciones, tutoriales y videos de nuestros aliados.
+            Recursos en video de nuestras empresas asociadas.
           </p>
         </div>
       </div>
 
-      {/* Stats bar */}
-      {total > 0 && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
-            <p className="text-xs uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-              Total
-            </p>
-            <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              {total}
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              videos disponibles
-            </p>
-          </div>
-          <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
-            <p className="text-xs uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-              Vistos
-            </p>
-            <p className="mt-1 text-2xl font-bold text-success-600 dark:text-success-400">
-              {completados}
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              de {total}
-            </p>
-          </div>
-          <div className="col-span-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 sm:col-span-1">
-            <p className="text-xs uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-              Duración total
-            </p>
-            <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              {totalDuracion > 0 ? formatSeconds(totalDuracion) : '—'}
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              de material en video
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Grid of videos */}
+      {/* Partner cards — one card per company/course */}
       {total > 0 ? (
-        <div className="flex flex-col gap-6">
-          {Array.from(grupos.values()).map((grupo) => (
-            <section key={grupo.cursoId}>
-              <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                <BookOpen className="h-3.5 w-3.5" />
-                {grupo.cursoNombre}
-                <span className="ml-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                  {grupo.items.length}
-                </span>
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {grupo.items.map((video) => {
-                  const cap = capituloMap.get(video.capitulo_id)
-                  const progress = progresoMap.get(video.id)
-                  const publicUrl = urlMap.get(video.id)
-                  return (
-                    <Link
-                      key={video.id}
-                      href={`/estudio/video/${video.id}`}
-                      className="group overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 transition-all hover:border-success-300 dark:hover:border-success-700 hover:shadow-md cursor-pointer"
-                    >
-                      {/* Thumbnail area — auto-preview from the video first
-                          frame via <video preload="metadata">. The #t=1
-                          fragment seeks past any initial black frames. */}
-                      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-success-500/10 via-success-600/5 to-neutral-100 dark:from-success-900/30 dark:via-success-950/20 dark:to-neutral-900">
-                        {publicUrl && (
-                          <video
-                            src={`${publicUrl}#t=1`}
-                            preload="metadata"
-                            muted
-                            playsInline
-                            aria-hidden="true"
-                            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-                          />
-                        )}
-                        {/* Subtle darkening for play button contrast */}
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                        {/* Play button overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 dark:bg-neutral-900/90 shadow-lg group-hover:scale-110 transition-transform">
-                            <PlayCircle className="h-8 w-8 text-success-600 dark:text-success-400" />
-                          </div>
-                        </div>
-                        {video.duracion_segundos && (
-                          <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white z-10">
-                            {formatSeconds(video.duracion_segundos)}
-                          </span>
-                        )}
-                        {progress?.completado && (
-                          <span className="absolute top-2 right-2 rounded-full bg-success-500 p-1 z-10">
-                            <CheckCircle2 className="h-4 w-4 text-white" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 line-clamp-2">
-                          {video.titulo}
-                        </p>
-                        {cap && (
-                          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                            Cap. {cap.numero} · {cap.nombre}
-                          </p>
-                        )}
-                        {progress && !progress.completado && (
-                          <div className="mt-2 h-1 w-full rounded-full bg-neutral-100 dark:bg-neutral-800">
-                            <div
-                              className="h-1 rounded-full bg-success-500 transition-all"
-                              style={{
-                                width: `${Math.round(progress.progreso_porcentaje)}%`,
-                              }}
+        <div className="flex flex-col gap-5">
+          {Array.from(grupos.values()).map((grupo) => {
+            const grupoCompletados = grupo.items.filter(
+              (v) => progresoMap.get(v.id)?.completado
+            ).length
+            const grupoDuracion = grupo.items.reduce(
+              (acc, v) => acc + (v.duracion_segundos || 0),
+              0
+            )
+
+            return (
+              <section
+                key={grupo.cursoId}
+                className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+              >
+                {/* Partner header */}
+                <div className="flex items-center gap-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 px-5 py-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-800">
+                    <Building2 className="h-6 w-6 text-success-600 dark:text-success-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
+                      {grupo.cursoNombre}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                      {grupo.items.length} video{grupo.items.length !== 1 ? 's' : ''}
+                      {grupoDuracion > 0 && ` · ${formatSeconds(grupoDuracion)}`}
+                      {grupoCompletados > 0 && ` · ${grupoCompletados} visto${grupoCompletados !== 1 ? 's' : ''}`}
+                    </p>
+                  </div>
+                  {grupoCompletados === grupo.items.length && grupo.items.length > 0 && (
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-success-500" />
+                  )}
+                </div>
+
+                {/* Video list */}
+                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                  {grupo.items.map((video) => {
+                    const progress = progresoMap.get(video.id)
+                    const publicUrl = urlMap.get(video.id)
+                    return (
+                      <Link
+                        key={video.id}
+                        href={`/estudio/video/${video.id}`}
+                        className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60 cursor-pointer"
+                      >
+                        {/* Mini thumbnail */}
+                        <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
+                          {publicUrl && (
+                            <video
+                              src={`${publicUrl}#t=1`}
+                              preload="metadata"
+                              muted
+                              playsInline
+                              aria-hidden="true"
+                              className="absolute inset-0 h-full w-full object-cover pointer-events-none"
                             />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
+                            <PlayCircle className="h-6 w-6 text-white drop-shadow" />
                           </div>
-                        )}
-                        <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-success-600 dark:text-success-400">
-                          <span>Ver video</span>
-                          <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                          {video.duracion_segundos && (
+                            <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1 py-0.5 text-[9px] font-semibold text-white">
+                              {formatSeconds(video.duracion_segundos)}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            </section>
-          ))}
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-2 leading-snug">
+                            {video.titulo}
+                          </p>
+                          {progress && !progress.completado && (
+                            <div className="mt-1.5 h-1 w-full max-w-[120px] rounded-full bg-neutral-100 dark:bg-neutral-800">
+                              <div
+                                className="h-1 rounded-full bg-success-500"
+                                style={{ width: `${Math.round(progress.progreso_porcentaje)}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* State */}
+                        <div className="shrink-0">
+                          {progress?.completado ? (
+                            <CheckCircle2 className="h-5 w-5 text-success-500" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 transition-colors" />
+                          )}
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
         </div>
       ) : (
         <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
           <VideoIcon className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
           <p className="text-neutral-500 dark:text-neutral-400">
-            Los videos se están preparando. Pronto tendrás contenido disponible.
+            Los videos de aliados se están preparando. Pronto tendrás contenido disponible.
           </p>
         </div>
       )}
