@@ -84,6 +84,26 @@ export function PDFViewerClient({
     })
   }, [])
 
+  // Collect marks with retry — react-pdf renders text layers lazily,
+  // so marks might not exist immediately after searchText changes.
+  const collectAndJump = useCallback(
+    (attempt = 0) => {
+      const marks = Array.from(
+        scrollRef.current?.querySelectorAll('mark') ?? []
+      )
+      if (marks.length === 0 && attempt < 8) {
+        // Retry up to 8 times (max ~2s total) while text layers render
+        setTimeout(() => collectAndJump(attempt + 1), 250)
+        return
+      }
+      marksRef.current = marks
+      setMatchCount(marks.length)
+      setMatchIndex(0)
+      if (marks.length > 0) activateMatch(marks, 0)
+    },
+    [activateMatch]
+  )
+
   // After search text changes, collect marks from DOM and jump to first
   useEffect(() => {
     if (!searchText.trim()) {
@@ -92,20 +112,10 @@ export function PDFViewerClient({
       setMatchIndex(0)
       return
     }
-
-    // Wait for react-pdf text layer to re-render with highlights
-    const timer = setTimeout(() => {
-      const marks = Array.from(
-        scrollRef.current?.querySelectorAll('mark') ?? []
-      )
-      marksRef.current = marks
-      setMatchCount(marks.length)
-      setMatchIndex(0)
-      activateMatch(marks, 0)
-    }, 400)
-
+    // Initial delay for react-pdf to apply customTextRenderer
+    const timer = setTimeout(() => collectAndJump(0), 300)
     return () => clearTimeout(timer)
-  }, [searchText, activateMatch])
+  }, [searchText, collectAndJump])
 
   const navigateMatch = useCallback(
     (dir: 'next' | 'prev') => {
@@ -347,7 +357,13 @@ export function PDFViewerClient({
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  e.shiftKey ? navigateMatch('prev') : navigateMatch('next')
+                  if (marksRef.current.length > 0) {
+                    // Marks already collected — just navigate
+                    e.shiftKey ? navigateMatch('prev') : navigateMatch('next')
+                  } else if (searchText.trim()) {
+                    // Marks not ready yet — collect and jump to first immediately
+                    collectAndJump(0)
+                  }
                 } else if (e.key === 'Escape') {
                   setSearchText('')
                 }
