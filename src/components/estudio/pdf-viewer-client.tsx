@@ -63,7 +63,19 @@ export function PDFViewerClient({
         el.style.backgroundColor = '#f97316'
         el.style.color = '#fff'
         el.style.outline = '2px solid #ea580c'
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        // Scroll SOLO dentro del contenedor del PDF — no scrollea la ventana
+        const container = scrollRef.current
+        if (container) {
+          const elRect = el.getBoundingClientRect()
+          const containerRect = container.getBoundingClientRect()
+          const targetTop =
+            container.scrollTop +
+            (elRect.top - containerRect.top) -
+            container.clientHeight / 2 +
+            elRect.height / 2
+          container.scrollTo({ top: targetTop, behavior: 'smooth' })
+        }
       } else {
         el.style.backgroundColor = '#fbbf24'
         el.style.color = '#000'
@@ -418,6 +430,50 @@ export function PDFViewerClient({
           style={{ width: `${progressPercent}%` }}
         />
       </div>
+
+      {/* ── Floating search bar — visible while scrolled into PDF ── */}
+      {searchText && matchCount > 0 && (
+        <div
+          className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none"
+          aria-live="polite"
+        >
+          <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-neutral-900/90 backdrop-blur-md px-4 py-2.5 shadow-2xl ring-1 ring-white/10">
+            <Search className="h-3.5 w-3.5 text-primary-400 shrink-0" />
+            <span className="text-xs text-neutral-300 max-w-[120px] truncate hidden sm:inline">
+              {searchText}
+            </span>
+            <span className="text-xs font-semibold text-white min-w-[40px] text-center tabular-nums">
+              {matchIndex + 1}/{matchCount}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => navigateMatch('prev')}
+                disabled={matchCount === 0}
+                className="rounded-full p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Anterior coincidencia"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => navigateMatch('next')}
+                disabled={matchCount === 0}
+                className="rounded-full p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Siguiente coincidencia"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="w-px h-4 bg-white/20" />
+            <button
+              onClick={() => setSearchText('')}
+              className="rounded-full p-1 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
+              aria-label="Cerrar búsqueda"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* PDF Document */}
       <div
