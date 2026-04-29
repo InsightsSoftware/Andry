@@ -493,7 +493,7 @@ export function PDFViewerClient({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900"
+        className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900 select-none"
         style={{ minHeight: '500px' }}
       >
         {pdfError ? (
