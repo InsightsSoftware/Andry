@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { HeroLogo } from '@/components/ui/hero-logo'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import { ForYouSection } from '@/components/landing/for-you-section'
+import { Spotlight } from '@/components/ui/spotlight'
+import { FlipWords } from '@/components/ui/flip-words'
+import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
 import {
   BookOpen,
   Headphones,
@@ -25,6 +28,15 @@ function HeroSection() {
       {/* Parallax background layers */}
       <HeroParallaxBg />
 
+      {/* Spotlight beams — brand purple + gold */}
+      <Spotlight
+        gradientFirst="radial-gradient(68.54% 68.72% at 55.02% 31.46%, hsla(270, 80%, 70%, .14) 0, hsla(270, 80%, 55%, .05) 50%, hsla(270, 80%, 45%, 0) 80%)"
+        gradientSecond="radial-gradient(50% 50% at 50% 50%, hsla(270, 80%, 70%, .10) 0, hsla(270, 80%, 55%, .03) 80%, transparent 100%)"
+        gradientThird="radial-gradient(50% 50% at 50% 50%, hsla(43, 70%, 65%, .09) 0, hsla(43, 70%, 50%, .02) 80%, transparent 100%)"
+        translateY={-300}
+        duration={9}
+      />
+
       <div className="relative mx-auto max-w-5xl text-center">
         {/* ── Large Centered Logo with 3D Tilt + Metallic Shine + Glow ── */}
         <HeroLogo />
@@ -38,8 +50,18 @@ function HeroSection() {
         {/* Main headline */}
         <h1 className="mb-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-neutral-900 dark:text-white sm:text-5xl lg:text-6xl">
           Sabes construir, pero{' '}
-          <span className="text-gold text-glow-gold">
-            el examen es otro juego
+          <br className="hidden sm:block" />
+          <span className="text-gold text-glow-gold inline-flex">
+            <FlipWords
+              words={[
+                'el examen es otro juego',
+                'el papel te tiene frenado',
+                'la licencia está al alcance',
+                'el examen tiene solución',
+              ]}
+              duration={3500}
+              className="text-gold text-glow-gold"
+            />
           </span>
         </h1>
 
@@ -191,6 +213,61 @@ function ServicesSection() {
           ))}
         </div>
       </div>
+    </section>
+  )
+}
+
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      quote: 'Estudié con los audiolibros mientras manejaba a la obra. Pasé el examen al primer intento.',
+      name: 'Carlos M.',
+      title: 'Electricista — Miami, FL',
+    },
+    {
+      quote: 'Todo en español, sin traducciones raras. Por fin un material que habla como nosotros.',
+      name: 'Roberto G.',
+      title: 'Plomero — Orlando, FL',
+    },
+    {
+      quote: 'El asistente IA me explicó lo de los gravámenes 10 veces sin cansarse. Increíble.',
+      name: 'Miguel A.',
+      title: 'Contratista General — Tampa, FL',
+    },
+    {
+      quote: 'Pagué $3,000 en otro curso y no aprendí nada. Con Y Exam Prep lo logré en 2 meses.',
+      name: 'José R.',
+      title: 'HVAC — Fort Lauderdale, FL',
+    },
+    {
+      quote: 'El PDF interactivo con búsqueda me salvó la vida. Nada de andar hojeando páginas.',
+      name: 'Luis H.',
+      title: 'Albañil — Jacksonville, FL',
+    },
+    {
+      quote: 'Los simulacros de examen son exactamente como el real. Me fue mucho mejor de lo que esperaba.',
+      name: 'Andrés P.',
+      title: 'Carpintero — Hialeah, FL',
+    },
+  ]
+
+  return (
+    <section className="py-16 overflow-hidden">
+      <div className="mb-10 text-center px-4">
+        <h2 className="mb-3 text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
+          Lo que dicen nuestros{' '}
+          <span className="text-primary-600 dark:text-primary-400">contratistas</span>
+        </h2>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Historias reales de contratistas hispanos que ya pasaron su examen
+        </p>
+      </div>
+      <InfiniteMovingCards
+        items={testimonials}
+        direction="left"
+        speed="slow"
+        pauseOnHover
+      />
     </section>
   )
 }
@@ -400,14 +477,14 @@ function CTASection() {
             que realmente te prepara para pasar el examen.
           </p>
           <Link
-            href="/registro"
+            href="/precios"
             className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple"
           >
-            Crear Mi Cuenta Gratis
+            Comenzar Ahora
             <ArrowRight className="h-5 w-5" />
           </Link>
           <p className="mt-4 text-sm text-neutral-500">
-            Registro gratuito — elige tu plan después
+            Un solo pago — sin suscripciones
           </p>
         </div>
       </div>
@@ -422,6 +499,7 @@ export default function LandingPage() {
       <ForYouSection />
       <ProblemSection />
       <ServicesSection />
+      <TestimonialsSection />
       <HowItWorksSection />
       <PricingPreview />
       <FAQSection />
