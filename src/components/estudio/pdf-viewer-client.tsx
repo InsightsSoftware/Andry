@@ -242,7 +242,7 @@ export function PDFViewerClient({
         zoom('out')
       } else if (e.ctrlKey && e.key === 'f') {
         e.preventDefault()
-        setShowSearch((s) => !s)
+        searchInputRef.current?.focus()
       }
     }
     window.addEventListener('keydown', handler)
