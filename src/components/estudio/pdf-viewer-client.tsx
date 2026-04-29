@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -256,6 +256,18 @@ export function PDFViewerClient({
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [currentPage, goToPage, zoom])
+
+  // Memoize so react-pdf only re-renders text layers when searchText changes,
+  // not on every state update (matchIndex, progress, etc.). Without this,
+  // every render creates a new function reference, react-pdf destroys and
+  // recreates all <mark> elements, and marksRef ends up with detached nodes.
+  const textRenderer = useMemo(
+    () =>
+      searchText
+        ? (textItem: { str: string }) => highlightSearchText(textItem.str, searchText)
+        : undefined,
+    [searchText]
+  )
 
   const progressPercent = numPages > 0 ? Math.round((currentPage / numPages) * 100) : progress
 
@@ -537,11 +549,7 @@ export function PDFViewerClient({
                     <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
                   </div>
                 }
-                customTextRenderer={
-                  searchText
-                    ? (textItem) => highlightSearchText(textItem.str, searchText)
-                    : undefined
-                }
+                customTextRenderer={textRenderer}
               />
             ))}
           </Document>
