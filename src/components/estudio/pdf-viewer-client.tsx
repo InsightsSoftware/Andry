@@ -105,8 +105,15 @@ export function PDFViewerClient({
 
   const navigateMatch = useCallback(
     (dir: 'next' | 'prev') => {
-      const marks = marksRef.current
+      // Re-query every time — react-pdf puede haber re-renderizado text layers
+      // desde la última colección, dejando marksRef con referencias stale.
+      const marks = Array.from(
+        scrollRef.current?.querySelectorAll('mark') ?? []
+      )
       if (marks.length === 0) return
+
+      marksRef.current = marks
+      setMatchCount(marks.length)
 
       const newIndex =
         dir === 'next'
