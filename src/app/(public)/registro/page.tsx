@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { GraduationCap } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { registerSchema } from '@/lib/validations'
+import { registerSchema, OFICIOS_LISTA } from '@/lib/validations'
 
 function RegisterForm() {
   const router = useRouter()
@@ -20,11 +20,13 @@ function RegisterForm() {
     email: '',
     password: '',
     telefono: '',
+    direccion: '',
+    oficio: '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -47,6 +49,8 @@ function RegisterForm() {
         data: {
           nombre_completo: formData.nombre_completo,
           telefono: formData.telefono,
+          direccion: formData.direccion,
+          oficio: formData.oficio,
         },
       },
     })
@@ -104,14 +108,43 @@ function RegisterForm() {
           required
         />
         <Input
-          label="Teléfono (opcional)"
+          label="Teléfono"
           name="telefono"
           type="tel"
           placeholder="(305) 555-1234"
           value={formData.telefono}
           onChange={handleChange}
           autoComplete="tel"
+          required
         />
+        <Input
+          label="Dirección"
+          name="direccion"
+          placeholder="123 Main St, Miami, FL 33101"
+          value={formData.direccion}
+          onChange={handleChange}
+          autoComplete="street-address"
+          required
+        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            Oficio <span className="text-danger-500">*</span>
+          </label>
+          <select
+            name="oficio"
+            value={formData.oficio}
+            onChange={handleChange}
+            required
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          >
+            <option value="">Seleccionar oficio...</option>
+            {OFICIOS_LISTA.map((oficio) => (
+              <option key={oficio} value={oficio}>
+                {oficio}
+              </option>
+            ))}
+          </select>
+        </div>
         <Input
           label="Contraseña"
           name="password"

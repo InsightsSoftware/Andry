@@ -45,8 +45,18 @@ export async function POST(request: Request) {
           session.metadata?.duration_months || '6'
         )
 
-        if (!userId || !planKey) {
-          console.error('Missing metadata in checkout session')
+        if (!planKey) {
+          console.error('Missing plan_key in checkout session metadata')
+          break
+        }
+
+        // New flow: supabase_user_id is absent — the user creates their account
+        // on /pago/exito after payment. Activation is handled there.
+        // This webhook is a fallback for legacy sessions that still carry the ID.
+        if (!userId) {
+          console.log(
+            `[webhook] New-flow payment — activation handled on success page. plan=${planKey}`
+          )
           break
         }
 

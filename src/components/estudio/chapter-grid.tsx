@@ -112,7 +112,7 @@ export function ChapterGrid({ chapters, courseName }: Props) {
 
                 {/* CTA */}
                 <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  <span>Abrir capítulo</span>
+                  <span>{c.href.startsWith('/estudio/pdf/') ? 'Abrir PDF' : 'Abrir capítulo'}</span>
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>

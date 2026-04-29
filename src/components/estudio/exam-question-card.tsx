@@ -105,7 +105,16 @@ export function ExamQuestionCard({
         >
           Anterior
         </button>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          {/* Finalizar — always visible as secondary action */}
+          {numero < total && (
+            <button
+              onClick={onFinish}
+              className="rounded-xl border border-success-300 dark:border-success-700 px-4 py-3 text-sm font-medium text-success-700 dark:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20 transition-colors cursor-pointer"
+            >
+              Finalizar
+            </button>
+          )}
           {numero < total ? (
             <button
               onClick={onNext}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CreditCard, Lock, CheckCircle, TestTube2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,40 +9,15 @@ function SimulatedCheckoutForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planKey = searchParams.get('plan') || 'basico'
-  const userId = searchParams.get('uid') || ''
 
   const planName = planKey === 'premium' ? 'Plan Premium' : 'Plan Básico'
   const planPrice = planKey === 'premium' ? '$599.00' : '$299.00'
   const planPeriod = planKey === 'premium' ? '12 meses' : '6 meses'
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handlePay() {
-    setLoading(true)
-    setError('')
-
-    try {
-      const res = await fetch('/api/checkout/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planKey, userId }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al procesar pago simulado')
-      }
-
-      router.push('/pago/exito')
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Error al procesar pago'
-      )
-    } finally {
-      setLoading(false)
-    }
+  function handlePay() {
+    // In simulated mode just redirect to the success/register page.
+    // Actual subscription activation happens AFTER the user creates their account.
+    router.push(`/pago/exito?plan=${planKey}&simulated=true`)
   }
 
   return (
@@ -53,9 +28,8 @@ function SimulatedCheckoutForm() {
         <div className="text-sm text-warning-700 dark:text-warning-400">
           <p className="font-semibold mb-0.5">Estás en modo demostración</p>
           <p>
-            Hacé click abajo para activar tu suscripción gratis mientras
-            estamos en pruebas. No se cobra nada — los pagos reales se
-            habilitan cuando se active Stripe.
+            Hacé click abajo para continuar gratis mientras estamos en pruebas.
+            No se cobra nada — los pagos reales se habilitan cuando se active Stripe.
           </p>
         </div>
       </div>
@@ -79,7 +53,7 @@ function SimulatedCheckoutForm() {
         <div className="p-6">
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              Numero de tarjeta
+              Número de tarjeta
             </label>
             <div className="flex items-center gap-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
               <CreditCard className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
@@ -92,13 +66,15 @@ function SimulatedCheckoutForm() {
             </div>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-3">
+          <div className="mb-6 grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Vencimiento
               </label>
               <div className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
-                <span className="text-sm text-neutral-500 dark:text-neutral-400">12/28</span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                  12/28
+                </span>
               </div>
             </div>
             <div>
@@ -106,29 +82,20 @@ function SimulatedCheckoutForm() {
                 CVC
               </label>
               <div className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-3">
-                <span className="text-sm text-neutral-500 dark:text-neutral-400">123</span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                  123
+                </span>
               </div>
             </div>
           </div>
 
-          {error && (
-            <p className="mb-4 rounded-lg bg-danger-500/10 dark:bg-danger-500/20 px-4 py-2 text-sm text-danger-500">
-              {error}
-            </p>
-          )}
-
-          <Button
-            size="lg"
-            fullWidth
-            loading={loading}
-            onClick={handlePay}
-          >
+          <Button size="lg" fullWidth onClick={handlePay}>
             <CheckCircle className="h-5 w-5" />
-            Activar {planName} (sin cargo)
+            Confirmar {planName} (sin cargo)
           </Button>
 
           <p className="mt-4 text-center text-xs text-neutral-400 dark:text-neutral-500">
-            Mientras estamos en demo no se cobra nada real.
+            Modo demo — no se procesa ningún pago real.
           </p>
         </div>
       </div>

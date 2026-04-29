@@ -32,7 +32,8 @@ export default async function EstudioPage() {
     : { data: [] }
 
   // Quick stats for the pdf/audio/video shortcuts (global across courses)
-  const [{ count: totalPdfs }, { count: totalAudios }, { count: totalVideos }] =
+  // Also fetch first PDF per chapter so chapter cards link directly to the PDF viewer
+  const [{ count: totalPdfs }, { count: totalAudios }, { count: totalVideos }, { data: chapterPdfs }] =
     await Promise.all([
       supabase
         .from('contenido')
@@ -46,7 +47,23 @@ export default async function EstudioPage() {
         .from('contenido')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'video'),
+      cursoIds.length
+        ? supabase
+            .from('contenido')
+            .select('id, capitulo_id')
+            .eq('tipo', 'pdf')
+            .in('capitulo_id', (capitulos || []).map((c) => c.id))
+            .order('orden')
+        : Promise.resolve({ data: [] }),
     ])
+
+  // Map capituloId → first PDF contenido id
+  const firstPdfByCapitulo = new Map<string, string>()
+  for (const pdf of chapterPdfs || []) {
+    if (!firstPdfByCapitulo.has(pdf.capitulo_id)) {
+      firstPdfByCapitulo.set(pdf.capitulo_id, pdf.id)
+    }
+  }
 
   // Group chapters by course
   const chaptersByCurso = new Map<string, typeof capitulos>()
@@ -62,11 +79,12 @@ export default async function EstudioPage() {
   ): ChapterCard[] {
     return caps.map((cap) => {
       const isSupp = cap.numero >= 11
+      const pdfId = firstPdfByCapitulo.get(cap.id)
       return {
         id: cap.id,
         numero: cap.numero,
         nombre: cap.nombre,
-        href: `/estudio/${cursoSlug}#cap-${cap.id}`,
+        href: pdfId ? `/estudio/pdf/${pdfId}` : `/estudio/${cursoSlug}#cap-${cap.id}`,
         label: isSupp
           ? cap.numero === 11
             ? 'SUPLEMENTO AIA'

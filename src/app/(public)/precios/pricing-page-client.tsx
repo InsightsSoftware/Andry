@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, ArrowRight, Star, AlertCircle, TestTube2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
 
 const plans = [
   {
@@ -56,16 +55,7 @@ export function PricingPageClient({ simulated }: PricingPageClientProps) {
     setLoadingPlan(planKey)
 
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push(`/registro?plan=${planKey}`)
-        return
-      }
-
+      // No auth check — new flow: pay first, create account after payment
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

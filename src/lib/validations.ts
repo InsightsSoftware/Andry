@@ -14,6 +14,20 @@ export const loginSchema = z.object({
     .min(6, 'La contraseña debe tener al menos 6 caracteres'),
 })
 
+export const OFICIOS_LISTA = [
+  'Electricidad',
+  'Plomería',
+  'HVAC / A-C',
+  'Albañilería',
+  'Carpintería',
+  'Pintura',
+  'Techos',
+  'Remodelación',
+  'Otro',
+] as const
+
+export type OficioValue = (typeof OFICIOS_LISTA)[number]
+
 export const registerSchema = z.object({
   nombre_completo: z
     .string()
@@ -30,7 +44,14 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, 'Debe contener al menos un número'),
   telefono: z
     .string()
-    .optional(),
+    .min(1, 'El teléfono es obligatorio'),
+  direccion: z
+    .string()
+    .min(5, 'La dirección debe tener al menos 5 caracteres')
+    .max(200, 'La dirección es demasiado larga'),
+  oficio: z
+    .string()
+    .min(1, 'El oficio es obligatorio'),
 })
 
 export const forgotPasswordSchema = z.object({
@@ -140,6 +161,7 @@ export const aiChatSchema = z.object({
 // Type exports
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
+
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export type PostDudaInput = z.infer<typeof postDudaSchema>
 export type PostTrabajoInput = z.infer<typeof postTrabajoSchema>

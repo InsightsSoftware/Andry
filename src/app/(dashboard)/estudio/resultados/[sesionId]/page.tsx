@@ -357,9 +357,17 @@ export default async function ResultadosPage({
                 })}
               </div>
 
-              {/* Explanation */}
+              {/* Explanation — green when correct, red when wrong, neutral when skipped */}
               {pregunta.explicacion && (
-                <div className="ml-10 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-3 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <div
+                  className={`ml-10 rounded-lg p-3 text-xs leading-relaxed ${
+                    estado === 'correcta'
+                      ? 'bg-success-50 dark:bg-success-900/20 text-success-800 dark:text-success-300 border border-success-200 dark:border-success-800'
+                      : estado === 'incorrecta'
+                        ? 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-800'
+                        : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                  }`}
+                >
                   {pregunta.explicacion}
                 </div>
               )}

@@ -135,8 +135,8 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
         </a>
       </div>
 
-      {/* Search + filter bar — only shown when there are posts */}
-      {posts.length > 0 && (
+      {/* Search + filter bar — always visible */}
+      {(
         <div className="mb-5 flex flex-col gap-3">
           {/* Search input */}
           <div className="relative">
@@ -226,7 +226,7 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
       )}
 
       {/* Posts list */}
-      {posts.length > 0 && filteredPosts.length > 0 ? (
+      {filteredPosts.length > 0 ? (
         <div className="flex flex-col gap-4">
           {filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />

@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   ZoomIn,
   ZoomOut,
   Search,
@@ -39,16 +41,75 @@ export function PDFViewerClient({
   const [completed, setCompleted] = useState(initialProgress >= 95)
   const [saving, setSaving] = useState(false)
   const [searchText, setSearchText] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [pageInputValue, setPageInputValue] = useState('1')
   const [loadingDoc, setLoadingDoc] = useState(true)
   const [pdfError, setPdfError] = useState(false)
 
+  // Search navigation state
+  const [matchIndex, setMatchIndex] = useState(0)
+  const [matchCount, setMatchCount] = useState(0)
+  const marksRef = useRef<Element[]>([])
+
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastSavedProgress = useRef(initialProgress)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const activateMatch = useCallback((marks: Element[], index: number) => {
+    marks.forEach((m, i) => {
+      const el = m as HTMLElement
+      if (i === index) {
+        el.style.backgroundColor = '#f97316'
+        el.style.color = '#fff'
+        el.style.outline = '2px solid #ea580c'
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else {
+        el.style.backgroundColor = '#fbbf24'
+        el.style.color = '#000'
+        el.style.outline = 'none'
+      }
+    })
+  }, [])
+
+  // After search text changes, collect marks from DOM and jump to first
+  useEffect(() => {
+    if (!searchText.trim()) {
+      marksRef.current = []
+      setMatchCount(0)
+      setMatchIndex(0)
+      return
+    }
+
+    // Wait for react-pdf text layer to re-render with highlights
+    const timer = setTimeout(() => {
+      const marks = Array.from(
+        scrollRef.current?.querySelectorAll('mark') ?? []
+      )
+      marksRef.current = marks
+      setMatchCount(marks.length)
+      setMatchIndex(0)
+      activateMatch(marks, 0)
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [searchText, activateMatch])
+
+  const navigateMatch = useCallback(
+    (dir: 'next' | 'prev') => {
+      const marks = marksRef.current
+      if (marks.length === 0) return
+
+      const newIndex =
+        dir === 'next'
+          ? (matchIndex + 1) % marks.length
+          : (matchIndex - 1 + marks.length) % marks.length
+
+      setMatchIndex(newIndex)
+      activateMatch(marks, newIndex)
+    },
+    [matchIndex, activateMatch]
+  )
 
   // Track scroll-based progress
   const handleScroll = useCallback(() => {
@@ -62,7 +123,6 @@ export function PDFViewerClient({
 
     setProgress(clampedPercent)
 
-    // Estimate current page from scroll position
     const estimatedPage = Math.max(
       1,
       Math.min(numPages, Math.ceil((clampedPercent / 100) * numPages))
@@ -79,13 +139,8 @@ export function PDFViewerClient({
       lastSavedProgress.current = progress
       const saveProgress = async () => {
         setSaving(true)
-        const result = await updateProgress(
-          contenidoId,
-          Math.min(100, progress)
-        )
-        if (result.success && result.completado) {
-          setCompleted(true)
-        }
+        const result = await updateProgress(contenidoId, Math.min(100, progress))
+        if (result.success && result.completado) setCompleted(true)
         setSaving(false)
       }
       saveProgress()
@@ -106,20 +161,14 @@ export function PDFViewerClient({
     ({ numPages: total }: { numPages: number }) => {
       setNumPages(total)
       setLoadingDoc(false)
-      // Jump to approximate page based on saved progress
       if (initialProgress > 0 && total > 1) {
-        const startPage = Math.max(
-          1,
-          Math.ceil((initialProgress / 100) * total)
-        )
+        const startPage = Math.max(1, Math.ceil((initialProgress / 100) * total))
         setCurrentPage(startPage)
         setPageInputValue(String(startPage))
-        // Scroll to that page after render
         setTimeout(() => {
           const el = scrollRef.current
           if (el) {
-            const scrollTarget =
-              (startPage / total) * (el.scrollHeight - el.clientHeight)
+            const scrollTarget = (startPage / total) * (el.scrollHeight - el.clientHeight)
             el.scrollTo({ top: scrollTarget, behavior: 'auto' })
           }
         }, 500)
@@ -133,12 +182,9 @@ export function PDFViewerClient({
       const targetPage = Math.max(1, Math.min(numPages, page))
       setCurrentPage(targetPage)
       setPageInputValue(String(targetPage))
-
-      // Scroll to page
       const el = scrollRef.current
       if (el && numPages > 0) {
-        const scrollTarget =
-          ((targetPage - 1) / numPages) * el.scrollHeight
+        const scrollTarget = ((targetPage - 1) / numPages) * el.scrollHeight
         el.scrollTo({ top: scrollTarget, behavior: 'smooth' })
       }
     },
@@ -155,15 +201,12 @@ export function PDFViewerClient({
     [pageInputValue, goToPage]
   )
 
-  const zoom = useCallback(
-    (dir: 'in' | 'out') => {
-      setScale((s) => {
-        if (dir === 'in') return Math.min(3, s + 0.25)
-        return Math.max(0.5, s - 0.25)
-      })
-    },
-    []
-  )
+  const zoom = useCallback((dir: 'in' | 'out') => {
+    setScale((s) => {
+      if (dir === 'in') return Math.min(3, s + 0.25)
+      return Math.max(0.5, s - 0.25)
+    })
+  }, [])
 
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
@@ -176,7 +219,6 @@ export function PDFViewerClient({
     }
   }, [])
 
-  // Listen for fullscreen exit via Esc
   useEffect(() => {
     const handler = () => {
       if (!document.fullscreenElement) setIsFullscreen(false)
@@ -185,14 +227,6 @@ export function PDFViewerClient({
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
-  // Focus search input
-  useEffect(() => {
-    if (showSearch && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [showSearch])
-
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
@@ -263,7 +297,6 @@ export function PDFViewerClient({
           </button>
         </div>
 
-        {/* Divider */}
         <div className="hidden sm:block h-5 w-px bg-neutral-300 dark:bg-neutral-600" />
 
         {/* Zoom */}
@@ -289,21 +322,62 @@ export function PDFViewerClient({
           </button>
         </div>
 
-        {/* Divider */}
         <div className="hidden sm:block h-5 w-px bg-neutral-300 dark:bg-neutral-600" />
 
-        {/* Search toggle */}
-        <button
-          onClick={() => setShowSearch((s) => !s)}
-          className={`rounded-lg p-1.5 transition-colors cursor-pointer ${
-            showSearch
-              ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600'
-              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-          }`}
-          aria-label="Buscar"
-        >
-          <Search className="h-4 w-4" />
-        </button>
+        {/* Inline search */}
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <div className="relative flex-1 min-w-0 max-w-xs">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.shiftKey ? navigateMatch('prev') : navigateMatch('next')
+                } else if (e.key === 'Escape') {
+                  setSearchText('')
+                }
+              }}
+              placeholder="Buscar…"
+              className="w-full rounded-lg bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 pl-7 pr-2 py-1 text-xs text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-500/30"
+            />
+          </div>
+
+          {searchText && (
+            <>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0 min-w-[2.5rem] text-center">
+                {matchCount === 0 ? '0' : `${matchIndex + 1}/${matchCount}`}
+              </span>
+              <button
+                onClick={() => navigateMatch('prev')}
+                disabled={matchCount === 0}
+                className="rounded-lg p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Anterior"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => navigateMatch('next')}
+                disabled={matchCount === 0}
+                className="rounded-lg p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Siguiente"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setSearchText('')}
+                className="rounded-lg p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="hidden sm:block h-5 w-px bg-neutral-300 dark:bg-neutral-600" />
 
         {/* Fullscreen */}
         <button
@@ -318,14 +392,11 @@ export function PDFViewerClient({
           )}
         </button>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
         {/* Progress + status */}
         <div className="flex items-center gap-2">
-          {saving && (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-500" />
-          )}
+          {saving && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-500" />}
           {completed ? (
             <div className="flex items-center gap-1 text-success-600 dark:text-success-400">
               <CheckCircle2 className="h-4 w-4" />
@@ -339,29 +410,6 @@ export function PDFViewerClient({
         </div>
       </div>
 
-      {/* Search bar */}
-      {showSearch && (
-        <div className="flex items-center gap-2 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 p-2 mb-2">
-          <Search className="h-4 w-4 text-neutral-400 shrink-0" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Buscar en el documento..."
-            className="flex-1 bg-transparent text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 outline-none"
-          />
-          <button
-            onClick={() => {
-              setSearchText('')
-              setShowSearch(false)
-            }}
-            className="rounded-lg p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
 
       {/* Progress bar */}
       <div className="h-1 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 mb-2 overflow-hidden">
@@ -424,14 +472,16 @@ export function PDFViewerClient({
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
                 loading={
-                  <div className="flex items-center justify-center bg-white dark:bg-neutral-800 rounded-sm shadow-lg" style={{ width: 595 * scale, height: 842 * scale }}>
+                  <div
+                    className="flex items-center justify-center bg-white dark:bg-neutral-800 rounded-sm shadow-lg"
+                    style={{ width: 595 * scale, height: 842 * scale }}
+                  >
                     <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
                   </div>
                 }
                 customTextRenderer={
                   searchText
-                    ? (textItem) =>
-                        highlightSearchText(textItem.str, searchText)
+                    ? (textItem) => highlightSearchText(textItem.str, searchText)
                     : undefined
                 }
               />

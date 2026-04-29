@@ -52,7 +52,7 @@ function HeroSection() {
         {/* CTA buttons */}
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
-            href="/registro"
+            href="/precios"
             className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple sm:w-auto"
           >
             Comenzar Ahora

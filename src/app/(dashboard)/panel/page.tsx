@@ -1,7 +1,83 @@
 import Link from 'next/link'
-import { BookOpen, Users, ArrowRight, Shield, Sparkles } from 'lucide-react'
+import {
+  FileText,
+  Headphones,
+  ClipboardList,
+  Video,
+  Handshake,
+  Users,
+  Sparkles,
+  ArrowRight,
+  Shield,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { HeroVideo } from '@/components/ui/hero-video'
+
+interface HomeCard {
+  href: string
+  label: string
+  description: string
+  icon: typeof FileText
+  accent: string        // Tailwind color for icon bg + border
+  iconColor: string     // icon itself
+  tourKey?: string
+}
+
+const HOME_CARDS: HomeCard[] = [
+  {
+    href: '/estudio/pdfs',
+    label: 'PDF Interactivo',
+    description: 'Guía oficial con búsqueda y navegación por capítulo',
+    icon: FileText,
+    accent: 'bg-primary-500/10 border-primary-500/20',
+    iconColor: 'text-primary-500 dark:text-primary-400',
+    tourKey: 'card-pdf',
+  },
+  {
+    href: '/estudio/audios',
+    label: 'Audio Estudio',
+    description: 'Audiolibros para estudiar donde sea',
+    icon: Headphones,
+    accent: 'bg-sky-500/10 border-sky-500/20',
+    iconColor: 'text-sky-500 dark:text-sky-400',
+    tourKey: 'card-audio',
+  },
+  {
+    href: '/practica',
+    label: 'Práctica y Examen',
+    description: 'Simulacro real con tiempo o práctica libre sin reloj',
+    icon: ClipboardList,
+    accent: 'bg-success-500/10 border-success-500/20',
+    iconColor: 'text-success-600 dark:text-success-400',
+    tourKey: 'card-practica',
+  },
+  {
+    href: '/estudio/videos',
+    label: 'Videos',
+    description: 'Tutoriales y explicaciones en video',
+    icon: Video,
+    accent: 'bg-purple-500/10 border-purple-500/20',
+    iconColor: 'text-purple-500 dark:text-purple-400',
+    tourKey: 'card-videos',
+  },
+  {
+    href: '/aliados',
+    label: 'Aliados',
+    description: 'Herramientas y recursos de nuestros socios',
+    icon: Handshake,
+    accent: 'bg-accent-500/10 border-accent-500/20',
+    iconColor: 'text-accent-500 dark:text-accent-400',
+    tourKey: 'card-aliados',
+  },
+  {
+    href: '/comunidad/dudas',
+    label: 'Comunidad',
+    description: 'Dudas de estudio y oportunidades de trabajo',
+    icon: Users,
+    accent: 'bg-rose-500/10 border-rose-500/20',
+    iconColor: 'text-rose-500 dark:text-rose-400',
+    tourKey: 'card-comunidad',
+  },
+]
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -29,79 +105,39 @@ export default async function DashboardPage() {
         ¿Qué quieres hacer hoy?
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Study Mode Card — cinematic animated hero */}
-        <Link
-          href="/estudio"
-          data-tour="card-estudio"
-          className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary-900/30 dark:border-neutral-800 sm:min-h-[320px]"
-        >
-          <HeroVideo
-            src="/videos/home/estudio.mp4"
-            poster="/images/home/estudio.png"
-            alt="Contratista estudiando concentrado"
-            width={2528}
-            height={1696}
-            priority
-            className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105"
-          />
-          {/* Dark gradient for legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
-          {/* Purple accent tint */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-transparent mix-blend-overlay" />
+      {/* 6 direct-access cards — 2 columns mobile / 3 columns md+ */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+        {HOME_CARDS.map((card) => {
+          const Icon = card.icon
+          return (
+            <Link
+              key={card.href}
+              href={card.href}
+              data-tour={card.tourKey}
+              className="group flex flex-col gap-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-neutral-300 dark:hover:border-neutral-700 cursor-pointer"
+            >
+              {/* Icon */}
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${card.accent}`}
+              >
+                <Icon className={`h-5 w-5 ${card.iconColor}`} />
+              </div>
 
-          {/* Content */}
-          <div className="relative p-5 sm:p-6">
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-primary-400/40 bg-primary-500/20 backdrop-blur-sm">
-              <BookOpen className="h-5 w-5 text-primary-200" />
-            </div>
-            <h2 className="mb-1.5 text-xl font-extrabold text-white drop-shadow-lg sm:text-2xl">
-              Modo Estudio
-            </h2>
-            <p className="mb-3 text-sm text-neutral-200 drop-shadow">
-              PDF interactivo, audiolibros, videos, banco de preguntas y examen cronometrado.
-            </p>
-            <span className="inline-flex items-center gap-1 text-sm font-bold text-primary-200 transition-all group-hover:gap-2 group-hover:text-primary-100">
-              Estudiar ahora
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          </div>
-        </Link>
+              {/* Text */}
+              <div className="flex-1">
+                <p className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm leading-tight mb-1">
+                  {card.label}
+                </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2">
+                  {card.description}
+                </p>
+              </div>
 
-        {/* Community Card — cinematic animated hero */}
-        <Link
-          href="/comunidad/dudas"
-          data-tour="card-comunidad"
-          className="group relative flex min-h-[280px] flex-col justify-end overflow-hidden rounded-2xl border border-neutral-200 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-accent-900/30 dark:border-neutral-800 sm:min-h-[320px]"
-        >
-          <HeroVideo
-            src="/videos/home/comunidad.mp4"
-            poster="/images/home/comunidad.png"
-            alt="Contratistas conversando en una obra"
-            width={2528}
-            height={1696}
-            priority
-            className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-br from-accent-500/25 to-transparent mix-blend-overlay" />
-
-          <div className="relative p-5 sm:p-6">
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-accent-300/50 bg-accent-500/20 backdrop-blur-sm">
-              <Users className="h-5 w-5 text-accent-200" />
-            </div>
-            <h2 className="mb-1.5 text-xl font-extrabold text-white drop-shadow-lg sm:text-2xl">
-              Comunidad
-            </h2>
-            <p className="mb-3 text-sm text-neutral-200 drop-shadow">
-              Dudas de estudio por capítulo y trabajos con otros contratistas.
-            </p>
-            <span className="inline-flex items-center gap-1 text-sm font-bold text-accent-200 transition-all group-hover:gap-2 group-hover:text-accent-100">
-              Ir a la comunidad
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          </div>
-        </Link>
+              {/* Arrow hint */}
+              <ArrowRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 transition-all duration-200 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 group-hover:translate-x-0.5" />
+            </Link>
+          )
+        })}
       </div>
 
       {/* Admin quick link */}
