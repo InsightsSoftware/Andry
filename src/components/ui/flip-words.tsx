@@ -32,9 +32,9 @@ export function FlipWords({ words, duration = 3000, className }: FlipWordsProps)
     >
       <motion.span
         key={words[currentIdx]}
-        initial={{ opacity: 0, y: 10, filter: 'blur(8px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        exit={{ opacity: 0, y: -10, filter: 'blur(8px)', scale: 1.05 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12, scale: 1.05 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
         onAnimationStart={() => setIsAnimating(true)}
         onAnimationComplete={() => setIsAnimating(false)}
@@ -43,8 +43,8 @@ export function FlipWords({ words, duration = 3000, className }: FlipWordsProps)
         {words[currentIdx].split('').map((letter, i) => (
           <motion.span
             key={i}
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.03, duration: 0.25 }}
             className="inline-block"
           >
