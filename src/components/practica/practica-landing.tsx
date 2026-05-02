@@ -72,10 +72,7 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
     params.set('duracion', duracion)
     if (fuente === 'especifico' && capituloId) params.set('capitulo_id', capituloId)
 
-    if (mode === 'examen') {
-      router.push(`/estudio/examen?${params.toString()}`)
-      return
-    }
+    params.set('tipo', mode === 'examen' ? 'examen' : 'libre')
     router.push(`/practica/sesion?${params.toString()}`)
   }
 
