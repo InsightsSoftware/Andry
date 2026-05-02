@@ -79,6 +79,7 @@ export default async function ExamenPage({
       sesionId={sesionId}
       cursoSlug={cursoSlug}
       tiempoLimiteSegundos={sesion.tiempo_limite_segundos || 5400}
+      isPractica={sesion.tipo === 'practica'}
       preguntas={shuffled.map((p) => ({
         id: p.id,
         texto: p.texto,
