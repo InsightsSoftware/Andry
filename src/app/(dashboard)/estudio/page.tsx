@@ -23,7 +23,7 @@ export default async function EstudioPage() {
   // All active courses — each gets its own chapter grid section below.
   const { data: cursos } = await supabase
     .from('cursos')
-    .select('id, nombre, slug, descripcion')
+    .select('id, nombre, slug, descripcion, imagen_url')
     .eq('activo', true)
     .order('orden')
 
@@ -96,6 +96,7 @@ export default async function EstudioPage() {
       id: curso.id,
       nombre: curso.nombre,
       slug: curso.slug,
+      imagenUrl: (curso as typeof curso & { imagen_url?: string | null }).imagen_url ?? null,
       cards: makeCards(caps, curso.slug),
     }
   })

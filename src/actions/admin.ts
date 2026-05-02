@@ -676,6 +676,18 @@ export async function updateChapterImage(capituloId: string, imagenUrl: string |
   return { success: true }
 }
 
+export async function updateCursoImage(cursoId: string, imagenUrl: string | null) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('cursos')
+    .update({ imagen_url: imagenUrl })
+    .eq('id', cursoId)
+  if (error) return { error: error.message }
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
 export async function getChapters(cursoId: string) {
   await requireAdmin()
   const admin = createAdminClient()

@@ -4,12 +4,14 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { ArrowLeft, BookOpen, ArrowRight } from 'lucide-react'
 import { ChapterGrid, type ChapterCard } from '@/components/estudio/chapter-grid'
+import { CursoImageUpload } from '@/components/admin/curso-image-upload'
 
 interface CursoData {
   id: string
   nombre: string
   slug: string
   descripcion?: string | null
+  imagenUrl?: string | null
   cards: ChapterCard[]
 }
 
@@ -26,6 +28,99 @@ const GRADIENTS = [
   'from-emerald-600/30 via-teal-600/20 to-green-600/10',
 ]
 const ACCENT = ['text-violet-400', 'text-blue-400', 'text-amber-400', 'text-emerald-400']
+
+function CursoCard({
+  curso,
+  idx,
+  isAdmin,
+  onClick,
+}: {
+  curso: CursoData
+  idx: number
+  isAdmin: boolean
+  onClick: () => void
+}) {
+  const [imagenUrl, setImagenUrl] = useState<string | null>(curso.imagenUrl ?? null)
+  const gradient = GRADIENTS[idx % GRADIENTS.length]
+  const accent = ACCENT[idx % ACCENT.length]
+  const chapterCount = curso.cards.length
+
+  const cardInner = (
+    <>
+      {/* Cover image */}
+      {imagenUrl && (
+        <Image
+          src={imagenUrl}
+          alt={curso.nombre}
+          fill
+          sizes="(max-width: 640px) 100vw, 50vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          unoptimized
+        />
+      )}
+      {/* Gradient overlay — always present, stronger when no image */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} ${imagenUrl ? 'opacity-80' : 'opacity-100'}`} />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col h-full p-8">
+        {/* Icon */}
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 dark:bg-white/5 border border-white/20">
+          <BookOpen className={`h-6 w-6 ${accent}`} />
+        </div>
+
+        {/* Course name */}
+        <h2 className="flex-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+          {curso.nombre}
+        </h2>
+
+        {/* Chapter count */}
+        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          {chapterCount} {chapterCount === 1 ? 'capítulo' : 'capítulos'}
+        </p>
+
+        {/* CTA */}
+        <div className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${accent}`}>
+          Ver capítulos
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </div>
+      </div>
+    </>
+  )
+
+  if (!isAdmin) {
+    return (
+      <button
+        onClick={onClick}
+        className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br ${gradient} text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl cursor-pointer min-h-[200px]`}
+      >
+        {cardInner}
+      </button>
+    )
+  }
+
+  // Admin: card + image upload strip
+  return (
+    <div className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br ${gradient} transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl`}>
+      {/* Clickable area */}
+      <button
+        onClick={onClick}
+        className="relative flex flex-col min-h-[200px] text-left cursor-pointer w-full"
+      >
+        {cardInner}
+      </button>
+
+      {/* Admin strip */}
+      <div className="flex items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 px-4 py-2">
+        <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wide">Portada</span>
+        <CursoImageUpload
+          cursoId={curso.id}
+          currentImageUrl={imagenUrl}
+          onUpdate={(url) => setImagenUrl(url)}
+        />
+      </div>
+    </div>
+  )
+}
 
 export function CursoPicker({ cursos, isAdmin = false }: CursoPickerProps) {
   const [selected, setSelected] = useState<CursoData | null>(
@@ -56,40 +151,15 @@ export function CursoPicker({ cursos, isAdmin = false }: CursoPickerProps) {
   // ── Course cards grid ───────────────────────────────────────────────
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      {cursos.map((curso, idx) => {
-        const gradient = GRADIENTS[idx % GRADIENTS.length]
-        const accent = ACCENT[idx % ACCENT.length]
-        const chapterCount = curso.cards.length
-
-        return (
-          <button
-            key={curso.id}
-            onClick={() => setSelected(curso)}
-            className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br ${gradient} p-8 text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl cursor-pointer min-h-[200px]`}
-          >
-            {/* Icon */}
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 dark:bg-white/5 border border-white/20">
-              <BookOpen className={`h-6 w-6 ${accent}`} />
-            </div>
-
-            {/* Course name */}
-            <h2 className="flex-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
-              {curso.nombre}
-            </h2>
-
-            {/* Chapter count */}
-            <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-              {chapterCount} {chapterCount === 1 ? 'capítulo' : 'capítulos'}
-            </p>
-
-            {/* CTA */}
-            <div className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${accent}`}>
-              Ver capítulos
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </div>
-          </button>
-        )
-      })}
+      {cursos.map((curso, idx) => (
+        <CursoCard
+          key={curso.id}
+          curso={curso}
+          idx={idx}
+          isAdmin={isAdmin}
+          onClick={() => setSelected(curso)}
+        />
+      ))}
     </div>
   )
 }
