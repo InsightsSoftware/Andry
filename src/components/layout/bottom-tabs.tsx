@@ -19,7 +19,7 @@ const tabs = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Estudio', icon: BookOpen },
   { href: '/practica', label: 'Práctica', icon: ClipboardList },
-  { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
+  { href: '/comunidad', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: User },
 ]
 
@@ -31,8 +31,7 @@ export function BottomTabs() {
       <div className="flex items-center justify-around" role="tablist">
         {tabs.map((tab) => {
           const isActive =
-            pathname === tab.href || pathname.startsWith(tab.href + '/') ||
-            (tab.href === '/comunidad/dudas' && pathname.startsWith('/comunidad/'))
+            pathname === tab.href || pathname.startsWith(tab.href + '/')
           const Icon = tab.icon
 
           // Data attribute used by the onboarding tour

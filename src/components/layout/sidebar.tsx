@@ -49,7 +49,7 @@ const links: NavLink[] = [
   { href: '/practica', label: 'Práctica', icon: ClipboardList },
   { href: '/estudio/videos', label: 'Videos', icon: Video },
   { href: '/aliados', label: 'Aliados', icon: Handshake },
-  { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
+  { href: '/comunidad', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Mi Perfil', icon: User },
 ]
 
@@ -102,7 +102,7 @@ export function Sidebar() {
             !excluded &&
             (pathname === link.href ||
               pathname.startsWith(link.href + '/') ||
-              (link.href === '/comunidad/dudas' &&
+              (link.href === '/comunidad' &&
                 pathname.startsWith('/comunidad/')))
           const Icon = link.icon
 

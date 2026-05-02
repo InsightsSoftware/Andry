@@ -76,7 +76,7 @@ const HOME_CARDS: HomeCard[] = [
     tourKey: 'card-aliados',
   },
   {
-    href: '/comunidad/dudas',
+    href: '/comunidad',
     label: 'Comunidad',
     description: 'Dudas de estudio y oportunidades de trabajo',
     icon: Users,
