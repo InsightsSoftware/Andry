@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
-  FileText,
   Headphones,
   ClipboardList,
   Video,

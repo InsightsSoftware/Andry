@@ -26,9 +26,9 @@ interface HomeCard {
 
 const HOME_CARDS: HomeCard[] = [
   {
-    href: '/estudio/pdfs',
-    label: 'PDF Interactivo',
-    description: 'Guía oficial con búsqueda y navegación por capítulo',
+    href: '/estudio',
+    label: 'Modo Estudio',
+    description: 'Guías PDF con búsqueda y navegación por capítulo',
     icon: FileText,
     accent: 'bg-primary-500/10 border-primary-500/20',
     iconColor: 'text-primary-500 dark:text-primary-400',
