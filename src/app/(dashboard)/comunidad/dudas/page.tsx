@@ -7,23 +7,45 @@ export const metadata = { title: 'Comunidad - Dudas' }
 export default async function DudasPage() {
   const supabase = await createClient()
 
-  const { data: posts } = await supabase
-    .from('posts_comunidad')
-    .select(
+  const [
+    { data: posts },
+    { data: { user } },
+  ] = await Promise.all([
+    supabase
+      .from('posts_comunidad')
+      .select(
+        `
+        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at,
+        profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ),
+        comentarios ( id, contenido, created_at, profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ) )
       `
-      id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at,
-      profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ),
-      comentarios ( id, contenido, created_at, profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ) )
-    `
-    )
-    .eq('tipo', 'duda')
-    .order('created_at', { ascending: false })
-    .limit(50)
+      )
+      .eq('tipo', 'duda')
+      .order('created_at', { ascending: false })
+      .limit(50),
+    supabase.auth.getUser(),
+  ])
+
+  // Check admin role
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('rol')
+      .eq('id', user.id)
+      .single()
+    isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+  }
 
   return (
     <>
       <CommunityStats />
-      <CommunityPage tipo="duda" posts={(posts as never[]) || []} />
+      <CommunityPage
+        tipo="duda"
+        posts={(posts as never[]) || []}
+        currentUserId={user?.id}
+        isAdmin={isAdmin}
+      />
     </>
   )
 }

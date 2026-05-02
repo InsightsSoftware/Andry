@@ -663,6 +663,19 @@ export async function deleteChapter(capituloId: string) {
   return { success: true }
 }
 
+export async function updateChapterImage(capituloId: string, imagenUrl: string | null) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('capitulos')
+    .update({ imagen_url: imagenUrl })
+    .eq('id', capituloId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/contenido')
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
 export async function getChapters(cursoId: string) {
   await requireAdmin()
   const admin = createAdminClient()

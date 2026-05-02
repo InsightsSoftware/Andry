@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Search, ArrowRight, BookOpen, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ChapterImageUpload } from '@/components/admin/chapter-image-upload'
 
 export interface ChapterCard {
   id: string
@@ -15,18 +17,137 @@ export interface ChapterCard {
   /** Text for the small uppercase label above the title. Usually
    * "CAPÍTULO 01", but "SUPLEMENTO AIA" etc. for out-of-sequence items. */
   label: string
+  /** Optional cover image uploaded by admin */
+  imagenUrl?: string | null
 }
 
 interface Props {
   chapters: ChapterCard[]
   courseName?: string
+  isAdmin?: boolean
 }
 
 function stripAccents(s: string): string {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 }
 
-export function ChapterGrid({ chapters, courseName }: Props) {
+// ── Per-card component so each card can manage its own imagenUrl state ────────
+function ChapterCardItem({
+  c,
+  isAdmin,
+}: {
+  c: ChapterCard
+  isAdmin: boolean
+}) {
+  const [imagenUrl, setImagenUrl] = useState<string | null>(c.imagenUrl ?? null)
+  const isSupp = c.numero >= 11
+
+  const cardInner = (
+    <>
+      {imagenUrl ? (
+        <>
+          <div className="relative h-36 w-full shrink-0 overflow-hidden">
+            <Image
+              src={imagenUrl}
+              alt={c.nombre}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              unoptimized
+            />
+            {/* gradient overlay so label is readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-3 left-4 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-white/80">
+              {isSupp && <Sparkles className="h-3 w-3 text-amber-400" />}
+              {c.label}
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col gap-3 p-5">
+            <h3 className="flex-1 text-lg font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-2">
+              {c.nombre}
+            </h3>
+            <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
+              <span>{c.href.startsWith('/estudio/pdf/') ? 'Abrir PDF' : 'Abrir capítulo'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </div>
+          </div>
+        </>
+      ) : (
+        /* No image — original layout */
+        <div className="relative flex flex-1 flex-col gap-4 p-7">
+          {/* Soft brand accent in the corner */}
+          <div
+            className={cn(
+              'pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-40 blur-2xl',
+              isSupp ? 'bg-accent-500/30' : 'bg-primary-500/30'
+            )}
+          />
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+            {isSupp && <Sparkles className="h-3 w-3 text-accent-500" />}
+            {c.label}
+          </div>
+          <h3 className="flex-1 text-xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-3">
+            {c.nombre}
+          </h3>
+          <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
+            <span>{c.href.startsWith('/estudio/pdf/') ? 'Abrir PDF' : 'Abrir capítulo'}</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          </div>
+        </div>
+      )}
+    </>
+  )
+
+  if (!isAdmin) {
+    return (
+      <Link
+        href={c.href}
+        className={cn(
+          'group relative flex flex-col overflow-hidden rounded-2xl border',
+          'bg-white dark:bg-neutral-900',
+          'border-neutral-200 dark:border-neutral-700',
+          'transition-all hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md',
+          'min-h-[220px] cursor-pointer'
+        )}
+      >
+        {cardInner}
+      </Link>
+    )
+  }
+
+  // Admin: card container is a div, link wraps only the content area
+  return (
+    <div
+      className={cn(
+        'relative flex flex-col overflow-hidden rounded-2xl border',
+        'bg-white dark:bg-neutral-900',
+        'border-neutral-200 dark:border-neutral-700',
+        'transition-all hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md'
+      )}
+    >
+      {/* Clickable navigation area */}
+      <Link
+        href={c.href}
+        className="group relative flex flex-col min-h-[180px]"
+      >
+        {cardInner}
+      </Link>
+
+      {/* Admin image upload strip */}
+      <div className="flex items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 px-4 py-2">
+        <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wide">
+          Portada
+        </span>
+        <ChapterImageUpload
+          capituloId={c.id}
+          currentImageUrl={imagenUrl}
+          onUpdate={(url) => setImagenUrl(url)}
+        />
+      </div>
+    </div>
+  )
+}
+
+export function ChapterGrid({ chapters, courseName, isAdmin = false }: Props) {
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
@@ -74,50 +195,10 @@ export function ChapterGrid({ chapters, courseName }: Props) {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((c) => {
-            const isSupp = c.numero >= 11
-            return (
-              <Link
-                key={c.id}
-                href={c.href}
-                className={cn(
-                  'group relative flex flex-col gap-3 overflow-hidden rounded-2xl border p-5',
-                  'bg-white dark:bg-neutral-900',
-                  'border-neutral-200 dark:border-neutral-700',
-                  'transition-all hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md',
-                  'min-h-[180px] cursor-pointer'
-                )}
-              >
-                {/* Soft brand accent in the corner */}
-                <div
-                  className={cn(
-                    'pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-40 blur-2xl',
-                    isSupp
-                      ? 'bg-accent-500/30'
-                      : 'bg-primary-500/30'
-                  )}
-                />
-
-                {/* Tiny uppercase label */}
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
-                  {isSupp && <Sparkles className="h-3 w-3 text-accent-500" />}
-                  {c.label}
-                </div>
-
-                {/* Title — fixed rows so cards line up nicely */}
-                <h3 className="flex-1 text-lg font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-3">
-                  {c.nombre}
-                </h3>
-
-                {/* CTA */}
-                <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  <span>{c.href.startsWith('/estudio/pdf/') ? 'Abrir PDF' : 'Abrir capítulo'}</span>
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                </div>
-              </Link>
-            )
-          })}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((c) => (
+            <ChapterCardItem key={c.id} c={c} isAdmin={isAdmin} />
+          ))}
         </div>
       )}
     </div>

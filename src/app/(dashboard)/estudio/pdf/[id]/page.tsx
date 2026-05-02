@@ -72,7 +72,7 @@ export default async function PDFViewerPage({
       {/* Header */}
       <div className="mb-3 shrink-0">
         <Link
-          href={`/estudio/${cursoSlug}`}
+          href="/estudio"
           className="mb-2 inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

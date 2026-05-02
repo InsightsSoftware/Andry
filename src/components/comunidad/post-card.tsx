@@ -10,7 +10,7 @@ import {
   Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createComment } from '@/actions/comunidad'
+import { createComment, markResuelto } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
 interface Profile {
@@ -29,6 +29,7 @@ interface Comment {
 
 interface Post {
   id: string
+  user_id: string
   titulo: string
   contenido: string
   tipo: 'duda' | 'trabajo'
@@ -76,11 +77,32 @@ function timeAgo(date: string) {
   return `hace ${days}d`
 }
 
-export function PostCard({ post }: { post: Post }) {
+interface PostCardProps {
+  post: Post
+  currentUserId?: string
+  isAdmin?: boolean
+}
+
+export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [showComments, setShowComments] = useState(false)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [error, setError] = useState('')
+  const [resolving, setResolving] = useState(false)
+  const [resuelto, setResuelto] = useState(post.resuelto)
+
+  const canResolve = !resuelto && (currentUserId === post.user_id || isAdmin)
+
+  async function handleMarkResuelto() {
+    setResolving(true)
+    const result = await markResuelto(post.id)
+    if (result.error) {
+      setError(result.error)
+    } else {
+      setResuelto(true)
+    }
+    setResolving(false)
+  }
 
   async function handleComment(e: React.FormEvent) {
     e.preventDefault()
@@ -115,12 +137,21 @@ export function PostCard({ post }: { post: Post }) {
             <h3 className="font-bold text-neutral-900 dark:text-neutral-100">
               {post.titulo}
             </h3>
-            {post.resuelto && (
+            {resuelto ? (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-500/10 dark:bg-success-500/20 px-2 py-0.5 text-xs font-semibold text-success-600 dark:text-success-400">
                 <CheckCircle className="h-3 w-3" />
                 Resuelto
               </span>
-            )}
+            ) : canResolve ? (
+              <button
+                onClick={handleMarkResuelto}
+                disabled={resolving}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-success-400/40 bg-success-500/10 px-2 py-0.5 text-xs font-semibold text-success-600 dark:text-success-400 hover:bg-success-500/20 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle className="h-3 w-3" />
+                {resolving ? 'Guardando…' : 'Marcar resuelto'}
+              </button>
+            ) : null}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-400 dark:text-neutral-500">
             <span className="font-medium text-neutral-600 dark:text-neutral-400">

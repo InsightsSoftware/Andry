@@ -23,12 +23,28 @@ interface Chapter {
   numero: number
 }
 
-export function CSVUploader() {
+interface CSVUploaderProps {
+  /** Pre-load courses — skips the lazy getCourses() fetch */
+  allCursos?: Course[]
+  /** Pre-load chapters — skips the lazy getChapters() fetch */
+  allChapters?: Chapter[]
+  /** Pre-select a course */
+  initialCursoId?: string
+  /** Pre-select a chapter */
+  initialCapituloId?: string
+}
+
+export function CSVUploader({
+  allCursos,
+  allChapters,
+  initialCursoId   = '',
+  initialCapituloId = '',
+}: CSVUploaderProps = {}) {
   const [step, setStep] = useState<'select' | 'preview' | 'done'>('select')
-  const [courses, setCourses] = useState<Course[]>([])
-  const [chapters, setChapters] = useState<Chapter[]>([])
-  const [selectedCourse, setSelectedCourse] = useState('')
-  const [selectedChapter, setSelectedChapter] = useState('')
+  const [courses, setCourses] = useState<Course[]>(allCursos ?? [])
+  const [chapters, setChapters] = useState<Chapter[]>(allChapters ?? [])
+  const [selectedCourse, setSelectedCourse] = useState(initialCursoId)
+  const [selectedChapter, setSelectedChapter] = useState(initialCapituloId)
   const [questions, setQuestions] = useState<ParsedQuestion[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
@@ -36,7 +52,7 @@ export function CSVUploader() {
   const [rawCsv, setRawCsv] = useState<{ text: string; filename: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Load courses on first render
+  // Load courses on first render (skipped if allCursos was pre-supplied)
   const loadCourses = async () => {
     if (courses.length > 0) return
     const result = await getCourses()
@@ -46,6 +62,8 @@ export function CSVUploader() {
   const handleCourseChange = async (cursoId: string) => {
     setSelectedCourse(cursoId)
     setSelectedChapter('')
+    // If chapters were pre-supplied by parent, skip fetch
+    if (allChapters) return
     if (cursoId) {
       const result = await getChapters(cursoId)
       setChapters(result.chapters || [])

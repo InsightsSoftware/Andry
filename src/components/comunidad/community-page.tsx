@@ -39,6 +39,7 @@ interface Comment {
 
 interface Post {
   id: string
+  user_id: string
   titulo: string
   contenido: string
   tipo: 'duda' | 'trabajo'
@@ -53,9 +54,11 @@ interface Post {
 interface CommunityPageProps {
   tipo: 'duda' | 'trabajo'
   posts: Post[]
+  currentUserId?: string
+  isAdmin?: boolean
 }
 
-export function CommunityPage({ tipo, posts }: CommunityPageProps) {
+export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: CommunityPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
   const [oficio, setOficio] = useState<OficioKey | null>(null)
@@ -229,7 +232,7 @@ export function CommunityPage({ tipo, posts }: CommunityPageProps) {
       {filteredPosts.length > 0 ? (
         <div className="flex flex-col gap-4">
           {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} currentUserId={currentUserId} isAdmin={isAdmin} />
           ))}
         </div>
       ) : posts.length > 0 && filteredPosts.length === 0 ? (

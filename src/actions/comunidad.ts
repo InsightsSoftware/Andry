@@ -61,6 +61,47 @@ export async function createPost(formData: FormData) {
   return { success: true }
 }
 
+export async function markResuelto(postId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autenticado' }
+
+  // Fetch the post to verify ownership or admin
+  const { data: post } = await supabase
+    .from('posts_comunidad')
+    .select('user_id, tipo')
+    .eq('id', postId)
+    .single()
+
+  if (!post) return { error: 'Post no encontrado' }
+
+  // Check if user is admin/root
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('rol')
+    .eq('id', user.id)
+    .single()
+
+  const isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+  const isOwner = post.user_id === user.id
+
+  if (!isOwner && !isAdmin) return { error: 'Sin permiso' }
+
+  const { error } = await supabase
+    .from('posts_comunidad')
+    .update({ resuelto: true })
+    .eq('id', postId)
+
+  if (error) return { error: 'Error al marcar como resuelto' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
 export async function createComment(formData: FormData) {
   const supabase = await createClient()
   const {

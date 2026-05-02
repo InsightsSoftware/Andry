@@ -1,0 +1,169 @@
+'use client'
+
+import { useRef, useState } from 'react'
+import Image from 'next/image'
+import { ImagePlus, Loader2, Trash2, CheckCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { updateChapterImage } from '@/actions/admin'
+
+const BUCKET = 'capitulos-portadas'
+
+interface Props {
+  capituloId: string
+  currentImageUrl: string | null
+  onUpdate?: (newUrl: string | null) => void
+}
+
+export function ChapterImageUpload({ capituloId, currentImageUrl, onUpdate }: Props) {
+  const [imageUrl, setImageUrl] = useState<string | null>(currentImageUrl)
+  const [uploading, setUploading] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate client-side
+    if (!file.type.startsWith('image/')) {
+      showToast('Solo se aceptan imágenes')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Máximo 5 MB')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${capituloId}/portada.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+      const url = `${data.publicUrl}?t=${Date.now()}` // cache bust
+
+      const result = await updateChapterImage(capituloId, data.publicUrl)
+      if ('error' in result && result.error) throw new Error(result.error)
+
+      setImageUrl(url)
+      onUpdate?.(data.publicUrl)
+      showToast('Imagen guardada')
+    } catch (err: any) {
+      showToast(err?.message || 'Error al subir')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  async function handleRemove() {
+    if (!imageUrl) return
+    if (!confirm('¿Eliminar la imagen de este capítulo?')) return
+    setRemoving(true)
+    try {
+      // Remove from storage (best-effort)
+      const path = `${capituloId}/portada`
+      await supabase.storage.from(BUCKET).remove([
+        `${path}.jpg`, `${path}.jpeg`, `${path}.png`,
+        `${path}.webp`, `${path}.gif`,
+      ])
+      const result = await updateChapterImage(capituloId, null)
+      if ('error' in result && result.error) throw new Error(result.error)
+      setImageUrl(null)
+      onUpdate?.(null)
+      showToast('Imagen eliminada')
+    } catch (err: any) {
+      showToast(err?.message || 'Error al eliminar')
+    } finally {
+      setRemoving(false)
+    }
+  }
+
+  return (
+    <div className="relative flex items-center gap-2">
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {imageUrl ? (
+        /* Thumbnail + remove */
+        <div className="flex items-center gap-1.5">
+          <div className="relative h-8 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
+            <Image
+              src={imageUrl}
+              alt="portada"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <button
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            title="Cambiar imagen"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ImagePlus className="h-3.5 w-3.5" />
+            )}
+          </button>
+          <button
+            onClick={handleRemove}
+            disabled={removing}
+            title="Eliminar imagen"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-40"
+          >
+            {removing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      ) : (
+        /* Upload button */
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          title="Agregar imagen al capítulo"
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
+        >
+          {uploading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <ImagePlus className="h-3.5 w-3.5" />
+          )}
+          <span>{uploading ? 'Subiendo...' : 'Imagen'}</span>
+        </button>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <span className="absolute -top-8 left-0 flex items-center gap-1 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-2.5 py-1 text-xs font-medium text-white dark:text-neutral-900 shadow whitespace-nowrap z-50">
+          <CheckCircle className="h-3 w-3" />
+          {toast}
+        </span>
+      )}
+    </div>
+  )
+}

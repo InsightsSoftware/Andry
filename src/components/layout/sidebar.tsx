@@ -41,13 +41,11 @@ const links: NavLink[] = [
     label: 'Modo Estudio',
     icon: BookOpen,
     excludePrefixes: [
-      '/estudio/pdfs',
       '/estudio/audios',
       '/estudio/videos',
       '/practica',
     ],
   },
-  { href: '/estudio/pdfs', label: 'PDFs', icon: FileText },
   { href: '/estudio/audios', label: 'Audios', icon: Headphones },
   { href: '/practica', label: 'Práctica', icon: ClipboardList },
   { href: '/estudio/videos', label: 'Videos', icon: Video },

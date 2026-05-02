@@ -20,8 +20,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 const links = [
   { href: '/admin/dashboard', label: 'Métricas', icon: BarChart3 },
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
-  { href: '/admin/contenido', label: 'Cursos', icon: FileText },
-  { href: '/admin/pdfs', label: 'PDFs', icon: FileText },
+  { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/audios', label: 'Audios', icon: Headphones },
   { href: '/admin/videos', label: 'Videos', icon: Video },
   { href: '/admin/preguntas', label: 'Preguntas', icon: HelpCircle },

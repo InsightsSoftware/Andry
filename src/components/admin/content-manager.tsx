@@ -18,6 +18,7 @@ import {
   FolderPlus,
   X,
 } from 'lucide-react'
+import { ChapterImageUpload } from '@/components/admin/chapter-image-upload'
 import {
   getChapters,
   getContent,
@@ -41,6 +42,7 @@ interface Chapter {
   id: string
   nombre: string
   numero: number
+  imagen_url?: string | null
 }
 
 interface ContentItem {
@@ -431,6 +433,19 @@ export function ContentManager({ courses: initialCourses }: { courses: Course[] 
                             {ch.nombre}
                           </span>
                         </button>
+                        <div className="mr-2">
+                          <ChapterImageUpload
+                            capituloId={ch.id}
+                            currentImageUrl={ch.imagen_url ?? null}
+                            onUpdate={(url) =>
+                              setChapters((prev) =>
+                                prev.map((c) =>
+                                  c.id === ch.id ? { ...c, imagen_url: url } : c
+                                )
+                              )
+                            }
+                          />
+                        </div>
                         <button
                           onClick={() => handleDeleteChapter(ch.id, ch.nombre)}
                           className="mr-3 rounded-lg p-1.5 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 transition-colors cursor-pointer"

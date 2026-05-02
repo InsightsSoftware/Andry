@@ -14,10 +14,13 @@ import {
   Plus,
   Upload,
   Link2,
-  BookOpen,
   Clock,
   Hash,
   GripVertical,
+  ArrowLeft,
+  BookOpen,
+  Music,
+  ChevronRight,
 } from 'lucide-react'
 import {
   updateContent,
@@ -63,34 +66,71 @@ interface Props {
 
 export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
   const router = useRouter()
-  const [rows, setRows] = useState<MediaItem[]>(items)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editTitle, setEditTitle] = useState('')
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [filterCapId, setFilterCapId] = useState<string>('')
 
-  // Upload modal
-  const [showUpload, setShowUpload] = useState(false)
-  const [formCapituloId, setFormCapituloId] = useState<string>(
-    capitulos[0]?.id ?? ''
+  // ── Navigation state ─────────────────────────────────────────────────────
+  const [selectedCurso,     setSelectedCurso]     = useState<MediaCurso | null>(
+    cursos.length === 1 ? cursos[0] : null
   )
-  const [uploadedUrl, setUploadedUrl] = useState('')
-  const [uploadMode, setUploadMode] = useState<'upload' | 'url'>('upload')
-  const [formTitulo, setFormTitulo] = useState('')
-  const [formDuracion, setFormDuracion] = useState('')
-  const [formOrden, setFormOrden] = useState('0')
-  const [formError, setFormError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [selectedCapitulo,  setSelectedCapitulo]  = useState<MediaCapitulo | null>(null)
 
-  const capMap = useMemo(() => new Map(capitulos.map((c) => [c.id, c])), [capitulos])
-  const cursoMap = useMemo(() => new Map(cursos.map((c) => [c.id, c])), [cursos])
+  // ── List state ────────────────────────────────────────────────────────────
+  const [rows,        setRows]        = useState<MediaItem[]>(items)
+  const [editingId,   setEditingId]   = useState<string | null>(null)
+  const [editTitle,   setEditTitle]   = useState('')
+  const [savingId,    setSavingId]    = useState<string | null>(null)
+  const [deletingId,  setDeletingId]  = useState<string | null>(null)
 
-  // Drag-and-drop reorder state
-  const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOverId, setDragOverId] = useState<string | null>(null)
-  const [savingReorder, setSavingReorder] = useState<string | null>(null) // chapter id
+  // ── Upload modal state ────────────────────────────────────────────────────
+  const [showUpload,     setShowUpload]     = useState(false)
+  const [formCapituloId, setFormCapituloId] = useState<string>('')
+  const [uploadedUrl,    setUploadedUrl]    = useState('')
+  const [uploadMode,     setUploadMode]     = useState<'upload' | 'url'>('upload')
+  const [formTitulo,     setFormTitulo]     = useState('')
+  const [formDuracion,   setFormDuracion]   = useState('')
+  const [formOrden,      setFormOrden]      = useState('0')
+  const [formError,      setFormError]      = useState('')
+  const [submitting,     setSubmitting]     = useState(false)
 
+  // ── Drag reorder ──────────────────────────────────────────────────────────
+  const [dragId,         setDragId]         = useState<string | null>(null)
+  const [dragOverId,     setDragOverId]     = useState<string | null>(null)
+  const [savingReorder,  setSavingReorder]  = useState<string | null>(null)
+
+  // ── Derived maps ──────────────────────────────────────────────────────────
+  const capMap   = useMemo(() => new Map(capitulos.map((c) => [c.id, c])),  [capitulos])
+  const cursoMap = useMemo(() => new Map(cursos.map((c) => [c.id, c])),     [cursos])
+
+  const capsByCurso = useMemo(() => {
+    const m = new Map<string, MediaCapitulo[]>()
+    for (const cap of capitulos) {
+      const arr = m.get(cap.curso_id) ?? []
+      arr.push(cap)
+      m.set(cap.curso_id, arr)
+    }
+    return m
+  }, [capitulos])
+
+  // Item counts
+  const countByCap = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const r of rows) m.set(r.capitulo_id, (m.get(r.capitulo_id) ?? 0) + 1)
+    return m
+  }, [rows])
+
+  const countByCurso = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const curso of cursos) {
+      const caps = capsByCurso.get(curso.id) ?? []
+      const total = caps.reduce((s, c) => s + (countByCap.get(c.id) ?? 0), 0)
+      m.set(curso.id, total)
+    }
+    return m
+  }, [cursos, capsByCurso, countByCap])
+
+  const Icon       = tipo === 'audio' ? Headphones : tipo === 'video' ? VideoIcon : FileText
+  const tipoLabel  = tipo === 'audio' ? 'Audio' : tipo === 'video' ? 'Video' : 'PDF'
+
+  // ── Drag helpers ──────────────────────────────────────────────────────────
   function arrayMove<T>(arr: T[], from: number, to: number): T[] {
     const copy = [...arr]
     const [item] = copy.splice(from, 1)
@@ -98,20 +138,12 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
     return copy
   }
 
-  async function handleDropOnChapter(
-    capituloId: string,
-    fromId: string,
-    toId: string
-  ) {
-    const chapterRows = rows
-      .filter((r) => r.capitulo_id === capituloId)
-      .sort((a, b) => a.orden - b.orden)
+  async function handleDropOnChapter(capituloId: string, fromId: string, toId: string) {
+    const chapterRows = rows.filter((r) => r.capitulo_id === capituloId).sort((a, b) => a.orden - b.orden)
     const fromIdx = chapterRows.findIndex((r) => r.id === fromId)
-    const toIdx = chapterRows.findIndex((r) => r.id === toId)
+    const toIdx   = chapterRows.findIndex((r) => r.id === toId)
     if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return
-
     const reordered = arrayMove(chapterRows, fromIdx, toIdx)
-    // Optimistic: assign local orden so UI updates immediately
     const optimisticOrden = new Map<string, number>()
     reordered.forEach((r, i) => optimisticOrden.set(r.id, (i + 1) * 10))
     setRows((prev) =>
@@ -121,45 +153,14 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
           : r
       )
     )
-
     setSavingReorder(capituloId)
     const res = await reorderContent(reordered.map((r) => r.id))
-    if (res && 'error' in res && res.error) {
-      alert(res.error)
-    } else {
-      router.refresh()
-    }
+    if (res && 'error' in res && res.error) alert(res.error)
+    else router.refresh()
     setSavingReorder(null)
   }
 
-  const filtered = useMemo(() => {
-    if (!filterCapId) return rows
-    return rows.filter((r) => r.capitulo_id === filterCapId)
-  }, [rows, filterCapId])
-
-  const Icon =
-    tipo === 'audio' ? Headphones : tipo === 'video' ? VideoIcon : FileText
-  const tipoLabel =
-    tipo === 'audio' ? 'Audio' : tipo === 'video' ? 'Video' : 'PDF'
-
-  // Group by capítulo for rendering (sorted)
-  const grouped = useMemo(() => {
-    const m = new Map<string, MediaItem[]>()
-    for (const r of filtered) {
-      const arr = m.get(r.capitulo_id) ?? []
-      arr.push(r)
-      m.set(r.capitulo_id, arr)
-    }
-    // Sort each group by orden
-    for (const arr of m.values()) arr.sort((a, b) => a.orden - b.orden)
-    // Return as list ordered by capítulo numero
-    return Array.from(m.entries())
-      .map(([capId, rows]) => ({ capId, cap: capMap.get(capId), rows }))
-      .sort((a, b) => (a.cap?.numero ?? 0) - (b.cap?.numero ?? 0))
-  }, [filtered, capMap])
-
-  // ── Handlers ──────────────────────────────────────────────
-
+  // ── CRUD handlers ─────────────────────────────────────────────────────────
   function startEdit(item: MediaItem) {
     setEditingId(item.id)
     setEditTitle(item.titulo)
@@ -167,18 +168,12 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
 
   async function saveEdit(item: MediaItem) {
     const t = editTitle.trim()
-    if (!t || t === item.titulo) {
-      setEditingId(null)
-      return
-    }
+    if (!t || t === item.titulo) { setEditingId(null); return }
     setSavingId(item.id)
     const res = await updateContent(item.id, { titulo: t })
-    if (res && 'error' in res && res.error) {
-      alert(res.error)
-    } else {
-      setRows((prev) =>
-        prev.map((r) => (r.id === item.id ? { ...r, titulo: t } : r))
-      )
+    if (res && 'error' in res && res.error) alert(res.error)
+    else {
+      setRows((prev) => prev.map((r) => (r.id === item.id ? { ...r, titulo: t } : r)))
       setEditingId(null)
       router.refresh()
     }
@@ -189,23 +184,19 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
     if (!confirm(`¿Eliminar "${item.titulo}"?`)) return
     setDeletingId(item.id)
     const res = await deleteContent(item.id)
-    if (res?.error) {
-      alert(res.error)
-    } else {
-      setRows((prev) => prev.filter((r) => r.id !== item.id))
-      router.refresh()
-    }
+    if (res?.error) alert(res.error)
+    else { setRows((prev) => prev.filter((r) => r.id !== item.id)); router.refresh() }
     setDeletingId(null)
   }
 
-  function openUpload() {
+  function openUpload(capId?: string) {
     setUploadedUrl('')
     setFormTitulo('')
     setFormDuracion('')
     setFormOrden('0')
     setFormError('')
     setUploadMode('upload')
-    if (!formCapituloId) setFormCapituloId(capitulos[0]?.id ?? '')
+    setFormCapituloId(capId ?? selectedCapitulo?.id ?? capitulos[0]?.id ?? '')
     setShowUpload(true)
   }
 
@@ -213,14 +204,10 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
     e.preventDefault()
     setFormError('')
     const titulo = formTitulo.trim()
-    if (!titulo) return setFormError('Falta el título')
+    if (!titulo)        return setFormError('Falta el título')
     if (!formCapituloId) return setFormError('Elegí un capítulo')
     const archivoUrl = uploadedUrl.trim()
-    if (!archivoUrl)
-      return setFormError(
-        uploadMode === 'upload' ? 'Subí un archivo' : 'Pegá una URL'
-      )
-
+    if (!archivoUrl)   return setFormError(uploadMode === 'upload' ? 'Subí un archivo' : 'Pegá una URL')
     setSubmitting(true)
     const res = await createContent({
       capitulo_id: formCapituloId,
@@ -230,254 +217,307 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
       duracion_segundos: Number(formDuracion) || undefined,
       orden: Number(formOrden) || 0,
     })
-    if (res.error) {
-      setFormError(res.error)
-    } else {
-      setShowUpload(false)
-      router.refresh()
-    }
+    if (res.error) setFormError(res.error)
+    else { setShowUpload(false); router.refresh() }
     setSubmitting(false)
   }
 
-  // Build folder path for storage: cursoSlug/capitulo-NN/
-  const targetCap = capMap.get(formCapituloId)
+  const targetCap   = capMap.get(formCapituloId)
   const targetCurso = targetCap ? cursoMap.get(targetCap.curso_id) : null
   const uploadFolder =
     targetCurso && targetCap
       ? `${targetCurso.slug}/capitulo-${String(targetCap.numero).padStart(2, '0')}`
       : 'general'
 
-  // ── Render ─────────────────────────────────────────────────
+  // Items for selected chapter
+  const chapterItems = useMemo(() => {
+    if (!selectedCapitulo) return []
+    return rows.filter((r) => r.capitulo_id === selectedCapitulo.id).sort((a, b) => a.orden - b.orden)
+  }, [rows, selectedCapitulo])
 
-  return (
-    <div className="space-y-5">
-      {/* Header actions */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Icon className="h-5 w-5 text-primary-500" />
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {rows.length} {tipoLabel.toLowerCase()}
-            {rows.length === 1 ? '' : 's'} en total
-          </p>
-        </div>
-
-        <div className="flex gap-2">
-          <select
-            value={filterCapId}
-            onChange={(e) => setFilterCapId(e.target.value)}
-            className="rounded-xl glass-input px-3 py-2 text-sm cursor-pointer"
-          >
-            <option value="">Todos los capítulos</option>
-            {capitulos
-              .slice()
-              .sort((a, b) => a.numero - b.numero)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  Cap. {c.numero} — {c.nombre}
-                </option>
-              ))}
-          </select>
-          <button
-            onClick={openUpload}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-500 cursor-pointer transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Subir {tipoLabel.toLowerCase()}
-          </button>
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 1 — Course cards
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!selectedCurso) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          {rows.length} {tipoLabel.toLowerCase()}{rows.length === 1 ? '' : 's'} en total
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cursos.map((curso) => {
+            const count  = countByCurso.get(curso.id) ?? 0
+            const caps   = capsByCurso.get(curso.id) ?? []
+            return (
+              <button
+                key={curso.id}
+                onClick={() => setSelectedCurso(curso)}
+                className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6 text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md cursor-pointer min-h-[160px]"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/30">
+                  <Icon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+                    {curso.nombre}
+                  </h3>
+                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    {caps.length} cap{caps.length === 1 ? 'ítulo' : 'ítulos'} · {count} {tipoLabel.toLowerCase()}{count === 1 ? '' : 's'}
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400">
+                  Ver capítulos
+                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
+    )
+  }
 
-      {/* Bulk folder upload — drag a whole chapter/folder tree at once */}
-      <BulkFolderUpload tipo={tipo} capitulos={capitulos} cursos={cursos} />
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 2 — Chapter cards for selected course
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!selectedCapitulo) {
+    const caps = (capsByCurso.get(selectedCurso.id) ?? []).slice().sort((a, b) => a.numero - b.numero)
+    return (
+      <div className="space-y-4">
+        {cursos.length > 1 && (
+          <button
+            onClick={() => setSelectedCurso(null)}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver a cursos
+          </button>
+        )}
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          {selectedCurso.nombre} · {caps.length} capítulos
+        </p>
 
-      {/* Empty state */}
-      {filtered.length === 0 && (
-        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
-          <Icon className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-          <p className="mb-3 text-neutral-500 dark:text-neutral-400">
-            {rows.length === 0
-              ? `Todavía no hay ${tipoLabel.toLowerCase()}s.`
-              : 'Sin resultados para este capítulo.'}
-          </p>
-          {rows.length === 0 && (
-            <button
-              onClick={openUpload}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-500 cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              Subir el primero
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Grouped list */}
-      {grouped.map(({ capId, cap, rows: chapterRows }) => (
-        <section key={capId}>
-          <h2 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            <BookOpen className="h-3.5 w-3.5" />
-            {cap ? `Cap. ${cap.numero} — ${cap.nombre}` : 'Sin capítulo'}
-            <span className="ml-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold">
-              {chapterRows.length}
-            </span>
-            {savingReorder === capId && (
-              <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-primary-500">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Guardando orden…
-              </span>
-            )}
-          </h2>
-
-          <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-            {chapterRows.map((item, i) => {
-              const isEditing = editingId === item.id
-              const isSaving = savingId === item.id
-              const isDeleting = deletingId === item.id
-              const isDragging = dragId === item.id
-              const isDragOver = dragOverId === item.id && dragId !== item.id
-              const fileBasename = item.archivo_url
-                .split('/')
-                .pop()
-                ?.replace(/^\d+_?/, '') // strip timestamp prefix if present
+        {caps.length === 0 ? (
+          <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
+            <BookOpen className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
+            <p className="text-neutral-500 dark:text-neutral-400">Sin capítulos en este curso.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {caps.map((cap) => {
+              const count  = countByCap.get(cap.id) ?? 0
+              const isSupp = cap.numero >= 11
               return (
-                <div
-                  key={item.id}
-                  draggable={!isEditing && !filterCapId}
-                  onDragStart={() => setDragId(item.id)}
-                  onDragEnd={() => {
-                    setDragId(null)
-                    setDragOverId(null)
-                  }}
-                  onDragOver={(e) => {
-                    if (!dragId || dragId === item.id) return
-                    const fromRow = rows.find((r) => r.id === dragId)
-                    if (fromRow?.capitulo_id !== item.capitulo_id) return
-                    e.preventDefault()
-                    setDragOverId(item.id)
-                  }}
-                  onDragLeave={() => {
-                    if (dragOverId === item.id) setDragOverId(null)
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    if (!dragId || dragId === item.id) return
-                    handleDropOnChapter(item.capitulo_id, dragId, item.id)
-                    setDragId(null)
-                    setDragOverId(null)
-                  }}
-                  className={cn(
-                    'flex items-start gap-3 px-3 py-3 text-sm transition-colors',
-                    i !== 0 && 'border-t border-neutral-100 dark:border-neutral-800',
-                    isDragging && 'opacity-40',
-                    isDragOver &&
-                      'bg-primary-50/70 dark:bg-primary-900/20 ring-2 ring-inset ring-primary-400'
-                  )}
+                <button
+                  key={cap.id}
+                  onClick={() => { setSelectedCapitulo(cap); setFormCapituloId(cap.id) }}
+                  className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6 text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md cursor-pointer min-h-[160px]"
                 >
-                  {/* Drag handle — hidden when the chapter filter is active
-                      (reorder within a single chapter only makes sense when
-                      we see the full group) */}
-                  {!filterCapId && (
-                    <span
-                      className="mt-0.5 cursor-grab active:cursor-grabbing text-neutral-300 dark:text-neutral-600 hover:text-primary-500 shrink-0"
-                      title="Arrastrá para reordenar"
-                    >
-                      <GripVertical className="h-4 w-4" />
-                    </span>
-                  )}
-
-                  <Icon className="h-4 w-4 shrink-0 text-primary-500 mt-0.5" />
-
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <input
-                        autoFocus
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveEdit(item)
-                          if (e.key === 'Escape') setEditingId(null)
-                        }}
-                        className="w-full rounded-lg border border-primary-400 bg-white dark:bg-neutral-950 px-2.5 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-                      />
-                    ) : (
-                      <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">
-                        {item.titulo}
-                      </p>
-                    )}
-                    {!isEditing && fileBasename && (
-                      <p className="mt-0.5 truncate text-[11px] font-mono text-neutral-400 dark:text-neutral-500">
-                        {fileBasename}
-                      </p>
-                    )}
+                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+                    {isSupp ? 'SUPLEMENTO' : `CAPÍTULO ${String(cap.numero).padStart(2, '0')}`}
                   </div>
-
-                  {item.duracion_segundos && !isEditing && (
-                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 shrink-0 mt-0.5">
-                      <Clock className="h-3 w-3" />
-                      {formatSeconds(item.duracion_segundos)}
-                    </span>
-                  )}
-
-                  {!isEditing && (
-                    <span className="hidden md:inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5">
-                      <Hash className="h-3 w-3" />
-                      {item.orden}
-                    </span>
-                  )}
-
-                  <div className="flex gap-1 shrink-0">
-                    {isEditing ? (
-                      <>
-                        <button
-                          onClick={() => saveEdit(item)}
-                          disabled={isSaving}
-                          title="Guardar"
-                          className="rounded-lg p-1.5 text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30 cursor-pointer disabled:opacity-50"
-                        >
-                          {isSaving ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Check className="h-4 w-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          title="Cancelar"
-                          className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => startEdit(item)}
-                          title="Editar título"
-                          className="rounded-lg p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item)}
-                          disabled={isDeleting}
-                          title="Eliminar"
-                          className="rounded-lg p-1.5 text-neutral-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/30 cursor-pointer disabled:opacity-50"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </>
-                    )}
+                  <h3 className="flex-1 font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-3">
+                    {cap.nombre}
+                  </h3>
+                  <p className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <Music className="h-3.5 w-3.5" />
+                    {count} {tipoLabel.toLowerCase()}{count === 1 ? '' : 's'}
+                  </p>
+                  <div className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400">
+                    Gestionar
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
-        </section>
-      ))}
+        )}
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 3 — Items list for selected chapter
+  // ══════════════════════════════════════════════════════════════════════════
+  const isSupp = selectedCapitulo.numero >= 11
+  const capLabel = isSupp ? 'SUPLEMENTO' : `CAPÍTULO ${String(selectedCapitulo.numero).padStart(2, '0')}`
+
+  return (
+    <div className="space-y-5">
+      {/* Breadcrumb nav */}
+      <button
+        onClick={() => setSelectedCapitulo(null)}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors cursor-pointer"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {selectedCurso.nombre}
+      </button>
+
+      {/* Chapter header + actions */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{capLabel}</p>
+          <h2 className="text-lg font-bold text-neutral-900 dark:text-white">{selectedCapitulo.nombre}</h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            {chapterItems.length} {tipoLabel.toLowerCase()}{chapterItems.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        <button
+          onClick={() => openUpload(selectedCapitulo.id)}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-500 cursor-pointer transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          Subir {tipoLabel.toLowerCase()}
+        </button>
+      </div>
+
+      {/* Bulk upload */}
+      <BulkFolderUpload
+        tipo={tipo}
+        capitulos={capitulos}
+        cursos={cursos}
+      />
+
+      {/* Empty state */}
+      {chapterItems.length === 0 && (
+        <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
+          <Icon className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
+          <p className="mb-3 text-neutral-500 dark:text-neutral-400">
+            Todavía no hay {tipoLabel.toLowerCase()}s en este capítulo.
+          </p>
+          <button
+            onClick={() => openUpload(selectedCapitulo.id)}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-500 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Subir el primero
+          </button>
+        </div>
+      )}
+
+      {/* Items list */}
+      {chapterItems.length > 0 && (
+        <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+          {savingReorder === selectedCapitulo.id && (
+            <div className="flex items-center gap-2 border-b border-neutral-100 dark:border-neutral-800 px-4 py-2 text-xs text-primary-500">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Guardando orden…
+            </div>
+          )}
+          {chapterItems.map((item, i) => {
+            const isEditing  = editingId  === item.id
+            const isSaving   = savingId   === item.id
+            const isDeleting = deletingId === item.id
+            const isDragging = dragId     === item.id
+            const isDragOver = dragOverId === item.id && dragId !== item.id
+            const fileBasename = item.archivo_url.split('/').pop()?.replace(/^\d+_?/, '')
+            return (
+              <div
+                key={item.id}
+                draggable={!isEditing}
+                onDragStart={() => setDragId(item.id)}
+                onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                onDragOver={(e) => {
+                  if (!dragId || dragId === item.id) return
+                  e.preventDefault()
+                  setDragOverId(item.id)
+                }}
+                onDragLeave={() => { if (dragOverId === item.id) setDragOverId(null) }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (!dragId || dragId === item.id) return
+                  handleDropOnChapter(item.capitulo_id, dragId, item.id)
+                  setDragId(null); setDragOverId(null)
+                }}
+                className={cn(
+                  'flex items-start gap-3 px-3 py-3 text-sm transition-colors',
+                  i !== 0 && 'border-t border-neutral-100 dark:border-neutral-800',
+                  isDragging && 'opacity-40',
+                  isDragOver && 'bg-primary-50/70 dark:bg-primary-900/20 ring-2 ring-inset ring-primary-400'
+                )}
+              >
+                <span
+                  className="mt-0.5 cursor-grab active:cursor-grabbing text-neutral-300 dark:text-neutral-600 hover:text-primary-500 shrink-0"
+                  title="Arrastrá para reordenar"
+                >
+                  <GripVertical className="h-4 w-4" />
+                </span>
+                <Icon className="h-4 w-4 shrink-0 text-primary-500 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter')  saveEdit(item)
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      className="w-full rounded-lg border border-primary-400 bg-white dark:bg-neutral-950 px-2.5 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                    />
+                  ) : (
+                    <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">{item.titulo}</p>
+                  )}
+                  {!isEditing && fileBasename && (
+                    <p className="mt-0.5 truncate text-[11px] font-mono text-neutral-400 dark:text-neutral-500">{fileBasename}</p>
+                  )}
+                </div>
+                {item.duracion_segundos && !isEditing && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 shrink-0 mt-0.5">
+                    <Clock className="h-3 w-3" />
+                    {formatSeconds(item.duracion_segundos)}
+                  </span>
+                )}
+                {!isEditing && (
+                  <span className="hidden md:inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5">
+                    <Hash className="h-3 w-3" />
+                    {item.orden}
+                  </span>
+                )}
+                <div className="flex gap-1 shrink-0">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={() => saveEdit(item)}
+                        disabled={isSaving}
+                        title="Guardar"
+                        className="rounded-lg p-1.5 text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        title="Cancelar"
+                        className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEdit(item)}
+                        title="Editar título"
+                        className="rounded-lg p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={isDeleting}
+                        title="Eliminar"
+                        className="rounded-lg p-1.5 text-neutral-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/30 cursor-pointer disabled:opacity-50"
+                      >
+                        {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Upload modal */}
       {showUpload && (
@@ -506,9 +546,7 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
             <div className="space-y-4">
               {/* Capítulo */}
               <div>
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Capítulo
-                </label>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Capítulo</label>
                 <select
                   value={formCapituloId}
                   onChange={(e) => setFormCapituloId(e.target.value)}
@@ -516,49 +554,34 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
                   className="mt-1 w-full rounded-xl glass-input px-3 py-2.5 text-sm cursor-pointer"
                 >
                   <option value="">Elegí un capítulo</option>
-                  {capitulos
-                    .slice()
-                    .sort((a, b) => a.numero - b.numero)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        Cap. {c.numero} — {c.nombre}
-                      </option>
-                    ))}
+                  {capitulos.slice().sort((a, b) => a.numero - b.numero).map((c) => (
+                    <option key={c.id} value={c.id}>Cap. {c.numero} — {c.nombre}</option>
+                  ))}
                 </select>
               </div>
 
               {/* Título */}
               <div>
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Título
-                </label>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Título</label>
                 <input
                   value={formTitulo}
                   onChange={(e) => setFormTitulo(e.target.value)}
                   required
-                  placeholder={
-                    tipo === 'audio'
-                      ? 'Ej: Plan de Negocios'
-                      : 'Ej: Introducción al examen'
-                  }
+                  placeholder={tipo === 'audio' ? 'Ej: Plan de Negocios' : 'Ej: Introducción al examen'}
                   className="mt-1 w-full rounded-xl glass-input px-3 py-2.5 text-sm"
                 />
               </div>
 
               {/* Upload mode */}
               <div>
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5 block">
-                  Archivo
-                </label>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5 block">Archivo</label>
                 <div className="flex rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-3">
                   <button
                     type="button"
                     onClick={() => setUploadMode('upload')}
                     className={cn(
                       'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-medium cursor-pointer transition-colors',
-                      uploadMode === 'upload'
-                        ? 'bg-primary-600 text-white'
-                        : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                      uploadMode === 'upload' ? 'bg-primary-600 text-white' : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                     )}
                   >
                     <Upload className="h-3.5 w-3.5" />
@@ -569,9 +592,7 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
                     onClick={() => setUploadMode('url')}
                     className={cn(
                       'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-medium cursor-pointer transition-colors',
-                      uploadMode === 'url'
-                        ? 'bg-primary-600 text-white'
-                        : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                      uploadMode === 'url' ? 'bg-primary-600 text-white' : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                     )}
                   >
                     <Link2 className="h-3.5 w-3.5" />
@@ -597,22 +618,16 @@ export function MediaManager({ tipo, items, capitulos, cursos }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Duración (seg)
-                  </label>
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Duración (seg)</label>
                   <input
                     value={formDuracion}
                     onChange={(e) => setFormDuracion(e.target.value)}
-                    type="number"
-                    min="0"
-                    placeholder="300"
+                    type="number" min="0" placeholder="300"
                     className="mt-1 w-full rounded-xl glass-input px-3 py-2.5 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Orden
-                  </label>
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Orden</label>
                   <input
                     value={formOrden}
                     onChange={(e) => setFormOrden(e.target.value)}

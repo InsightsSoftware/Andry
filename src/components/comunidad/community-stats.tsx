@@ -1,4 +1,4 @@
-import { Users, MessageCircle, Briefcase, CheckCircle } from 'lucide-react'
+import { Users, MessageCircle, Briefcase } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -59,7 +59,7 @@ export async function CommunityStats() {
   return (
     <div className="mb-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950 p-4">
       {/* Stats grid */}
-      <div className="mb-3 grid grid-cols-4 gap-2 sm:gap-3">
+      <div className="mb-3 grid grid-cols-3 gap-2 sm:gap-3">
         {/* Miembros */}
         <div className="flex flex-col items-center gap-1 rounded-xl bg-white/60 dark:bg-white/[0.02] px-2 py-2.5 text-center">
           <Users className="h-4 w-4 text-primary-500" />
@@ -71,46 +71,31 @@ export async function CommunityStats() {
           </span>
         </div>
 
-        {/* Dudas abiertas */}
+        {/* Dudas */}
         <div className="flex flex-col items-center gap-1 rounded-xl bg-white/60 dark:bg-white/[0.02] px-2 py-2.5 text-center">
           <MessageCircle className="h-4 w-4 text-sky-500" />
           <span className="text-lg font-bold leading-none text-neutral-900 dark:text-neutral-100">
             {dudasAbiertas || 0}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Dudas
+            Sin resolver
           </span>
-          {(dudasResueltas || 0) > 0 && (
-            <span className="text-[9px] text-success-600 dark:text-success-400 font-medium leading-none">
-              {dudasResueltas} resueltas
-            </span>
-          )}
+          <span className="text-[9px] text-success-600 dark:text-success-400 font-medium leading-none">
+            {dudasResueltas || 0} resueltas
+          </span>
         </div>
 
-        {/* Trabajos activos */}
+        {/* Trabajos */}
         <div className="flex flex-col items-center gap-1 rounded-xl bg-white/60 dark:bg-white/[0.02] px-2 py-2.5 text-center">
           <Briefcase className="h-4 w-4 text-accent-500" />
           <span className="text-lg font-bold leading-none text-neutral-900 dark:text-neutral-100">
             {trabajosActivos || 0}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Trabajos
+            Activos
           </span>
-          {(trabajosCerrados || 0) > 0 && (
-            <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-medium leading-none">
-              {trabajosCerrados} cerrados
-            </span>
-          )}
-        </div>
-
-        {/* Resueltas total */}
-        <div className="flex flex-col items-center gap-1 rounded-xl bg-white/60 dark:bg-white/[0.02] px-2 py-2.5 text-center">
-          <CheckCircle className="h-4 w-4 text-success-500" />
-          <span className="text-lg font-bold leading-none text-neutral-900 dark:text-neutral-100">
-            {(dudasResueltas || 0) + (trabajosCerrados || 0)}
-          </span>
-          <span className="text-[10px] uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Cerradas
+          <span className="text-[9px] text-success-600 dark:text-success-400 font-medium leading-none">
+            {trabajosCerrados || 0} resueltos
           </span>
         </div>
       </div>
