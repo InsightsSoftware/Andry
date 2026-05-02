@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { updateCursoImage } from '@/actions/admin'
 
 const BUCKET = 'cursos-portadas'
+const UPLOAD_URL = '/api/admin/upload-portada'
 
 interface Props {
   cursoId: string
@@ -20,7 +21,7 @@ export function CursoImageUpload({ cursoId, currentImageUrl, onUpdate }: Props) 
   const [removing, setRemoving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
+  const supabase = createClient() // used only for DELETE (remove)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -43,22 +44,23 @@ export function CursoImageUpload({ cursoId, currentImageUrl, onUpdate }: Props) 
     setUploading(true)
     try {
       const ext = file.name.split('.').pop() || 'jpg'
-      const path = `${cursoId}/portada.${ext}`
+      const storagePath = `${cursoId}/portada.${ext}`
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { upsert: true, contentType: file.type })
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('bucket', BUCKET)
+      fd.append('path', storagePath)
 
-      if (uploadError) throw uploadError
+      const res = await fetch(UPLOAD_URL, { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || json.error) throw new Error(json.error || 'Error al subir')
 
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
-      const url = `${data.publicUrl}?t=${Date.now()}`
-
-      const result = await updateCursoImage(cursoId, data.publicUrl)
+      const url = `${json.url}?t=${Date.now()}`
+      const result = await updateCursoImage(cursoId, json.url)
       if ('error' in result && result.error) throw new Error(result.error)
 
       setImageUrl(url)
-      onUpdate?.(data.publicUrl)
+      onUpdate?.(json.url)
       showToast('Imagen guardada')
     } catch (err: any) {
       showToast(err?.message || 'Error al subir')
