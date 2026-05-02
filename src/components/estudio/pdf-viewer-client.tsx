@@ -165,6 +165,73 @@ export function PDFViewerClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── DRM-lite: block screenshot / screen-capture APIs ────────────────
+  useEffect(() => {
+    // 1. CSS: user-select none + screenshot-obscure color-scheme trick
+    //    (doesn't stop OS-level screenshots but adds friction and blocks
+    //     browser "copy text" from the rendered canvas/text layer)
+    const style = document.createElement('style')
+    style.id = '__pdf-drm'
+    style.textContent = `
+      .react-pdf__Page { -webkit-user-select: none !important; user-select: none !important; }
+      .react-pdf__Page__textContent {
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        pointer-events: none !important;
+      }
+      .react-pdf__Page__textContent mark {
+        pointer-events: none !important;
+      }
+      @media print { body { display: none !important; } }
+    `
+    document.head.appendChild(style)
+
+    // 2. Block PrintScreen / Ctrl+P / Ctrl+S / right-click
+    const blockKey = (e: KeyboardEvent) => {
+      const isCtrl = e.ctrlKey || e.metaKey
+      if (
+        e.key === 'PrintScreen' ||
+        (isCtrl && e.key === 'p') ||
+        (isCtrl && e.key === 's') ||
+        (isCtrl && e.key === 'a') ||
+        (isCtrl && e.key === 'c' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement))
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+
+    const blockContext = (e: MouseEvent) => {
+      // Only block right-click on the PDF canvas/text area, not on toolbar
+      const target = e.target as HTMLElement
+      if (target.closest('.react-pdf__Page')) {
+        e.preventDefault()
+      }
+    }
+
+    // 3. Visibility change: blur content when tab is not active
+    //    (partially defeats screen-capture tools that need focus)
+    const handleVisibility = () => {
+      const pages = document.querySelectorAll<HTMLElement>('.react-pdf__Page')
+      if (document.hidden) {
+        pages.forEach((p) => { p.style.filter = 'blur(20px)' })
+      } else {
+        pages.forEach((p) => { p.style.filter = '' })
+      }
+    }
+
+    window.addEventListener('keydown', blockKey, true)
+    window.addEventListener('contextmenu', blockContext, true)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      document.getElementById('__pdf-drm')?.remove()
+      window.removeEventListener('keydown', blockKey, true)
+      window.removeEventListener('contextmenu', blockContext, true)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [])
+
   const onDocumentLoadSuccess = useCallback(
     ({ numPages: total }: { numPages: number }) => {
       setNumPages(total)
