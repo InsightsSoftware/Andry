@@ -6,17 +6,19 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   BookOpen,
-  Handshake,
+  ClipboardList,
   Users,
   User,
 } from 'lucide-react'
 
 // IA removed from the MVP nav — will return in Fase 2 as part of the
 // "Plan Plus" upsell. The /ia page and route still exist, just hidden.
+// Aliados removed from mobile tabs (accessible via desktop sidebar) —
+// replaced by Práctica which is a core daily-use feature.
 const tabs = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   { href: '/estudio', label: 'Estudio', icon: BookOpen },
-  { href: '/aliados', label: 'Aliados', icon: Handshake },
+  { href: '/practica', label: 'Práctica', icon: ClipboardList },
   { href: '/comunidad/dudas', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: User },
 ]
@@ -35,11 +37,9 @@ export function BottomTabs() {
 
           // Data attribute used by the onboarding tour
           const tourKey =
-            tab.href === '/aliados'
-              ? 'tab-aliados'
-              : tab.href === '/perfil'
-                ? 'tab-perfil'
-                : undefined
+            tab.href === '/perfil'
+              ? 'tab-perfil'
+              : undefined
 
           return (
             <Link
