@@ -121,7 +121,6 @@ export default async function ResultadosPage({
     }
   }
 
-  const cursoSlug = (sesion as { cursos?: { slug?: string } }).cursos?.slug || ''
   const cursoNombre =
     (sesion as { cursos?: { nombre?: string } }).cursos?.nombre || 'Curso'
 
@@ -145,11 +144,11 @@ export default async function ResultadosPage({
     <div>
       {/* Back link */}
       <Link
-        href={`/estudio/${cursoSlug}`}
+        href="/practica"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        {cursoNombre}
+        Práctica
       </Link>
 
       {/* Score card */}
@@ -197,30 +196,19 @@ export default async function ResultadosPage({
         {/* Action buttons */}
         <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
           <Link
-            href={`/estudio/${cursoSlug}`}
+            href="/practica"
             className="inline-flex items-center gap-2 rounded-xl border border-neutral-300 dark:border-neutral-600 px-5 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al curso
+            Volver a Práctica
           </Link>
-          {isPractice && sesion.capitulo_id && (
-            <Link
-              href={`/estudio/practica/${sesion.capitulo_id}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 dark:bg-primary-500 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Practicar de nuevo
-            </Link>
-          )}
-          {!isPractice && (
-            <Link
-              href="/estudio/examen"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 dark:bg-primary-500 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Hacer otro examen
-            </Link>
-          )}
+          <Link
+            href="/practica"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 dark:bg-primary-500 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Practicar de nuevo
+          </Link>
         </div>
       </div>
 
