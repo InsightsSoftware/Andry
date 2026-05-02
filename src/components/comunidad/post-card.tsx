@@ -37,6 +37,7 @@ interface Post {
   presupuesto: string | null
   resuelto: boolean
   created_at: string
+  media_urls?: string[] | null
   profiles: Profile | null
   comentarios: Comment[]
 }
@@ -90,6 +91,12 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [error, setError] = useState('')
   const [resolving, setResolving] = useState(false)
   const [resuelto, setResuelto] = useState(post.resuelto)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+
+  const VIDEO_EXTS = ['.mp4', '.mov', '.webm']
+  const media = post.media_urls ?? []
+  const mediaImages = media.filter((u) => !VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
+  const mediaVideos = media.filter((u) => VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
 
   const canResolve = !resuelto && (currentUserId === post.user_id || isAdmin)
 
@@ -176,6 +183,69 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       <p className="mb-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
         {post.contenido}
       </p>
+
+      {/* Media: images */}
+      {mediaImages.length > 0 && (
+        <div className={`mb-3 grid gap-1.5 ${
+          mediaImages.length === 1
+            ? 'grid-cols-1'
+            : mediaImages.length === 2
+              ? 'grid-cols-2'
+              : 'grid-cols-3'
+        }`}>
+          {mediaImages.map((url, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setLightboxUrl(url)}
+              className="relative overflow-hidden rounded-xl cursor-pointer group"
+              style={{ aspectRatio: mediaImages.length === 1 ? '16/9' : '1/1' }}
+            >
+              <img
+                src={url}
+                alt={`Imagen ${i + 1}`}
+                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Media: videos */}
+      {mediaVideos.length > 0 && (
+        <div className="mb-3 flex flex-col gap-2">
+          {mediaVideos.map((url, i) => (
+            <video
+              key={i}
+              src={url}
+              controls
+              preload="metadata"
+              className="w-full max-h-72 rounded-xl bg-neutral-900 object-contain"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer text-2xl font-light leading-none"
+          >
+            ×
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Imagen ampliada"
+            className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       {/* Job metadata */}
       {post.tipo === 'trabajo' && (post.ubicacion || post.presupuesto) && (

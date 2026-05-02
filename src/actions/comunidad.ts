@@ -43,6 +43,18 @@ export async function createPost(formData: FormData) {
   const ubicacion = (formData.get('ubicacion') as string)?.trim() || null
   const presupuesto = (formData.get('presupuesto') as string)?.trim() || null
 
+  // Parse media URLs (JSON array sent by the client)
+  let mediaUrls: string[] = []
+  try {
+    const raw = formData.get('media_urls') as string
+    if (raw) mediaUrls = JSON.parse(raw)
+    if (!Array.isArray(mediaUrls)) mediaUrls = []
+    // Cap at 10 total (5 images + 5 videos, enforced client-side too)
+    mediaUrls = mediaUrls.slice(0, 10)
+  } catch {
+    mediaUrls = []
+  }
+
   const { error } = await supabase.from('posts_comunidad').insert({
     user_id: user.id,
     tipo,
@@ -50,6 +62,7 @@ export async function createPost(formData: FormData) {
     contenido,
     ubicacion,
     presupuesto,
+    media_urls: mediaUrls,
   })
 
   if (error) {

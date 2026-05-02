@@ -15,7 +15,7 @@ export default async function TrabajosPage() {
       .from('posts_comunidad')
       .select(
         `
-        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at,
+        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls,
         profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ),
         comentarios ( id, contenido, created_at, profiles:user_id ( nombre_completo, es_mentor, oficio, ubicacion ) )
       `
