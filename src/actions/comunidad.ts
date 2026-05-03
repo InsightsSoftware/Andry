@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { postDudaSchema, postTrabajoSchema, comentarioSchema } from '@/lib/validations'
+import { postLimiter, commentLimiter } from '@/lib/rate-limit'
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
@@ -12,6 +13,13 @@ export async function createPost(formData: FormData) {
 
   if (!user) {
     return { error: 'No autenticado' }
+  }
+
+  // Rate limit: 20 posts per hour per user
+  const { success: postOk, resetAt: postReset } = postLimiter.check(user.id)
+  if (!postOk) {
+    const waitMin = Math.ceil((postReset - Date.now()) / 60_000)
+    return { error: `Límite de publicaciones alcanzado. Volvé a intentarlo en ${waitMin} min.` }
   }
 
   const tipo = formData.get('tipo') as string
@@ -123,6 +131,13 @@ export async function createComment(formData: FormData) {
 
   if (!user) {
     return { error: 'No autenticado' }
+  }
+
+  // Rate limit: 60 comments per hour per user
+  const { success: commentOk, resetAt: commentReset } = commentLimiter.check(user.id)
+  if (!commentOk) {
+    const waitMin = Math.ceil((commentReset - Date.now()) / 60_000)
+    return { error: `Límite de comentarios alcanzado. Volvé a intentarlo en ${waitMin} min.` }
   }
 
   const postId = formData.get('post_id') as string

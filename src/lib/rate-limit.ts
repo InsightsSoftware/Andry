@@ -1,5 +1,5 @@
 /**
- * Simple in-memory rate limiter for API routes.
+ * Simple in-memory rate limiter for API routes and Server Actions.
  * For production at scale, swap to Redis-based (e.g., @upstash/ratelimit).
  *
  * Usage:
@@ -86,20 +86,38 @@ export function createRateLimiter(options: RateLimiterOptions) {
 
 // ── Pre-configured limiters ──────────────────────────────────────────
 
-/** AI chat: 20 requests per minute per user */
+/** AI chat: 30 requests per hour per user */
 export const aiChatLimiter = createRateLimiter({
-  maxRequests: 20,
-  windowMs: 60_000,
+  maxRequests: 30,
+  windowMs: 60 * 60_000, // 1 hour
 })
 
-/** Auth routes: 10 attempts per 15 minutes */
+/** Auth routes: 10 attempts per 15 minutes per IP */
 export const authLimiter = createRateLimiter({
   maxRequests: 10,
   windowMs: 15 * 60_000,
 })
 
-/** General API: 60 requests per minute */
+/** General API / uploads: 60 requests per minute */
 export const apiLimiter = createRateLimiter({
   maxRequests: 60,
   windowMs: 60_000,
+})
+
+/** Community posts: 20 posts per hour per user */
+export const postLimiter = createRateLimiter({
+  maxRequests: 20,
+  windowMs: 60 * 60_000,
+})
+
+/** Community comments: 60 comments per hour per user */
+export const commentLimiter = createRateLimiter({
+  maxRequests: 60,
+  windowMs: 60 * 60_000,
+})
+
+/** Media uploads: 30 files per hour per user */
+export const uploadLimiter = createRateLimiter({
+  maxRequests: 30,
+  windowMs: 60 * 60_000,
 })

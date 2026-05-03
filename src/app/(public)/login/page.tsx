@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { GraduationCap } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { loginSchema } from '@/lib/validations'
+import { loginAction } from '@/actions/auth'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/panel'
+  const redirectTo = searchParams.get('redirect') || '/panel'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,6 +24,7 @@ function LoginForm() {
     e.preventDefault()
     setError('')
 
+    // Client-side validation first
     const result = loginSchema.safeParse({ email, password })
     if (!result.success) {
       setError(result.error.issues[0].message)
@@ -31,28 +32,20 @@ function LoginForm() {
     }
 
     setLoading(true)
-    try {
-      const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+    const formData = new FormData()
+    formData.set('email', email)
+    formData.set('password', password)
 
-      if (authError) {
-        const msg = authError.message === 'Invalid login credentials'
-          ? 'Correo o contraseña incorrectos'
-          : authError.message || 'Error al iniciar sesión'
-        setError(msg)
-        setLoading(false)
-        return
-      }
+    const res = await loginAction(formData)
 
-      router.push(redirect)
-      router.refresh()
-    } catch {
-      setError('Error de conexión. Verifica tu internet e intenta de nuevo.')
+    if (res.error) {
+      setError(res.error)
       setLoading(false)
+      return
     }
+
+    router.push(redirectTo)
+    router.refresh()
   }
 
   return (

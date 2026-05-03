@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { uploadLimiter } from '@/lib/rate-limit'
 
 const BUCKET = 'comunidad-media'
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024   // 10 MB
@@ -16,6 +17,16 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+  }
+
+  // Rate limit: 30 uploads per hour per user
+  const { success, resetAt } = uploadLimiter.check(user.id)
+  if (!success) {
+    const waitMin = Math.ceil((resetAt - Date.now()) / 60_000)
+    return NextResponse.json(
+      { error: `Límite de subidas alcanzado. Volvé a intentarlo en ${waitMin} min.` },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((resetAt - Date.now()) / 1000)) } }
+    )
   }
 
   let formData: FormData

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { apiLimiter } from '@/lib/rate-limit'
 
 export const maxDuration = 60
 export const runtime = 'nodejs'
@@ -23,6 +24,12 @@ export async function POST(request: Request) {
 
     if (profile?.rol !== 'admin' && profile?.rol !== 'root') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    // Rate limit: 60 uploads per minute per admin
+    const { success } = apiLimiter.check(user.id)
+    if (!success) {
+      return NextResponse.json({ error: 'Demasiadas subidas. Esperá un momento.' }, { status: 429 })
     }
 
     // 2. Parse form data

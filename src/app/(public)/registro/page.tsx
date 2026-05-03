@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { GraduationCap } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { registerSchema, OFICIOS_LISTA } from '@/lib/validations'
+import { registerAction } from '@/actions/auth'
 
 function RegisterForm() {
   const router = useRouter()
@@ -34,6 +34,7 @@ function RegisterForm() {
     e.preventDefault()
     setError('')
 
+    // Client-side validation first
     const result = registerSchema.safeParse(formData)
     if (!result.success) {
       setError(result.error.issues[0].message)
@@ -41,31 +42,18 @@ function RegisterForm() {
     }
 
     setLoading(true)
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          nombre_completo: formData.nombre_completo,
-          telefono: formData.telefono,
-          direccion: formData.direccion,
-          oficio: formData.oficio,
-        },
-      },
-    })
+    const fd = new FormData()
+    Object.entries(formData).forEach(([k, v]) => fd.set(k, v))
 
-    if (authError) {
-      if (authError.message.includes('already registered')) {
-        setError('Este correo ya está registrado. Intenta iniciar sesión.')
-      } else {
-        setError('Error al crear la cuenta. Inténtalo de nuevo.')
-      }
+    const res = await registerAction(fd)
+
+    if (res.error) {
+      setError(res.error)
       setLoading(false)
       return
     }
 
-    // If user came from pricing page with a plan, redirect to checkout
+    // Redirect to pricing with plan if applicable
     if (planFromUrl && (planFromUrl === 'basico' || planFromUrl === 'premium')) {
       router.push(`/precios?plan=${planFromUrl}&registered=true`)
     } else {
