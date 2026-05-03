@@ -9,7 +9,6 @@ const CARDS = [
     description: 'Consultá tus dudas de estudio y respondé las de otros estudiantes',
     image: '/images/community/dudas.png',
     icon: MessageCircleQuestion,
-    accent: 'from-transparent via-transparent to-black/40',
     iconColor: 'text-purple-300',
     iconBg: 'bg-purple-500/20 border-purple-500/30',
     cta: 'Ver dudas',
@@ -21,7 +20,6 @@ const CARDS = [
     description: 'Encontrá oportunidades laborales para intérpretes y traductores',
     image: '/images/community/trabajos.png',
     icon: Briefcase,
-    accent: 'from-transparent via-transparent to-black/40',
     iconColor: 'text-amber-300',
     iconBg: 'bg-amber-500/20 border-amber-500/30',
     cta: 'Ver trabajos',
@@ -49,7 +47,6 @@ export function CommunityHub() {
                 sizes="(max-width: 640px) 100vw, 50vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className={`absolute inset-0 bg-gradient-to-t ${card.accent}`} />
               {/* Icon badge */}
               <div className={`absolute bottom-3 left-3 flex h-9 w-9 items-center justify-center rounded-xl border ${card.iconBg} backdrop-blur-sm`}>
                 <Icon className={`h-5 w-5 ${card.iconColor}`} aria-hidden="true" />
