@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, Briefcase, Plus, Sparkles, Search, X, Filter } from 'lucide-react'
+import { Plus, Sparkles, Search, X, Filter } from 'lucide-react'
 import { PostForm } from './post-form'
 import { PostCard } from './post-card'
 
@@ -110,32 +110,6 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
             {isDuda ? 'Nueva Duda' : 'Nuevo Trabajo'}
           </span>
         </button>
-      </div>
-
-      {/* Tab navigation */}
-      <div className="mb-6 flex gap-2 border-b border-neutral-200 dark:border-neutral-700">
-        <a
-          href="/comunidad/dudas"
-          className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors ${
-            isDuda
-              ? 'border-b-2 border-primary-600 dark:border-primary-400 font-semibold text-primary-600 dark:text-primary-400'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
-          }`}
-        >
-          <MessageCircle className="h-4 w-4" />
-          Dudas
-        </a>
-        <a
-          href="/comunidad/trabajos"
-          className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors ${
-            !isDuda
-              ? 'border-b-2 border-primary-600 dark:border-primary-400 font-semibold text-primary-600 dark:text-primary-400'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
-          }`}
-        >
-          <Briefcase className="h-4 w-4" />
-          Trabajos
-        </a>
       </div>
 
       {/* Search + filter bar — always visible */}
