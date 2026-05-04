@@ -688,6 +688,25 @@ export async function updateCursoImage(cursoId: string, imagenUrl: string | null
   return { success: true }
 }
 
+export interface ImagenConfig {
+  x: number       // 0–100  horizontal object-position
+  y: number       // 0–100  vertical   object-position
+  zoom: number    // 1.0–3.0 scale
+  textDark: boolean // true → dark text on bright image
+}
+
+export async function updateCursoImageConfig(cursoId: string, config: ImagenConfig) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('cursos')
+    .update({ imagen_config: config })
+    .eq('id', cursoId)
+  if (error) return { error: error.message }
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
 export async function getChapters(cursoId: string) {
   await requireAdmin()
   const admin = createAdminClient()

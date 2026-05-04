@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { type ChapterCard } from '@/components/estudio/chapter-grid'
 import { CursoPicker } from '@/components/estudio/curso-picker'
 
-export const metadata = { title: 'Modo Estudio' }
+export const metadata = { title: 'Guía' }
 
 export default async function EstudioPage() {
   const supabase = await createClient()
@@ -23,7 +23,7 @@ export default async function EstudioPage() {
   // All active courses — each gets its own chapter grid section below.
   const { data: cursos } = await supabase
     .from('cursos')
-    .select('id, nombre, slug, descripcion, imagen_url')
+    .select('id, nombre, slug, descripcion, imagen_url, imagen_config')
     .eq('activo', true)
     .order('orden')
 
@@ -97,6 +97,7 @@ export default async function EstudioPage() {
       nombre: curso.nombre,
       slug: curso.slug,
       imagenUrl: (curso as typeof curso & { imagen_url?: string | null }).imagen_url ?? null,
+      imagenConfig: (curso as typeof curso & { imagen_config?: unknown }).imagen_config ?? null,
       cards: makeCards(caps, curso.slug),
     }
   })
@@ -104,7 +105,7 @@ export default async function EstudioPage() {
   return (
     <div>
       <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        Modo Estudio
+        Guía
       </h1>
       <p className="mb-6 text-neutral-500 dark:text-neutral-400">
         {cursosList.length === 0

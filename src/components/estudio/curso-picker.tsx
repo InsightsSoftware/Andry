@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ArrowLeft, BookOpen, ArrowRight } from 'lucide-react'
 import { ChapterGrid, type ChapterCard } from '@/components/estudio/chapter-grid'
 import { CursoImageUpload } from '@/components/admin/curso-image-upload'
+import { type ImagenConfig } from '@/actions/admin'
 
 interface CursoData {
   id: string
@@ -12,6 +13,7 @@ interface CursoData {
   slug: string
   descripcion?: string | null
   imagenUrl?: string | null
+  imagenConfig?: ImagenConfig | null
   cards: ChapterCard[]
 }
 
@@ -20,7 +22,7 @@ interface CursoPickerProps {
   isAdmin?: boolean
 }
 
-// Gradient per course index (cycles if more than 4 courses)
+// Fallback gradient when no image is set — cycles by course index
 const GRADIENTS = [
   'from-violet-600/30 via-purple-600/20 to-fuchsia-600/10',
   'from-blue-600/30 via-indigo-600/20 to-cyan-600/10',
@@ -41,9 +43,31 @@ function CursoCard({
   onClick: () => void
 }) {
   const [imagenUrl, setImagenUrl] = useState<string | null>(curso.imagenUrl ?? null)
+  const [imagenConfig, setImagenConfig] = useState<ImagenConfig | null>(curso.imagenConfig ?? null)
+
   const gradient = GRADIENTS[idx % GRADIENTS.length]
   const accent = ACCENT[idx % ACCENT.length]
   const chapterCount = curso.cards.length
+
+  // ── Text contrast based on admin config ──────────────────────────────
+  // textDark → dark text on bright image; default → white text
+  const textDark = imagenConfig?.textDark ?? false
+  const textPrimary = textDark ? 'text-neutral-900' : 'text-neutral-100 dark:text-neutral-100'
+  const textMuted = textDark ? 'text-neutral-700' : 'text-neutral-400 dark:text-neutral-400'
+  const textAccent = textDark ? 'text-neutral-800' : accent
+  const iconBg = textDark ? 'bg-black/10 border-black/20' : 'bg-white/10 dark:bg-white/5 border-white/20'
+  const overlayGradient = textDark
+    ? 'bg-gradient-to-t from-white/60 via-white/25 to-transparent'
+    : 'bg-gradient-to-t from-black/60 via-black/25 to-transparent'
+
+  // ── Image CSS positioning ────────────────────────────────────────────
+  const imgStyle: React.CSSProperties = imagenConfig
+    ? {
+        objectPosition: `${imagenConfig.x}% ${imagenConfig.y}%`,
+        transform: `scale(${imagenConfig.zoom})`,
+        transformOrigin: `${imagenConfig.x}% ${imagenConfig.y}%`,
+      }
+    : {}
 
   const cardInner = (
     <>
@@ -55,31 +79,37 @@ function CursoCard({
           fill
           sizes="(max-width: 640px) 100vw, 50vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          style={imgStyle}
           unoptimized
         />
       )}
-      {/* Gradient overlay — always present, stronger when no image */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} ${imagenUrl ? 'opacity-80' : 'opacity-100'}`} />
+
+      {/* Gradient overlay — always present, adapts to text contrast mode */}
+      <div
+        className={`absolute inset-0 ${
+          imagenUrl ? overlayGradient : `bg-gradient-to-br ${gradient}`
+        }`}
+      />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col h-full p-8">
         {/* Icon */}
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 dark:bg-white/5 border border-white/20">
-          <BookOpen className={`h-6 w-6 ${accent}`} />
+        <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} border`}>
+          <BookOpen className={`h-6 w-6 ${textAccent}`} />
         </div>
 
         {/* Course name */}
-        <h2 className="flex-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+        <h2 className={`flex-1 text-2xl font-bold leading-snug ${textPrimary}`}>
           {curso.nombre}
         </h2>
 
         {/* Chapter count */}
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className={`mt-3 text-sm ${textMuted}`}>
           {chapterCount} {chapterCount === 1 ? 'capítulo' : 'capítulos'}
         </p>
 
         {/* CTA */}
-        <div className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${accent}`}>
+        <div className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${textAccent}`}>
           Ver capítulos
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </div>
@@ -91,7 +121,7 @@ function CursoCard({
     return (
       <button
         onClick={onClick}
-        className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br ${gradient} text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl cursor-pointer min-h-[200px]`}
+        className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 ${imagenUrl ? 'bg-neutral-900' : `bg-gradient-to-br ${gradient}`} text-left transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl cursor-pointer min-h-[200px]`}
       >
         {cardInner}
       </button>
@@ -100,7 +130,7 @@ function CursoCard({
 
   // Admin: card + image upload strip
   return (
-    <div className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br ${gradient} transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl`}>
+    <div className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 ${imagenUrl ? 'bg-neutral-900' : `bg-gradient-to-br ${gradient}`} transition-all hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl`}>
       {/* Clickable area */}
       <button
         onClick={onClick}
@@ -115,7 +145,9 @@ function CursoCard({
         <CursoImageUpload
           cursoId={curso.id}
           currentImageUrl={imagenUrl}
+          initialConfig={imagenConfig}
           onUpdate={(url) => setImagenUrl(url)}
+          onConfigUpdate={(cfg) => setImagenConfig(cfg)}
         />
       </div>
     </div>

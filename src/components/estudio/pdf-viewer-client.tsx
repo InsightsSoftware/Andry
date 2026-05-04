@@ -18,6 +18,8 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
+  ChevronLast,
+  ChevronFirst,
 } from 'lucide-react'
 
 // Configure worker
@@ -36,7 +38,7 @@ export function PDFViewerClient({
 }: PDFViewerProps) {
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const [scale, setScale] = useState(1)
+  const [scale, setScale] = useState(1.25)           // ← 125% by default
   const [progress, setProgress] = useState(initialProgress)
   const [completed, setCompleted] = useState(initialProgress >= 95)
   const [saving, setSaving] = useState(false)
@@ -51,11 +53,113 @@ export function PDFViewerClient({
   const [matchCount, setMatchCount] = useState(0)
   const marksRef = useRef<Element[]>([])
 
+  // Page-turn feedback: brief flash at boundary before turning
+  const [boundaryDir, setBoundaryDir] = useState<'next' | 'prev' | null>(null)
+  const boundaryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastSavedProgress = useRef(initialProgress)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  // ── Page navigation ───────────────────────────────────────────────
+  const goToPage = useCallback(
+    (page: number, scrollTo: 'top' | 'bottom' = 'top') => {
+      const targetPage = Math.max(1, Math.min(numPages || 1, page))
+      if (targetPage === currentPage && numPages > 0) return
+      setCurrentPage(targetPage)
+      setPageInputValue(String(targetPage))
+      // Reset scroll on the container after the new page renders
+      requestAnimationFrame(() => {
+        const el = scrollRef.current
+        if (!el) return
+        if (scrollTo === 'bottom') {
+          el.scrollTop = el.scrollHeight
+        } else {
+          el.scrollTop = 0
+        }
+      })
+    },
+    [currentPage, numPages]
+  )
+
+  // ── Wheel-based page turning ──────────────────────────────────────
+  // When at the very top/bottom of the single-page scroll area,
+  // an extra scroll gesture turns the page.
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      const el = scrollRef.current
+      if (!el || numPages === 0) return
+
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8
+      const atTop = el.scrollTop <= 0
+
+      if (atBottom && e.deltaY > 0 && currentPage < numPages) {
+        e.preventDefault()
+        if (boundaryTimeout.current) return // already firing
+        setBoundaryDir('next')
+        boundaryTimeout.current = setTimeout(() => {
+          goToPage(currentPage + 1, 'top')
+          setBoundaryDir(null)
+          boundaryTimeout.current = null
+        }, 350)
+      } else if (atTop && e.deltaY < 0 && currentPage > 1) {
+        e.preventDefault()
+        if (boundaryTimeout.current) return
+        setBoundaryDir('prev')
+        boundaryTimeout.current = setTimeout(() => {
+          goToPage(currentPage - 1, 'bottom')
+          setBoundaryDir(null)
+          boundaryTimeout.current = null
+        }, 350)
+      }
+    },
+    [currentPage, numPages, goToPage]
+  )
+
+  // Cleanup boundary timeout on unmount
+  useEffect(() => () => {
+    if (boundaryTimeout.current) clearTimeout(boundaryTimeout.current)
+  }, [])
+
+  // ── Progress — based on page number ──────────────────────────────
+  const progressPercent = numPages > 0
+    ? Math.round((currentPage / numPages) * 100)
+    : 0
+
+  useEffect(() => {
+    if (numPages === 0) return
+    const pct = Math.round((currentPage / numPages) * 100)
+    setProgress(pct)
+  }, [currentPage, numPages])
+
+  // Auto-save progress every ~10% change
+  useEffect(() => {
+    if (completed || numPages === 0) return
+    const diff = progress - lastSavedProgress.current
+    if (diff >= 10 || (progress >= 95 && !completed)) {
+      lastSavedProgress.current = progress
+      const doSave = async () => {
+        setSaving(true)
+        const result = await updateProgress(contenidoId, Math.min(100, progress))
+        if (result.success && result.completado) setCompleted(true)
+        setSaving(false)
+      }
+      doSave()
+    }
+  }, [progress, completed, contenidoId, numPages])
+
+  // Save on unmount
+  useEffect(() => {
+    return () => {
+      if (progress > lastSavedProgress.current && !completed) {
+        updateProgress(contenidoId, progress)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Search ────────────────────────────────────────────────────────
   const activateMatch = useCallback((marks: Element[], index: number) => {
     marks.forEach((m, i) => {
       const el = m as HTMLElement
@@ -72,13 +176,9 @@ export function PDFViewerClient({
     })
   }, [])
 
-  // Collect marks con retry — react-pdf renderiza text layers de forma lazy.
-  // Reintenta hasta que aparezcan marks o se agoten los intentos (max ~3s).
   const collectAndJump = useCallback(
     (attempt = 0) => {
-      const marks = Array.from(
-        scrollRef.current?.querySelectorAll('mark') ?? []
-      )
+      const marks = Array.from(scrollRef.current?.querySelectorAll('mark') ?? [])
       if (marks.length === 0 && attempt < 12) {
         setTimeout(() => collectAndJump(attempt + 1), 250)
         return
@@ -91,7 +191,6 @@ export function PDFViewerClient({
     [activateMatch]
   )
 
-  // Cuando cambia el texto de búsqueda, esperar el re-render y saltar
   useEffect(() => {
     if (!searchText.trim()) {
       marksRef.current = []
@@ -107,131 +206,17 @@ export function PDFViewerClient({
     (dir: 'next' | 'prev') => {
       const marks = marksRef.current
       if (marks.length === 0) return
-
       const newIndex =
         dir === 'next'
           ? (matchIndex + 1) % marks.length
           : (matchIndex - 1 + marks.length) % marks.length
-
       setMatchIndex(newIndex)
       activateMatch(marks, newIndex)
     },
     [matchIndex, activateMatch]
   )
 
-  // Track scroll-based progress
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current
-    if (!el || numPages === 0) return
-
-    const scrollPercent = Math.round(
-      (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100
-    )
-    const clampedPercent = Math.min(100, Math.max(0, scrollPercent))
-
-    setProgress(clampedPercent)
-
-    const estimatedPage = Math.max(
-      1,
-      Math.min(numPages, Math.ceil((clampedPercent / 100) * numPages))
-    )
-    setCurrentPage(estimatedPage)
-    setPageInputValue(String(estimatedPage))
-  }, [numPages])
-
-  // Auto-save progress every 10% change
-  useEffect(() => {
-    if (completed) return
-    const diff = progress - lastSavedProgress.current
-    if (diff >= 10 || (progress >= 95 && !completed)) {
-      lastSavedProgress.current = progress
-      const saveProgress = async () => {
-        setSaving(true)
-        const result = await updateProgress(contenidoId, Math.min(100, progress))
-        if (result.success && result.completado) setCompleted(true)
-        setSaving(false)
-      }
-      saveProgress()
-    }
-  }, [progress, completed, contenidoId])
-
-  // Save on unmount
-  useEffect(() => {
-    return () => {
-      if (progress > lastSavedProgress.current && !completed) {
-        updateProgress(contenidoId, progress)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // ── DRM-lite: block screenshot / screen-capture APIs ────────────────
-  useEffect(() => {
-    // 1. CSS: user-select none + screenshot-obscure color-scheme trick
-    //    (doesn't stop OS-level screenshots but adds friction and blocks
-    //     browser "copy text" from the rendered canvas/text layer)
-    const style = document.createElement('style')
-    style.id = '__pdf-drm'
-    style.textContent = `
-      .react-pdf__Page { -webkit-user-select: none !important; user-select: none !important; }
-      .react-pdf__Page__textContent {
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        pointer-events: none !important;
-      }
-      .react-pdf__Page__textContent mark {
-        pointer-events: none !important;
-      }
-      @media print { body { display: none !important; } }
-    `
-    document.head.appendChild(style)
-
-    // 2. Block PrintScreen / Ctrl+P / Ctrl+S / right-click
-    const blockKey = (e: KeyboardEvent) => {
-      const isCtrl = e.ctrlKey || e.metaKey
-      if (
-        e.key === 'PrintScreen' ||
-        (isCtrl && e.key === 'p') ||
-        (isCtrl && e.key === 's') ||
-        (isCtrl && e.key === 'a') ||
-        (isCtrl && e.key === 'c' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement))
-      ) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    }
-
-    const blockContext = (e: MouseEvent) => {
-      // Only block right-click on the PDF canvas/text area, not on toolbar
-      const target = e.target as HTMLElement
-      if (target.closest('.react-pdf__Page')) {
-        e.preventDefault()
-      }
-    }
-
-    // 3. Visibility change: blur content when tab is not active
-    //    (partially defeats screen-capture tools that need focus)
-    const handleVisibility = () => {
-      const pages = document.querySelectorAll<HTMLElement>('.react-pdf__Page')
-      if (document.hidden) {
-        pages.forEach((p) => { p.style.filter = 'blur(20px)' })
-      } else {
-        pages.forEach((p) => { p.style.filter = '' })
-      }
-    }
-
-    window.addEventListener('keydown', blockKey, true)
-    window.addEventListener('contextmenu', blockContext, true)
-    document.addEventListener('visibilitychange', handleVisibility)
-
-    return () => {
-      document.getElementById('__pdf-drm')?.remove()
-      window.removeEventListener('keydown', blockKey, true)
-      window.removeEventListener('contextmenu', blockContext, true)
-      document.removeEventListener('visibilitychange', handleVisibility)
-    }
-  }, [])
-
+  // ── On document load ──────────────────────────────────────────────
   const onDocumentLoadSuccess = useCallback(
     ({ numPages: total }: { numPages: number }) => {
       setNumPages(total)
@@ -240,49 +225,20 @@ export function PDFViewerClient({
         const startPage = Math.max(1, Math.ceil((initialProgress / 100) * total))
         setCurrentPage(startPage)
         setPageInputValue(String(startPage))
-        setTimeout(() => {
-          const el = scrollRef.current
-          if (el) {
-            const scrollTarget = (startPage / total) * (el.scrollHeight - el.clientHeight)
-            el.scrollTo({ top: scrollTarget, behavior: 'auto' })
-          }
-        }, 500)
       }
     },
     [initialProgress]
   )
 
-  const goToPage = useCallback(
-    (page: number) => {
-      const targetPage = Math.max(1, Math.min(numPages, page))
-      setCurrentPage(targetPage)
-      setPageInputValue(String(targetPage))
-      const el = scrollRef.current
-      if (el && numPages > 0) {
-        const scrollTarget = ((targetPage - 1) / numPages) * el.scrollHeight
-        el.scrollTo({ top: scrollTarget, behavior: 'smooth' })
-      }
-    },
-    [numPages]
-  )
-
-  const handlePageInput = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        const page = parseInt(pageInputValue)
-        if (!isNaN(page)) goToPage(page)
-      }
-    },
-    [pageInputValue, goToPage]
-  )
-
+  // ── Zoom ─────────────────────────────────────────────────────────
   const zoom = useCallback((dir: 'in' | 'out') => {
     setScale((s) => {
-      if (dir === 'in') return Math.min(3, s + 0.25)
-      return Math.max(0.5, s - 0.25)
+      if (dir === 'in') return Math.min(3, Math.round((s + 0.25) * 100) / 100)
+      return Math.max(0.5, Math.round((s - 0.25) * 100) / 100)
     })
   }, [])
 
+  // ── Fullscreen ────────────────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
     if (!document.fullscreenElement) {
@@ -302,15 +258,16 @@ export function PDFViewerClient({
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
+  // ── Keyboard shortcuts ────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault()
-        goToPage(currentPage + 1)
+        goToPage(currentPage + 1, 'top')
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault()
-        goToPage(currentPage - 1)
+        goToPage(currentPage - 1, 'bottom')
       } else if (e.key === '+' || e.key === '=') {
         zoom('in')
       } else if (e.key === '-') {
@@ -324,10 +281,61 @@ export function PDFViewerClient({
     return () => window.removeEventListener('keydown', handler)
   }, [currentPage, goToPage, zoom])
 
-  // Memoize so react-pdf only re-renders text layers when searchText changes,
-  // not on every state update (matchIndex, progress, etc.). Without this,
-  // every render creates a new function reference, react-pdf destroys and
-  // recreates all <mark> elements, and marksRef ends up with detached nodes.
+  // ── DRM-lite ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.id = '__pdf-drm'
+    style.textContent = `
+      .react-pdf__Page { -webkit-user-select: none !important; user-select: none !important; }
+      .react-pdf__Page__textContent {
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        pointer-events: none !important;
+      }
+      .react-pdf__Page__textContent mark { pointer-events: none !important; }
+      @media print { body { display: none !important; } }
+    `
+    document.head.appendChild(style)
+
+    const blockKey = (e: KeyboardEvent) => {
+      const isCtrl = e.ctrlKey || e.metaKey
+      if (
+        e.key === 'PrintScreen' ||
+        (isCtrl && e.key === 'p') ||
+        (isCtrl && e.key === 's') ||
+        (isCtrl && e.key === 'a') ||
+        (isCtrl && e.key === 'c' &&
+          !(e.target instanceof HTMLInputElement) &&
+          !(e.target instanceof HTMLTextAreaElement))
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+
+    const blockContext = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest('.react-pdf__Page')) e.preventDefault()
+    }
+
+    const handleVisibility = () => {
+      const pages = document.querySelectorAll<HTMLElement>('.react-pdf__Page')
+      pages.forEach((p) => { p.style.filter = document.hidden ? 'blur(20px)' : '' })
+    }
+
+    window.addEventListener('keydown', blockKey, true)
+    window.addEventListener('contextmenu', blockContext, true)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      document.getElementById('__pdf-drm')?.remove()
+      window.removeEventListener('keydown', blockKey, true)
+      window.removeEventListener('contextmenu', blockContext, true)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [])
+
+  // ── Text renderer (search highlight) ─────────────────────────────
   const textRenderer = useMemo(
     () =>
       searchText
@@ -336,7 +344,15 @@ export function PDFViewerClient({
     [searchText]
   )
 
-  const progressPercent = numPages > 0 ? Math.round((currentPage / numPages) * 100) : progress
+  const handlePageInput = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        const page = parseInt(pageInputValue)
+        if (!isNaN(page)) goToPage(page)
+      }
+    },
+    [pageInputValue, goToPage]
+  )
 
   return (
     <div
@@ -348,7 +364,15 @@ export function PDFViewerClient({
         {/* Page navigation */}
         <div className="flex items-center gap-1">
           <button
-            onClick={() => goToPage(currentPage - 1)}
+            onClick={() => goToPage(1)}
+            disabled={currentPage <= 1}
+            className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
+            aria-label="Primera página"
+          >
+            <ChevronFirst className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => goToPage(currentPage - 1, 'bottom')}
             disabled={currentPage <= 1}
             className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
             aria-label="Página anterior"
@@ -375,12 +399,20 @@ export function PDFViewerClient({
           </div>
 
           <button
-            onClick={() => goToPage(currentPage + 1)}
+            onClick={() => goToPage(currentPage + 1, 'top')}
             disabled={currentPage >= numPages}
             className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
             aria-label="Página siguiente"
           >
             <ChevronRight className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => goToPage(numPages)}
+            disabled={currentPage >= numPages}
+            className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
+            aria-label="Última página"
+          >
+            <ChevronLast className="h-4 w-4" />
           </button>
         </div>
 
@@ -423,10 +455,8 @@ export function PDFViewerClient({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   if (marksRef.current.length > 0) {
-                    // Marks already collected — just navigate
                     e.shiftKey ? navigateMatch('prev') : navigateMatch('next')
                   } else if (searchText.trim()) {
-                    // Marks not ready yet — collect and jump to first immediately
                     collectAndJump(0)
                   }
                 } else if (e.key === 'Escape') {
@@ -447,7 +477,6 @@ export function PDFViewerClient({
                 onClick={() => navigateMatch('prev')}
                 disabled={matchCount === 0}
                 className="rounded-lg p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
-                aria-label="Anterior"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
@@ -455,14 +484,12 @@ export function PDFViewerClient({
                 onClick={() => navigateMatch('next')}
                 disabled={matchCount === 0}
                 className="rounded-lg p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
-                aria-label="Siguiente"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setSearchText('')}
                 className="rounded-lg p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
-                aria-label="Limpiar búsqueda"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -478,11 +505,7 @@ export function PDFViewerClient({
           className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
           aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
         >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
+          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
         </button>
 
         <div className="flex-1" />
@@ -503,7 +526,6 @@ export function PDFViewerClient({
         </div>
       </div>
 
-
       {/* Progress bar */}
       <div className="h-1 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 mb-2 overflow-hidden">
         <div
@@ -512,12 +534,9 @@ export function PDFViewerClient({
         />
       </div>
 
-      {/* ── Floating search bar — visible while scrolled into PDF ── */}
+      {/* Floating search pill */}
       {searchText && matchCount > 0 && (
-        <div
-          className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none"
-          aria-live="polite"
-        >
+        <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-neutral-900/90 backdrop-blur-md px-4 py-2.5 shadow-2xl ring-1 ring-white/10">
             <Search className="h-3.5 w-3.5 text-primary-400 shrink-0" />
             <span className="text-xs text-neutral-300 max-w-[120px] truncate hidden sm:inline">
@@ -531,7 +550,6 @@ export function PDFViewerClient({
                 onClick={() => navigateMatch('prev')}
                 disabled={matchCount === 0}
                 className="rounded-full p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors cursor-pointer"
-                aria-label="Anterior coincidencia"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
@@ -539,7 +557,6 @@ export function PDFViewerClient({
                 onClick={() => navigateMatch('next')}
                 disabled={matchCount === 0}
                 className="rounded-full p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors cursor-pointer"
-                aria-label="Siguiente coincidencia"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -548,7 +565,6 @@ export function PDFViewerClient({
             <button
               onClick={() => setSearchText('')}
               className="rounded-full p-1 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
-              aria-label="Cerrar búsqueda"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -556,54 +572,63 @@ export function PDFViewerClient({
         </div>
       )}
 
-      {/* PDF Document */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900 select-none"
-        style={{ minHeight: '500px' }}
-      >
-        {pdfError ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-danger-50 dark:bg-danger-900/20 flex items-center justify-center">
-              <X className="h-8 w-8 text-danger-500" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
-                No se pudo cargar el PDF
-              </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                Puede ser un problema de conexión o el archivo no está disponible.
-              </p>
-              <a
-                href={archivoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
-              >
-                Abrir PDF directamente
-              </a>
-            </div>
-          </div>
-        ) : (
-          <Document
-            file={archivoUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={() => setPdfError(true)}
-            loading={
-              <div className="flex flex-col items-center justify-center h-[500px] gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Cargando documento...
-                </p>
+      {/* ── Single-page PDF viewer ─────────────────────────────────── */}
+      <div className="relative flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+
+        {/* Boundary flash — visual cue before page turn */}
+        {boundaryDir === 'next' && (
+          <div className="absolute inset-x-0 bottom-0 z-20 h-1.5 bg-primary-500 animate-pulse rounded-b-xl" />
+        )}
+        {boundaryDir === 'prev' && (
+          <div className="absolute inset-x-0 top-0 z-20 h-1.5 bg-primary-500 animate-pulse rounded-t-xl" />
+        )}
+
+        <div
+          ref={scrollRef}
+          onWheel={handleWheel}
+          className="h-full overflow-auto bg-neutral-200 dark:bg-neutral-900 select-none"
+        >
+          {pdfError ? (
+            <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
+              <div className="h-16 w-16 rounded-2xl bg-danger-50 dark:bg-danger-900/20 flex items-center justify-center">
+                <X className="h-8 w-8 text-danger-500" />
               </div>
-            }
-            className="flex flex-col items-center gap-2 py-4"
-          >
-            {Array.from({ length: numPages }, (_, i) => (
+              <div>
+                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+                  No se pudo cargar el PDF
+                </h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  Puede ser un problema de conexión o el archivo no está disponible.
+                </p>
+                <a
+                  href={archivoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+                >
+                  Abrir PDF directamente
+                </a>
+              </div>
+            </div>
+          ) : (
+            <Document
+              file={archivoUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={() => setPdfError(true)}
+              loading={
+                <div className="flex flex-col items-center justify-center h-[500px] gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    Cargando documento...
+                  </p>
+                </div>
+              }
+              className="flex flex-col items-center py-4"
+            >
+              {/* ── Only render the current page ── */}
               <Page
-                key={`page_${i + 1}`}
-                pageNumber={i + 1}
+                key={`page_${currentPage}`}
+                pageNumber={currentPage}
                 scale={scale}
                 className="shadow-lg rounded-sm"
                 renderTextLayer={true}
@@ -618,10 +643,55 @@ export function PDFViewerClient({
                 }
                 customTextRenderer={textRenderer}
               />
-            ))}
-          </Document>
-        )}
+            </Document>
+          )}
+        </div>
       </div>
+
+      {/* Bottom page-turn hint */}
+      {numPages > 1 && (
+        <div className="mt-2 flex items-center justify-center gap-6">
+          <button
+            onClick={() => goToPage(currentPage - 1, 'bottom')}
+            disabled={currentPage <= 1}
+            className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400 disabled:opacity-30 transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Anterior
+          </button>
+
+          {/* Dot progress */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(numPages, 9) }, (_, i) => {
+              const dotPage = numPages <= 9
+                ? i + 1
+                : Math.round(1 + (i / 8) * (numPages - 1))
+              const isActive = numPages <= 9
+                ? dotPage === currentPage
+                : i === Math.round(((currentPage - 1) / (numPages - 1)) * 8)
+              return (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-200 ${
+                    isActive
+                      ? 'w-4 h-1.5 bg-primary-500'
+                      : 'w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600'
+                  }`}
+                />
+              )
+            })}
+          </div>
+
+          <button
+            onClick={() => goToPage(currentPage + 1, 'top')}
+            disabled={currentPage >= numPages}
+            className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400 disabled:opacity-30 transition-colors cursor-pointer"
+          >
+            Siguiente
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

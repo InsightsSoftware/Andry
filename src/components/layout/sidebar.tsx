@@ -37,7 +37,7 @@ const links: NavLink[] = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
   {
     href: '/estudio',
-    label: 'Modo Estudio',
+    label: 'Guía',
     icon: BookOpen,
     excludePrefixes: [
       '/estudio/audios',

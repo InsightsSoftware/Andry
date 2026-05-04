@@ -17,7 +17,7 @@ import {
 // replaced by Práctica which is a core daily-use feature.
 const tabs = [
   { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/estudio', label: 'Estudio', icon: BookOpen },
+  { href: '/estudio', label: 'Guía', icon: BookOpen },
   { href: '/practica', label: 'Práctica', icon: ClipboardList },
   { href: '/comunidad', label: 'Comunidad', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: User },

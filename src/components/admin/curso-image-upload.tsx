@@ -2,9 +2,10 @@
 
 import { useRef, useState } from 'react'
 import Image from 'next/image'
-import { ImagePlus, Loader2, Trash2, CheckCircle } from 'lucide-react'
+import { ImagePlus, Loader2, Trash2, CheckCircle, SlidersHorizontal } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { updateCursoImage } from '@/actions/admin'
+import { updateCursoImage, type ImagenConfig } from '@/actions/admin'
+import { CursoImageAdjust } from '@/components/admin/curso-image-adjust'
 
 const BUCKET = 'cursos-portadas'
 const UPLOAD_URL = '/api/admin/upload-portada'
@@ -12,16 +13,20 @@ const UPLOAD_URL = '/api/admin/upload-portada'
 interface Props {
   cursoId: string
   currentImageUrl: string | null
+  initialConfig?: ImagenConfig | null
   onUpdate?: (newUrl: string | null) => void
+  onConfigUpdate?: (config: ImagenConfig) => void
 }
 
-export function CursoImageUpload({ cursoId, currentImageUrl, onUpdate }: Props) {
+export function CursoImageUpload({ cursoId, currentImageUrl, initialConfig, onUpdate, onConfigUpdate }: Props) {
   const [imageUrl, setImageUrl] = useState<string | null>(currentImageUrl)
+  const [config, setConfig] = useState<ImagenConfig | null>(initialConfig ?? null)
   const [uploading, setUploading] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [showAdjust, setShowAdjust] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient() // used only for DELETE (remove)
+  const supabase = createClient()
 
   function showToast(msg: string) {
     setToast(msg)
@@ -83,6 +88,7 @@ export function CursoImageUpload({ cursoId, currentImageUrl, onUpdate }: Props) 
       const result = await updateCursoImage(cursoId, null)
       if ('error' in result && result.error) throw new Error(result.error)
       setImageUrl(null)
+      setConfig(null)
       onUpdate?.(null)
       showToast('Imagen eliminada')
     } catch (err: any) {
@@ -92,74 +98,100 @@ export function CursoImageUpload({ cursoId, currentImageUrl, onUpdate }: Props) 
     }
   }
 
-  return (
-    <div className="relative flex items-center gap-2">
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+  function handleConfigSaved(newConfig: ImagenConfig) {
+    setConfig(newConfig)
+    onConfigUpdate?.(newConfig)
+  }
 
-      {imageUrl ? (
-        <div className="flex items-center gap-1.5">
-          <div className="relative h-8 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
-            <Image
-              src={imageUrl}
-              alt="portada"
-              fill
-              className="object-cover"
-              unoptimized
-            />
+  return (
+    <>
+      <div className="relative flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {imageUrl ? (
+          <div className="flex items-center gap-1.5">
+            <div className="relative h-8 w-12 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
+              <Image
+                src={imageUrl}
+                alt="portada"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+            {/* Adjust button */}
+            <button
+              onClick={() => setShowAdjust(true)}
+              title="Ajustar posición y contraste"
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-violet-50 hover:text-violet-500 dark:hover:bg-violet-900/20 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              title="Cambiar imagen"
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              {uploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ImagePlus className="h-3.5 w-3.5" />
+              )}
+            </button>
+            <button
+              onClick={handleRemove}
+              disabled={removing}
+              title="Eliminar imagen"
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              {removing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </button>
           </div>
+        ) : (
           <button
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            title="Cambiar imagen"
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
+            title="Agregar imagen al curso"
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
           >
             {uploading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <ImagePlus className="h-3.5 w-3.5" />
             )}
+            <span>{uploading ? 'Subiendo...' : 'Imagen'}</span>
           </button>
-          <button
-            onClick={handleRemove}
-            disabled={removing}
-            title="Eliminar imagen"
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors cursor-pointer disabled:opacity-40"
-          >
-            {removing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          title="Agregar imagen al curso"
-          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-500 hover:bg-primary-50 hover:text-primary-500 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-40"
-        >
-          {uploading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <ImagePlus className="h-3.5 w-3.5" />
-          )}
-          <span>{uploading ? 'Subiendo...' : 'Imagen'}</span>
-        </button>
-      )}
+        )}
 
-      {toast && (
-        <span className="absolute -top-8 left-0 flex items-center gap-1 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-2.5 py-1 text-xs font-medium text-white dark:text-neutral-900 shadow whitespace-nowrap z-50">
-          <CheckCircle className="h-3 w-3" />
-          {toast}
-        </span>
+        {toast && (
+          <span className="absolute -top-8 left-0 flex items-center gap-1 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-2.5 py-1 text-xs font-medium text-white dark:text-neutral-900 shadow whitespace-nowrap z-50">
+            <CheckCircle className="h-3 w-3" />
+            {toast}
+          </span>
+        )}
+      </div>
+
+      {/* Adjust modal */}
+      {showAdjust && imageUrl && (
+        <CursoImageAdjust
+          cursoId={cursoId}
+          imagenUrl={imageUrl}
+          initialConfig={config}
+          onClose={() => setShowAdjust(false)}
+          onSaved={handleConfigSaved}
+        />
       )}
-    </div>
+    </>
   )
 }
