@@ -232,6 +232,7 @@ export async function getQuestions() {
     .from('preguntas')
     .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, imagen_url, opcion_a_imagen_url, opcion_b_imagen_url, opcion_c_imagen_url, opcion_d_imagen_url, capitulos(nombre, cursos(nombre))')
     .order('capitulo_id', { ascending: true })
+    .limit(500)
 
   if (error) {
     console.error('Error fetching questions:', error)
