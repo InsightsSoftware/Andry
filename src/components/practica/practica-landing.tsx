@@ -167,7 +167,7 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
           }`}
         >
           <Image
-            src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80"
+            src="https://images.unsplash.com/photo-1704265586142-db3e17d0dea0?auto=format&fit=crop&w=800&q=80"
             alt="Simulación Real"
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
