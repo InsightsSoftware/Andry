@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { Upload, X, FileText, Headphones, Video, Loader2, CheckCircle2 } from 'lucide-react'
+import { createUploadSignedUrl } from '@/actions/admin'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 interface FileUploaderProps {
   tipo: 'pdf' | 'audio' | 'video'
@@ -17,7 +19,7 @@ const ACCEPT_MAP: Record<string, string> = {
 }
 
 const MAX_SIZE_MAP: Record<string, number> = {
-  pdf: 100,   // MB
+  pdf: 100,
   audio: 300,
   video: 500,
 }
@@ -49,7 +51,6 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
     setError('')
     setProgress(0)
 
-    // Client-side validation
     const maxBytes = maxSizeMB * 1024 * 1024
     if (file.size > maxBytes) {
       setError(`El archivo es demasiado grande. Máximo: ${maxSizeMB}MB`)
@@ -60,49 +61,31 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
     setFileName(file.name)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('tipo', tipo)
-      formData.append('folder', folder)
+      // 1. Get a signed upload URL from our server action (bypasses Next.js body limits)
+      const signed = await createUploadSignedUrl({ tipo, folder, filename: file.name })
+      if (!('success' in signed) || !signed.success) {
+        throw new Error(('error' in signed && signed.error) || 'No se pudo obtener URL de subida')
+      }
 
-      // Use XMLHttpRequest for progress tracking
-      const url = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
+      setProgress(20)
 
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            setProgress(Math.round((e.loaded / e.total) * 100))
-          }
+      // 2. Upload directly to Supabase Storage from the browser
+      const sb = createBrowserSupabase()
+      const { data, error: upErr } = await sb.storage
+        .from('contenido-cursos')
+        .uploadToSignedUrl(signed.path, signed.token, file, {
+          upsert: true,
+          contentType: file.type || undefined,
         })
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const data = JSON.parse(xhr.responseText)
-            if (data.success) {
-              resolve(data.url)
-            } else {
-              reject(new Error(data.error || 'Error al subir'))
-            }
-          } else {
-            try {
-              const data = JSON.parse(xhr.responseText)
-              reject(new Error(data.error || `Error ${xhr.status}`))
-            } catch {
-              reject(new Error(`Error ${xhr.status}`))
-            }
-          }
-        })
+      if (upErr) {
+        throw new Error(upErr.message || 'Error al subir a Storage')
+      }
 
-        xhr.addEventListener('error', () => reject(new Error('Error de red')))
-        xhr.addEventListener('abort', () => reject(new Error('Subida cancelada')))
-
-        xhr.open('POST', '/api/admin/upload')
-        xhr.send(formData)
-      })
-
-      setUploadedUrl(url)
       setProgress(100)
-      onUploadComplete(url)
+      const storagePath = data?.path || signed.path
+      setUploadedUrl(storagePath)
+      onUploadComplete(storagePath)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al subir archivo')
       setProgress(0)
@@ -131,7 +114,6 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) handleUpload(file)
-    // Reset input so same file can be re-selected
     e.target.value = ''
   }, [handleUpload])
 
@@ -143,7 +125,6 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
     onUploadComplete('')
   }, [onUploadComplete])
 
-  // Already uploaded state
   if (uploadedUrl && !uploading) {
     return (
       <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
@@ -167,7 +148,6 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
     )
   }
 
-  // Uploading state
   if (uploading) {
     return (
       <div className="rounded-xl border border-primary-500/20 bg-primary-500/5 p-4">
@@ -177,12 +157,12 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
             <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
               Subiendo {fileName}...
             </p>
-            <p className="text-xs text-neutral-500">{progress}%</p>
+            <p className="text-xs text-neutral-500">{progress < 20 ? 'Preparando...' : progress < 100 ? 'Subiendo...' : 'Listo'}</p>
           </div>
         </div>
         <div className="h-1.5 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
           <div
-            className="h-full rounded-full bg-primary-500 transition-all duration-300"
+            className="h-full rounded-full bg-primary-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -190,7 +170,6 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
     )
   }
 
-  // Drop zone state
   return (
     <div>
       <div
