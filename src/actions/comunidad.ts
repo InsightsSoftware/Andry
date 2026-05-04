@@ -153,10 +153,14 @@ export async function createComment(formData: FormData) {
 
   const contenido = result.data.contenido
 
+  // Optional image attachment
+  const imagenUrl = (formData.get('imagen_url') as string)?.trim() || null
+
   const { error } = await supabase.from('comentarios').insert({
     post_id: postId,
     user_id: user.id,
     contenido,
+    ...(imagenUrl ? { imagen_url: imagenUrl } : {}),
   })
 
   if (error) {

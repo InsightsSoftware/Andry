@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   MessageCircle,
   MapPin,
@@ -8,6 +8,9 @@ import {
   CheckCircle,
   Clock,
   Award,
+  ImagePlus,
+  X,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createComment, markResuelto } from '@/actions/comunidad'
@@ -24,6 +27,7 @@ interface Profile {
 interface Comment {
   id: string
   contenido: string
+  imagen_url?: string | null
   created_at: string
   profiles: Profile | null
 }
@@ -89,10 +93,12 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [showComments, setShowComments] = useState(false)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
+  const [commentImage, setCommentImage] = useState<{ previewUrl: string; remoteUrl: string | null; uploading: boolean } | null>(null)
   const [error, setError] = useState('')
   const [resolving, setResolving] = useState(false)
   const [resuelto, setResuelto] = useState(post.resuelto)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const imgInputRef = useRef<HTMLInputElement>(null)
 
   const VIDEO_EXTS = ['.mp4', '.mov', '.webm']
   const media = post.media_urls ?? []
@@ -112,14 +118,42 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
     setResolving(false)
   }
 
+  async function handleCommentImagePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    const previewUrl = URL.createObjectURL(file)
+    setCommentImage({ previewUrl, remoteUrl: null, uploading: true })
+
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/comunidad/upload-media', { method: 'POST', body: fd })
+    const data = await res.json()
+
+    if (!res.ok || !data.url) {
+      setCommentImage(null)
+      setError('No se pudo subir la imagen. Intentalo de nuevo.')
+      return
+    }
+    setCommentImage({ previewUrl, remoteUrl: data.url, uploading: false })
+  }
+
   async function handleComment(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (commentImage?.uploading) {
+      setError('Esperá a que termine de subir la imagen.')
+      return
+    }
+
     setCommenting(true)
 
     const formData = new FormData()
     formData.set('post_id', post.id)
     formData.set('contenido', commentText)
+    if (commentImage?.remoteUrl) formData.set('imagen_url', commentImage.remoteUrl)
 
     const result = await createComment(formData)
 
@@ -127,6 +161,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       setError(result.error)
     } else {
       setCommentText('')
+      setCommentImage(null)
     }
     setCommenting(false)
   }
@@ -303,21 +338,75 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
                   {comment.contenido}
                 </p>
+                {comment.imagen_url && (
+                  <button
+                    type="button"
+                    onClick={() => setLightboxUrl(comment.imagen_url!)}
+                    className="mt-2 block overflow-hidden rounded-xl cursor-pointer group"
+                  >
+                    <img
+                      src={comment.imagen_url}
+                      alt="Imagen adjunta"
+                      className="max-h-48 w-auto rounded-xl object-cover transition-opacity group-hover:opacity-90"
+                    />
+                  </button>
+                )}
               </div>
             </div>
           ))}
 
-          <form onSubmit={handleComment} className="mt-3 flex gap-2">
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Escribe un comentario..."
-              className="flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/30"
-              required
-            />
-            <Button size="sm" type="submit" loading={commenting}>
-              Enviar
-            </Button>
+          <form onSubmit={handleComment} className="mt-3 flex flex-col gap-2">
+            {/* Image preview */}
+            {commentImage && (
+              <div className="relative inline-flex w-20 h-20 shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
+                <img src={commentImage.previewUrl} alt="" className="h-full w-full object-cover" />
+                {commentImage.uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  </div>
+                )}
+                {!commentImage.uploading && (
+                  <button
+                    type="button"
+                    onClick={() => setCommentImage(null)}
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              {/* Image picker button */}
+              <button
+                type="button"
+                onClick={() => imgInputRef.current?.click()}
+                disabled={!!commentImage}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 hover:border-primary-400 dark:hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Adjuntar imagen"
+              >
+                <ImagePlus className="h-4 w-4" />
+              </button>
+              <input
+                ref={imgInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleCommentImagePick}
+              />
+
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Escribe un comentario..."
+                className="flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/30"
+                required
+              />
+              <Button size="sm" type="submit" loading={commenting}>
+                Enviar
+              </Button>
+            </div>
           </form>
           {error && (
             <p className="mt-2 text-xs text-danger-500">{error}</p>
