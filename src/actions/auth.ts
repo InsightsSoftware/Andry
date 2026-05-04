@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { authLimiter } from '@/lib/rate-limit'
 import { loginSchema, registerSchema } from '@/lib/validations'
+import { sendWelcomeEmail } from '@/lib/email'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -95,6 +96,12 @@ export async function registerAction(formData: FormData) {
     }
     return { error: 'Error al crear la cuenta. Intentalo de nuevo.' }
   }
+
+  // Send welcome email (fire-and-forget)
+  sendWelcomeEmail({
+    to: data.email,
+    nombre: data.nombre_completo,
+  }).catch((err) => console.error('[registerAction] welcome email error:', err))
 
   return { success: true }
 }

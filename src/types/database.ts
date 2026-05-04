@@ -180,6 +180,10 @@ export interface Partner {
   video_url: string
   sitio_web: string | null
   cta_text: string
+  // Contact info (optional)
+  whatsapp: string | null
+  email_contacto: string | null
+  telefono: string | null
   orden: number
   destacado: boolean
   activo: boolean

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Brain } from 'lucide-react'
@@ -17,7 +17,7 @@ interface PracticeSessionProps {
     id: string
     texto: string
     imagenUrl?: string | null
-    opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
+    opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string; imagenUrl?: string | null }[]
   }[]
 }
 
@@ -34,6 +34,28 @@ export function PracticeSession({
   const [sesionId, setSesionId] = useState<string | null>(null)
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState({ correct: 0, total: 0 })
+
+  // Anti-copy protection during practice
+  useEffect(() => {
+    if (!started) return
+    function preventCopy(e: KeyboardEvent) {
+      if (e.ctrlKey && ['c', 'a', 'x', 'u'].includes(e.key.toLowerCase())) {
+        e.preventDefault()
+      }
+      if (e.key === 'PrintScreen') e.preventDefault()
+    }
+    function preventContextMenu(e: MouseEvent) { e.preventDefault() }
+    function preventSelect(e: Event) { e.preventDefault() }
+
+    document.addEventListener('keydown', preventCopy)
+    document.addEventListener('contextmenu', preventContextMenu)
+    document.addEventListener('selectstart', preventSelect)
+    return () => {
+      document.removeEventListener('keydown', preventCopy)
+      document.removeEventListener('contextmenu', preventContextMenu)
+      document.removeEventListener('selectstart', preventSelect)
+    }
+  }, [started])
 
   const handleStart = useCallback(async () => {
     const result = await startPractice(capituloId, cursoId)

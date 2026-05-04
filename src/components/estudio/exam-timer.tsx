@@ -15,6 +15,9 @@ export function ExamTimer({ tiempoLimiteSegundos, onTimeUp }: ExamTimerProps) {
   const hasTriggered = useRef(false)
 
   useEffect(() => {
+    // 0 means "no limit" — don't start the timer
+    if (tiempoLimiteSegundos === 0) return
+
     intervalRef.current = setInterval(() => {
       setRemaining((prev) => {
         const next = prev - 1
@@ -32,6 +35,9 @@ export function ExamTimer({ tiempoLimiteSegundos, onTimeUp }: ExamTimerProps) {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [tiempoLimiteSegundos, onTimeUp])
+
+  // No limit mode — don't show the timer at all
+  if (tiempoLimiteSegundos === 0) return null
 
   const isLow = remaining <= 300 // 5 minutes
   const isCritical = remaining <= 60 // 1 minute

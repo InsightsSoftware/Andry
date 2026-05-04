@@ -3,13 +3,22 @@
 import { useRouter } from 'next/navigation'
 import { Sparkles } from 'lucide-react'
 import { DASHBOARD_TOUR_STORAGE_KEY } from './dashboard-tour'
+import { ESTUDIO_TOUR_KEY, PRACTICA_TOUR_KEY, COMUNIDAD_TOUR_KEY, ALIADOS_TOUR_KEY } from './section-tours'
+
+const ALL_TOUR_KEYS = [
+  DASHBOARD_TOUR_STORAGE_KEY,
+  ESTUDIO_TOUR_KEY,
+  PRACTICA_TOUR_KEY,
+  COMUNIDAD_TOUR_KEY,
+  ALIADOS_TOUR_KEY,
+]
 
 export function ReplayTourButton() {
   const router = useRouter()
 
   const replay = () => {
     try {
-      localStorage.removeItem(DASHBOARD_TOUR_STORAGE_KEY)
+      ALL_TOUR_KEYS.forEach((k) => localStorage.removeItem(k))
     } catch {
       // ignore
     }

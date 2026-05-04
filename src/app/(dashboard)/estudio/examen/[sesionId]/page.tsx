@@ -36,7 +36,7 @@ export default async function ExamenPage({
 
   let preguntasQuery = supabase
     .from('preguntas')
-    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, capitulo_id, imagen_url')
+    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, capitulo_id, imagen_url, opcion_a_imagen_url, opcion_b_imagen_url, opcion_c_imagen_url, opcion_d_imagen_url')
 
   if (capituloFilter) {
     preguntasQuery = preguntasQuery.eq('capitulo_id', capituloFilter.capitulo_id)
@@ -78,17 +78,17 @@ export default async function ExamenPage({
     <ExamRunner
       sesionId={sesionId}
       cursoSlug={cursoSlug}
-      tiempoLimiteSegundos={sesion.tiempo_limite_segundos || 5400}
+      tiempoLimiteSegundos={sesion.tiempo_limite_segundos ?? 0}
       isPractica={sesion.tipo === 'practica'}
       preguntas={shuffled.map((p) => ({
         id: p.id,
         texto: p.texto,
         imagenUrl: (p as any).imagen_url ?? null,
         opciones: [
-          { key: 'a' as const, text: p.opcion_a },
-          { key: 'b' as const, text: p.opcion_b },
-          { key: 'c' as const, text: p.opcion_c },
-          { key: 'd' as const, text: p.opcion_d },
+          { key: 'a' as const, text: p.opcion_a, imagenUrl: (p as any).opcion_a_imagen_url ?? null },
+          { key: 'b' as const, text: p.opcion_b, imagenUrl: (p as any).opcion_b_imagen_url ?? null },
+          { key: 'c' as const, text: p.opcion_c, imagenUrl: (p as any).opcion_c_imagen_url ?? null },
+          { key: 'd' as const, text: p.opcion_d, imagenUrl: (p as any).opcion_d_imagen_url ?? null },
         ],
         answered: answeredMap.get(p.id) as 'a' | 'b' | 'c' | 'd' | null || null,
       }))}

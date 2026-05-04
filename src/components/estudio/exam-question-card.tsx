@@ -1,6 +1,7 @@
 'use client'
 
-import { BookOpen, CheckCircle2, XCircle, Flag, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { BookOpen, CheckCircle2, XCircle, Flag, Loader2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface QuestionFeedback {
@@ -15,7 +16,7 @@ interface ExamQuestionCardProps {
   total: number
   texto: string
   imagenUrl?: string | null
-  opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
+  opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string; imagenUrl?: string | null }[]
   selectedAnswer: 'a' | 'b' | 'c' | 'd' | null
   flagged: boolean
   onSelect: (respuesta: 'a' | 'b' | 'c' | 'd') => void
@@ -47,6 +48,7 @@ export function ExamQuestionCard({
   submitting = false,
 }: ExamQuestionCardProps) {
   const locked = isPractica && (!!feedback || submitting)
+  const [showFinishModal, setShowFinishModal] = useState(false)
 
   function getOptionStyle(key: 'a' | 'b' | 'c' | 'd') {
     if (!isPractica || !feedback) {
@@ -150,8 +152,20 @@ export function ExamQuestionCard({
                     : op.key.toUpperCase()
               }
             </span>
-            <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 pt-0.5">
-              {op.text}
+            <span className="flex-1 min-w-0">
+              {op.imagenUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={op.imagenUrl}
+                  alt={`Opción ${op.key.toUpperCase()}`}
+                  className="mb-2 rounded-lg max-h-40 w-auto object-contain"
+                />
+              )}
+              {op.text && (
+                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 block pt-0.5">
+                  {op.text}
+                </span>
+              )}
             </span>
           </button>
         ))}
@@ -182,16 +196,6 @@ export function ExamQuestionCard({
 
       {/* Navigation */}
       <div className="flex justify-between gap-3">
-        {/* Prev — exam only */}
-        {!isPractica && (
-          <button
-            onClick={onPrev}
-            disabled={numero <= 1}
-            className="rounded-xl border border-neutral-300 dark:border-neutral-600 px-5 py-3 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Anterior
-          </button>
-        )}
 
         {isPractica ? (
           /* Practice: show Siguiente/Finalizar only after feedback */
@@ -220,34 +224,83 @@ export function ExamQuestionCard({
             )}
           </div>
         ) : (
-          /* Exam: original navigation */
-          <div className="flex gap-2">
-            {numero < total && (
+          /* Exam mode: Finalizar on the left, Anterior + Siguiente on the right */
+          <>
+            {/* Left: Finalizar (always visible in exam mode) */}
+            <button
+              onClick={() => setShowFinishModal(true)}
+              className="rounded-xl border border-success-300 dark:border-success-700 px-4 py-3 text-sm font-medium text-success-700 dark:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20 transition-colors cursor-pointer"
+            >
+              Finalizar
+            </button>
+
+            {/* Right: Anterior + Siguiente */}
+            <div className="flex gap-2">
               <button
-                onClick={onFinish}
-                className="rounded-xl border border-success-300 dark:border-success-700 px-4 py-3 text-sm font-medium text-success-700 dark:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20 transition-colors cursor-pointer"
+                onClick={onPrev}
+                disabled={numero <= 1}
+                className="rounded-xl border border-neutral-300 dark:border-neutral-600 px-5 py-3 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
-                Finalizar
+                Anterior
               </button>
-            )}
-            {numero < total ? (
-              <button
-                onClick={onNext}
-                className="rounded-xl bg-primary-600 dark:bg-primary-500 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors cursor-pointer"
-              >
-                Siguiente
-              </button>
-            ) : (
-              <button
-                onClick={onFinish}
-                className="rounded-xl bg-success-500 px-6 py-3 text-sm font-semibold text-white hover:bg-success-600 transition-colors cursor-pointer"
-              >
-                Finalizar Examen
-              </button>
-            )}
-          </div>
+              {numero < total ? (
+                <button
+                  onClick={onNext}
+                  className="rounded-xl bg-primary-600 dark:bg-primary-500 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors cursor-pointer"
+                >
+                  Siguiente
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowFinishModal(true)}
+                  className="rounded-xl bg-success-500 px-6 py-3 text-sm font-semibold text-white hover:bg-success-600 transition-colors cursor-pointer"
+                >
+                  Finalizar Examen
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
+
+      {/* Confirm Finish Modal */}
+      {showFinishModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowFinishModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-100 dark:bg-warning-900/30">
+                <AlertTriangle className="h-5 w-5 text-warning-600 dark:text-warning-400" />
+              </div>
+              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                ¿Finalizar el examen?
+              </h3>
+            </div>
+            <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              Una vez que finalices no podrás volver a responder preguntas. Se calcularán tus resultados con las respuestas que diste hasta ahora.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFinishModal(false)}
+                className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-600 px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                Seguir respondiendo
+              </button>
+              <button
+                onClick={() => { setShowFinishModal(false); onFinish() }}
+                className="flex-1 rounded-xl bg-success-500 px-4 py-3 text-sm font-semibold text-white hover:bg-success-600 transition-colors cursor-pointer"
+              >
+                Sí, finalizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

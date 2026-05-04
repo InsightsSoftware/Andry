@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { PLANS, isPaymentsSimulated, getStripe, type PlanKey } from '@/lib/stripe'
 import { registerSchema } from '@/lib/validations'
+import { sendPurchaseConfirmationEmail } from '@/lib/email'
 
 type PurchaseInput = {
   nombre_completo: string
@@ -133,6 +134,23 @@ export async function completePurchase(
       if (error) console.error('[completePurchase] pagos insert error:', error)
     })
 
+  // Send purchase confirmation email (fire-and-forget)
+  sendPurchaseConfirmationEmail({
+    to: formData.email,
+    nombre: formData.nombre_completo,
+    plan: planKey,
+    direccion: formData.direccion || null,
+  }).catch((err) => console.error('[completePurchase] email error:', err))
+
+  // Mark as pending shipment (update profile)
+  admin
+    .from('profiles')
+    .update({ envio_estado: 'pendiente' })
+    .eq('id', userId)
+    .then(({ error }) => {
+      if (error) console.error('[completePurchase] envio_estado update error:', error)
+    })
+
   return { success: true, email: formData.email }
 }
 
@@ -209,6 +227,31 @@ export async function activateExistingSubscription(
     .then(({ error }) => {
       if (error) console.error('[activateExistingSubscription] pagos error:', error)
     })
+
+  // Send purchase confirmation email (fire-and-forget)
+  if (user.email) {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('nombre_completo, direccion')
+      .eq('id', user.id)
+      .single()
+
+    sendPurchaseConfirmationEmail({
+      to: user.email,
+      nombre: profile?.nombre_completo || user.email,
+      plan: planKey,
+      direccion: profile?.direccion || null,
+    }).catch((err) => console.error('[activateExistingSubscription] email error:', err))
+
+    // Mark as pending shipment
+    admin
+      .from('profiles')
+      .update({ envio_estado: 'pendiente' })
+      .eq('id', user.id)
+      .then(({ error }) => {
+        if (error) console.error('[activateExistingSubscription] envio_estado error:', error)
+      })
+  }
 
   return { success: true, email: user.email ?? '' }
 }

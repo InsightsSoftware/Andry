@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileCheck, BookOpenCheck, Flag } from 'lucide-react'
 import { ExamQuestionCard, type QuestionFeedback } from './exam-question-card'
@@ -17,7 +17,7 @@ interface ExamRunnerProps {
     id: string
     texto: string
     imagenUrl?: string | null
-    opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
+    opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string; imagenUrl?: string | null }[]
     answered: 'a' | 'b' | 'c' | 'd' | null
   }[]
 }
@@ -45,6 +45,40 @@ export function ExamRunner({
   // Practice mode: feedback per question
   const [feedbackMap, setFeedbackMap] = useState<Map<string, QuestionFeedback>>(new Map())
   const startTimeRef = useRef(Date.now())
+
+  // ── Anti-copy protection ────────────────────────────────────────────────
+  useEffect(() => {
+    function preventCopy(e: KeyboardEvent) {
+      // Block Ctrl+C, Ctrl+A, Ctrl+X, Ctrl+V (prevent paste-to-copy tricks)
+      if (e.ctrlKey && ['c', 'a', 'x', 'u'].includes(e.key.toLowerCase())) {
+        e.preventDefault()
+        return false
+      }
+      // Block PrintScreen
+      if (e.key === 'PrintScreen') {
+        e.preventDefault()
+        return false
+      }
+    }
+    function preventContextMenu(e: MouseEvent) {
+      e.preventDefault()
+      return false
+    }
+    function preventSelect(e: Event) {
+      e.preventDefault()
+      return false
+    }
+
+    document.addEventListener('keydown', preventCopy)
+    document.addEventListener('contextmenu', preventContextMenu)
+    document.addEventListener('selectstart', preventSelect)
+
+    return () => {
+      document.removeEventListener('keydown', preventCopy)
+      document.removeEventListener('contextmenu', preventContextMenu)
+      document.removeEventListener('selectstart', preventSelect)
+    }
+  }, [])
 
   // ── Practice: select → submit immediately → show feedback ──────────────
   const handlePracticaSelect = useCallback(async (respuesta: 'a' | 'b' | 'c' | 'd') => {
@@ -127,7 +161,7 @@ export function ExamRunner({
   const currentFeedback = feedbackMap.get(pregunta.id) ?? null
 
   return (
-    <div>
+    <div className="select-none">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">

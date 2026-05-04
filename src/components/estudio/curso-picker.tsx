@@ -6,6 +6,7 @@ import { ArrowLeft, BookOpen, ArrowRight } from 'lucide-react'
 import { ChapterGrid, type ChapterCard } from '@/components/estudio/chapter-grid'
 import { CursoImageUpload } from '@/components/admin/curso-image-upload'
 import { type ImagenConfig } from '@/actions/admin'
+import { EstudioTour } from '@/components/tour/section-tours'
 
 interface CursoData {
   id: string
@@ -21,6 +22,19 @@ interface CursoPickerProps {
   cursos: CursoData[]
   isAdmin?: boolean
 }
+
+const PROXIMOS = [
+  {
+    nombre: 'Electricidad',
+    gradient: 'from-amber-500/20 via-orange-500/10 to-yellow-500/5',
+    accent: 'text-amber-500',
+  },
+  {
+    nombre: 'General Contracts',
+    gradient: 'from-emerald-600/20 via-teal-600/10 to-green-600/5',
+    accent: 'text-emerald-500',
+  },
+]
 
 // Fallback gradient when no image is set — cycles by course index
 const GRADIENTS = [
@@ -182,7 +196,9 @@ export function CursoPicker({ cursos, isAdmin = false }: CursoPickerProps) {
 
   // ── Course cards grid ───────────────────────────────────────────────
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
+    <>
+    <EstudioTour />
+    <div className="grid gap-5 sm:grid-cols-2" data-tour="estudio-curso-card">
       {cursos.map((curso, idx) => (
         <CursoCard
           key={curso.id}
@@ -192,6 +208,28 @@ export function CursoPicker({ cursos, isAdmin = false }: CursoPickerProps) {
           onClick={() => setSelected(curso)}
         />
       ))}
+      {PROXIMOS.map((p) => (
+        <div
+          key={p.nombre}
+          className={`relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 bg-gradient-to-br ${p.gradient} min-h-[200px] opacity-60 cursor-not-allowed select-none`}
+        >
+          <span className="absolute top-3 right-3 rounded-full border border-neutral-300 dark:border-neutral-600 bg-white/80 dark:bg-neutral-800/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            Próximamente
+          </span>
+          <div className="relative z-10 flex flex-col h-full p-8">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 dark:bg-white/5 border border-white/20">
+              <BookOpen className={`h-6 w-6 ${p.accent} opacity-60`} />
+            </div>
+            <h2 className="flex-1 text-2xl font-bold leading-snug text-neutral-400 dark:text-neutral-500">
+              {p.nombre}
+            </h2>
+            <p className="mt-3 text-sm text-neutral-400 dark:text-neutral-600">
+              En desarrollo
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
+    </>
   )
 }

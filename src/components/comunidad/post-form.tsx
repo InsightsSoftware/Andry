@@ -214,14 +214,14 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
         {!isDuda && (
           <>
             <Input
-              label="Ubicacion"
+              label="Ubicación (opcional)"
               name="ubicacion"
-              placeholder="Ej: Miami, FL"
+              placeholder="Ej: Miami, FL · Sur de Florida · cualquier texto"
             />
             <Input
-              label="Presupuesto estimado"
+              label="Presupuesto estimado (opcional)"
               name="presupuesto"
-              placeholder="Ej: $500 - $1,000"
+              placeholder="Ej: $500 - $1,000 · A convenir"
             />
           </>
         )}

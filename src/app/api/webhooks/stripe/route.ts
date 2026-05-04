@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPurchaseConfirmationEmail } from '@/lib/email'
 import Stripe from 'stripe'
 
 // Stripe sends raw body — we need to read it as text for signature verification
@@ -97,6 +98,27 @@ export async function POST(request: Request) {
           console.error('Error recording payment:', paymentError)
           // Don't throw — subscription is already active
         }
+
+        // Send purchase confirmation email + mark pending shipment
+        const { data: profile } = await adminSupabase
+          .from('profiles')
+          .select('email, nombre_completo, direccion')
+          .eq('id', userId)
+          .single()
+
+        if (profile?.email) {
+          sendPurchaseConfirmationEmail({
+            to: profile.email,
+            nombre: profile.nombre_completo || profile.email,
+            plan: planKey,
+            direccion: profile.direccion || null,
+          }).catch((err) => console.error('[webhook] purchase email error:', err))
+        }
+
+        await adminSupabase
+          .from('profiles')
+          .update({ envio_estado: 'pendiente' })
+          .eq('id', userId)
 
         console.log(
           `✅ Subscription activated: user=${userId} plan=${planKey} expires=${expiresAt.toISOString()}`

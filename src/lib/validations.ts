@@ -91,11 +91,11 @@ export const postTrabajoSchema = z.object({
     .max(5000, 'La descripción es demasiado larga'),
   ubicacion: z
     .string()
-    .min(2, 'La ubicación es obligatoria')
-    .max(100, 'La ubicación es demasiado larga'),
+    .max(200, 'La ubicación es demasiado larga')
+    .optional(),
   presupuesto: z
     .string()
-    .max(50, 'El presupuesto es demasiado largo')
+    .max(100, 'El presupuesto es demasiado largo')
     .optional(),
 })
 

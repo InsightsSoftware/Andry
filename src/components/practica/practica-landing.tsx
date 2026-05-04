@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { BookOpenCheck, Timer, ArrowRight, ChevronDown, CheckCircle2 } from 'lucide-react'
+import { PracticaTour } from '@/components/tour/section-tours'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,7 +28,8 @@ interface Props {
 type Mode   = 'libre' | 'examen' | null
 type Fuente = 'especifico' | 'random' | 'balanceado'
 
-const CANTIDADES = [5, 10, 15, 20, 25, 30, 40, 50]
+const CANTIDADES_LIBRE  = [5, 10, 15, 20, 25, 30, 40, 50]
+const CANTIDADES_EXAMEN = [25, 50, 75, 100, 125]
 
 const DURACIONES_LIBRE  = ['Sin límite', '15 min', '30 min', '45 min', '1 hora', '1.5 horas', '2 horas']
 const DURACIONES_EXAMEN = ['2 horas', '3 horas', '4 horas', '5 horas', '6 horas']
@@ -49,12 +51,17 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
   function handleSelectMode(m: 'libre' | 'examen') {
     const next = mode === m ? null : m
     setMode(next)
-    // Reset duration default per mode
-    if (next === 'libre')  setDuracion('Sin límite')
-    if (next === 'examen') setDuracion('2 horas')
-    // Set default chapter when opening config
-    if (next && !capituloId && allChapters.length > 0) {
-      setCapituloId(allChapters[0].id)
+    // Reset defaults per mode
+    if (next === 'libre') {
+      setDuracion('Sin límite')
+      setFuente('especifico')
+      setCantidad(15)
+      if (!capituloId && allChapters.length > 0) setCapituloId(allChapters[0].id)
+    }
+    if (next === 'examen') {
+      setDuracion('2 horas')
+      setFuente('random')   // Simulación Real always uses random questions
+      setCantidad(25)
     }
   }
 
@@ -78,11 +85,13 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
 
   return (
     <div>
+      <PracticaTour />
       {/* ── Mode cards ─────────────────────────────────────────────────────── */}
       <div className="mb-5 grid gap-4 sm:grid-cols-2">
 
         {/* Práctica Libre */}
         <button
+          data-tour="practica-mode-libre"
           onClick={() => handleSelectMode('libre')}
           className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl min-h-[280px] cursor-pointer text-left transition-all duration-300 ${
             mode === 'libre'
@@ -127,6 +136,7 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
 
         {/* Simulación Real */}
         <button
+          data-tour="practica-mode-examen"
           onClick={() => handleSelectMode('examen')}
           className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl min-h-[280px] cursor-pointer text-left transition-all duration-300 ${
             mode === 'examen'
@@ -172,7 +182,7 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
 
       {/* ── Config panel ───────────────────────────────────────────────────── */}
       {mode && (
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700/60 bg-white dark:bg-neutral-900 p-6 shadow-sm">
+        <div data-tour="practica-config" className="rounded-2xl border border-neutral-200 dark:border-neutral-700/60 bg-white dark:bg-neutral-900 p-6 shadow-sm">
           {/* Header */}
           <div className="mb-5 flex items-start gap-3">
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
@@ -196,27 +206,29 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
           {/* Form fields */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            {/* Fuente */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Fuente de preguntas
-              </label>
-              <div className="relative">
-                <select
-                  value={fuente}
-                  onChange={(e) => handleFuenteChange(e.target.value as Fuente)}
-                  className="w-full appearance-none rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 pr-10 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-colors"
-                >
-                  <option value="especifico">Capítulo específico</option>
-                  <option value="random">Random</option>
-                  <option value="balanceado">Balanceado</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            {/* Fuente — only in libre mode */}
+            {mode === 'libre' && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  Fuente de preguntas
+                </label>
+                <div className="relative">
+                  <select
+                    value={fuente}
+                    onChange={(e) => handleFuenteChange(e.target.value as Fuente)}
+                    className="w-full appearance-none rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 pr-10 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-colors"
+                  >
+                    <option value="especifico">Capítulo específico</option>
+                    <option value="random">Random</option>
+                    <option value="balanceado">Balanceado</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Capítulo — only when específico */}
-            {fuente === 'especifico' && (
+            {/* Capítulo — only when libre + específico */}
+            {mode === 'libre' && fuente === 'especifico' && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                   Capítulo
@@ -255,7 +267,7 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
                   onChange={(e) => setCantidad(Number(e.target.value))}
                   className="w-full appearance-none rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 pr-10 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-colors"
                 >
-                  {CANTIDADES.map((n) => (
+                  {(mode === 'examen' ? CANTIDADES_EXAMEN : CANTIDADES_LIBRE).map((n) => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
@@ -263,24 +275,26 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
               </div>
             </div>
 
-            {/* Duración */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Duración
-              </label>
-              <div className="relative">
-                <select
-                  value={duracion}
-                  onChange={(e) => setDuracion(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 pr-10 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-colors"
-                >
-                  {(mode === 'examen' ? DURACIONES_EXAMEN : DURACIONES_LIBRE).map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            {/* Duración — solo en examen (libre siempre es sin límite) */}
+            {mode === 'examen' && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  Duración
+                </label>
+                <div className="relative">
+                  <select
+                    value={duracion}
+                    onChange={(e) => setDuracion(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 pr-10 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-colors"
+                  >
+                    {DURACIONES_EXAMEN.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* CTA */}

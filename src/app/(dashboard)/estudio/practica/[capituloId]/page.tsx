@@ -38,7 +38,7 @@ export default async function PracticaPage({
   // Fetch questions for this chapter
   const { data: preguntas } = await supabase
     .from('preguntas')
-    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, imagen_url')
+    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, imagen_url, opcion_a_imagen_url, opcion_b_imagen_url, opcion_c_imagen_url, opcion_d_imagen_url')
     .eq('capitulo_id', capituloId)
 
   if (!preguntas || preguntas.length === 0) {
@@ -74,10 +74,10 @@ export default async function PracticaPage({
         texto: p.texto,
         imagenUrl: (p as any).imagen_url ?? null,
         opciones: [
-          { key: 'a' as const, text: p.opcion_a },
-          { key: 'b' as const, text: p.opcion_b },
-          { key: 'c' as const, text: p.opcion_c },
-          { key: 'd' as const, text: p.opcion_d },
+          { key: 'a' as const, text: p.opcion_a, imagenUrl: (p as any).opcion_a_imagen_url ?? null },
+          { key: 'b' as const, text: p.opcion_b, imagenUrl: (p as any).opcion_b_imagen_url ?? null },
+          { key: 'c' as const, text: p.opcion_c, imagenUrl: (p as any).opcion_c_imagen_url ?? null },
+          { key: 'd' as const, text: p.opcion_d, imagenUrl: (p as any).opcion_d_imagen_url ?? null },
         ],
       }))}
     />

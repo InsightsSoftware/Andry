@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Sparkles, Search, X, Filter } from 'lucide-react'
 import { PostForm } from './post-form'
 import { PostCard } from './post-card'
+import { ComunidadTour } from '@/components/tour/section-tours'
 
 // Predefined trades for the Trabajos filter — based on the most common
 // FL contractor specialties. Matching is case-insensitive substring
@@ -89,7 +90,8 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
   const hasActiveFilter = search.trim().length > 0 || oficio !== null
 
   return (
-    <div>
+    <div data-tour="comunidad-root">
+      <ComunidadTour />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -102,6 +104,7 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
           </p>
         </div>
         <button
+          data-tour="comunidad-post-form"
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
         >
@@ -143,7 +146,7 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
 
           {/* Oficio filter — only on Trabajos tab */}
           {!isDuda && (
-            <div className="flex items-start gap-2">
+            <div data-tour="comunidad-filters" className="flex items-start gap-2">
               <div className="mt-1.5 flex shrink-0 items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                 <Filter className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Oficio:</span>
@@ -204,7 +207,7 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
 
       {/* Posts list */}
       {filteredPosts.length > 0 ? (
-        <div className="flex flex-col gap-4">
+        <div data-tour="comunidad-post-list" className="flex flex-col gap-4">
           {filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} currentUserId={currentUserId} isAdmin={isAdmin} />
           ))}

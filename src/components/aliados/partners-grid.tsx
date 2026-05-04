@@ -8,9 +8,13 @@ import {
   Play,
   Filter,
   X,
+  Phone,
+  Mail,
+  MessageCircle,
 } from 'lucide-react'
 import { CATEGORIA_LABELS_SHORT as CATEGORIA_LABELS } from '@/lib/partners'
 import type { Partner, PartnerCategoria } from '@/types/database'
+import { AliadosTour } from '@/components/tour/section-tours'
 
 function isYoutubeOrExternal(url: string): 'youtube' | 'external' | 'video' {
   if (/youtube\.com|youtu\.be/.test(url)) return 'youtube'
@@ -59,6 +63,7 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
 
   return (
     <div>
+      <AliadosTour />
       {/* Categoria filter */}
       {availableCategorias.length > 1 && (
         <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -99,7 +104,7 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
       )}
 
       {/* Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-tour="aliados-grid" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredPartners.map((p) => (
           <PartnerCard key={p.id} partner={p} />
         ))}
@@ -185,17 +190,59 @@ function PartnerCard({ partner }: { partner: Partner }) {
           {partner.descripcion}
         </p>
 
-        {partner.sitio_web && (
-          <a
-            href={partner.sitio_web}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-          >
-            {partner.cta_text}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        )}
+        {/* Contact buttons */}
+        <div className="flex flex-col gap-2">
+          {/* Primary CTA */}
+          {partner.sitio_web && (
+            <a
+              href={partner.sitio_web}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+            >
+              {partner.cta_text}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
+
+          {/* Secondary contact options */}
+          {(partner.whatsapp || partner.email_contacto || partner.telefono) && (
+            <div data-tour="aliados-contact" className="flex flex-wrap gap-2">
+              {partner.whatsapp && (
+                <a
+                  href={`https://wa.me/${partner.whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                  title={`WhatsApp: ${partner.whatsapp}`}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  WhatsApp
+                </a>
+              )}
+              {partner.email_contacto && (
+                <a
+                  href={`mailto:${partner.email_contacto}`}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                  title={partner.email_contacto}
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Email
+                </a>
+              )}
+              {partner.telefono && (
+                <a
+                  href={`tel:${partner.telefono.replace(/\s/g, '')}`}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                  title={partner.telefono}
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  Llamar
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

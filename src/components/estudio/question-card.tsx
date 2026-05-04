@@ -10,7 +10,7 @@ interface QuestionCardProps {
   total: number
   texto: string
   imagenUrl?: string | null
-  opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
+  opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string; imagenUrl?: string | null }[]
   /** If provided, shows instant feedback (practice mode) */
   onSubmit: (
     respuesta: 'a' | 'b' | 'c' | 'd'
@@ -149,8 +149,20 @@ export function QuestionCard({
                 op.key.toUpperCase()
               )}
             </span>
-            <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 pt-0.5">
-              {op.text}
+            <span className="flex-1 min-w-0">
+              {op.imagenUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={op.imagenUrl}
+                  alt={`Opción ${op.key.toUpperCase()}`}
+                  className="mb-2 rounded-lg max-h-40 w-auto object-contain"
+                />
+              )}
+              {op.text && (
+                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 block pt-0.5">
+                  {op.text}
+                </span>
+              )}
             </span>
           </button>
         ))}

@@ -34,6 +34,10 @@ export default async function AdminQuestionsPage() {
     pagina_libro: number | null
     capitulo_id: string
     imagen_url: string | null
+    opcion_a_imagen_url: string | null
+    opcion_b_imagen_url: string | null
+    opcion_c_imagen_url: string | null
+    opcion_d_imagen_url: string | null
     capitulos: { nombre: string; cursos: { nombre: string } | null } | null
   }[]
 

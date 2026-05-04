@@ -102,10 +102,10 @@ export async function getUsers() {
   const { data, error } = await admin
     .from('profiles')
     .select(
-      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at'
+      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado'
     )
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(200)
 
   if (error) {
     console.error('Error fetching users:', error)
@@ -169,6 +169,27 @@ export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin'
   return { success: true }
 }
 
+export async function updateEnvioEstado(
+  userId: string,
+  estado: 'pendiente' | 'enviado' | 'no_aplica'
+) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { error } = await admin
+    .from('profiles')
+    .update({ envio_estado: estado })
+    .eq('id', userId)
+
+  if (error) {
+    console.error('Error updating envio_estado:', error)
+    return { error: 'Error al actualizar estado de envío' }
+  }
+
+  revalidatePath('/admin/usuarios')
+  return { success: true }
+}
+
 export async function deleteUser(userId: string) {
   const currentUser = await requireRoot()
   const admin = createAdminClient()
@@ -209,7 +230,7 @@ export async function getQuestions() {
 
   const { data, error } = await admin
     .from('preguntas')
-    .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, imagen_url, capitulos(nombre, cursos(nombre))')
+    .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, imagen_url, opcion_a_imagen_url, opcion_b_imagen_url, opcion_c_imagen_url, opcion_d_imagen_url, capitulos(nombre, cursos(nombre))')
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -537,6 +558,22 @@ export async function deleteQuestion(questionId: string) {
   return { success: true }
 }
 
+export async function deleteQuestions(questionIds: string[]) {
+  if (!questionIds.length) return { success: true }
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { error } = await admin.from('preguntas').delete().in('id', questionIds)
+
+  if (error) {
+    console.error('Error deleting questions:', error)
+    return { error: 'Error al eliminar preguntas' }
+  }
+
+  revalidatePath('/admin/preguntas')
+  return { success: true }
+}
+
 // ── Content management ─────────────────────────────────────────────
 
 export async function getCourses() {
@@ -746,6 +783,55 @@ export async function updateQuestionImage(preguntaId: string, imagenUrl: string 
   const { error } = await admin
     .from('preguntas')
     .update({ imagen_url: imagenUrl })
+    .eq('id', preguntaId)
+  if (error) return { error: error.message }
+  revalidatePath('/estudio')
+  revalidatePath('/practica')
+  return { success: true }
+}
+
+// ── Option images ───────────────────────────────────────────────────────────────
+
+const OPCION_COL = {
+  a: 'opcion_a_imagen_url',
+  b: 'opcion_b_imagen_url',
+  c: 'opcion_c_imagen_url',
+  d: 'opcion_d_imagen_url',
+} as const
+
+export async function createOptionImageUploadUrl(
+  preguntaId: string,
+  opcion: 'a' | 'b' | 'c' | 'd',
+  filename: string
+) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg'
+  const safe = filename.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40)
+  const path = `preguntas/${preguntaId}/opcion_${opcion}_${safe}_${Date.now()}.${ext}`
+
+  const { data, error } = await admin.storage
+    .from('contenido-cursos')
+    .createSignedUploadUrl(path)
+
+  if (error || !data?.signedUrl) {
+    return { error: `No se pudo generar URL: ${error?.message || 'desconocido'}` }
+  }
+  return { success: true as const, signedUrl: data.signedUrl, path }
+}
+
+export async function updateOptionImage(
+  preguntaId: string,
+  opcion: 'a' | 'b' | 'c' | 'd',
+  imagenUrl: string | null
+) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const col = OPCION_COL[opcion]
+  const { error } = await admin
+    .from('preguntas')
+    .update({ [col]: imagenUrl })
     .eq('id', preguntaId)
   if (error) return { error: error.message }
   revalidatePath('/estudio')

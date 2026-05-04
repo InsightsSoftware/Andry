@@ -1,10 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, BookOpen } from 'lucide-react'
-import { deleteQuestion } from '@/actions/admin'
+import { Trash2, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, BookOpen, CheckSquare, Square, X } from 'lucide-react'
+import { deleteQuestion, deleteQuestions } from '@/actions/admin'
 import { useRouter } from 'next/navigation'
 import { QuestionImageUpload } from './question-image-upload'
+import { OptionImagesUpload } from './option-images-upload'
 
 interface Question {
   id: string
@@ -13,6 +14,10 @@ interface Question {
   pagina_libro: number | null
   capitulo_id: string
   imagen_url?: string | null
+  opcion_a_imagen_url?: string | null
+  opcion_b_imagen_url?: string | null
+  opcion_c_imagen_url?: string | null
+  opcion_d_imagen_url?: string | null
   capitulos: { nombre: string; cursos: { nombre: string } | null } | null
 }
 
@@ -39,8 +44,11 @@ export function QuestionList({
   isAdmin?: boolean
 }) {
   const router  = useRouter()
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [deleting,   setDeleting]   = useState<string | null>(null)
+  const [expandedId,    setExpandedId]    = useState<string | null>(null)
+  const [deleting,      setDeleting]      = useState<string | null>(null)
+  const [selectMode,    setSelectMode]    = useState(false)
+  const [selectedIds,   setSelectedIds]   = useState<Set<string>>(new Set())
+  const [bulkDeleting,  setBulkDeleting]  = useState(false)
 
   // ── Navigation state ───────────────────────────────────────────────────────
   const [selectedCurso,    setSelectedCurso]    = useState<string | null>(null)
@@ -75,6 +83,50 @@ export function QuestionList({
     router.refresh()
   }
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleSelectAll = (list: Question[]) => {
+    const allIds = list.map((q) => q.id)
+    const allSelected = allIds.every((id) => selectedIds.has(id))
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        allIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        allIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
+  }
+
+  const handleBulkDelete = async (list: Question[]) => {
+    const ids = list.filter((q) => selectedIds.has(q.id)).map((q) => q.id)
+    if (!ids.length) return
+    if (!confirm(`¿Eliminar ${ids.length} pregunta${ids.length === 1 ? '' : 's'}?`)) return
+    setBulkDeleting(true)
+    await deleteQuestions(ids)
+    setSelectedIds(new Set())
+    setSelectMode(false)
+    setBulkDeleting(false)
+    router.refresh()
+  }
+
+  const exitSelectMode = () => {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
   // ── Embedded: flat list, no navigation ────────────────────────────────────
   if (embedded) {
     if (questions.length === 0) {
@@ -84,50 +136,126 @@ export function QuestionList({
         </div>
       )
     }
+
+    const selectedInList = questions.filter((q) => selectedIds.has(q.id))
+    const allSelected = questions.every((q) => selectedIds.has(q.id))
+
     return (
-      <div className="rounded-2xl glass-card divide-y divide-black/5 dark:divide-white/5">
-        {questions.map((q) => (
-          <div key={q.id} className="px-4 py-3">
-            <div className="flex items-start gap-3">
+      <div className="space-y-2">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {!selectMode ? (
+            <button
+              onClick={() => setSelectMode(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              Seleccionar
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
-                className="mt-0.5 shrink-0 text-neutral-500 cursor-pointer"
+                onClick={() => handleSelectAll(questions)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               >
-                {expandedId === q.id
-                  ? <ChevronDown  className="h-4 w-4" />
-                  : <ChevronRight className="h-4 w-4" />
-                }
+                {allSelected ? <CheckSquare className="h-3.5 w-3.5 text-primary-500" /> : <Square className="h-3.5 w-3.5" />}
+                {allSelected ? 'Desmarcar todo' : 'Seleccionar todo'}
               </button>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-neutral-700 dark:text-neutral-200 truncate">{q.texto}</p>
-                <div className="mt-1 flex items-center gap-3 text-xs text-neutral-500">
-                  <span className="font-mono font-bold text-primary-400 uppercase">
-                    Resp: {q.respuesta_correcta}
-                  </span>
-                  {q.pagina_libro && <span>Pág. {q.pagina_libro}</span>}
-                </div>
-              </div>
+              {selectedInList.length > 0 && (
+                <button
+                  onClick={() => handleBulkDelete(questions)}
+                  disabled={bulkDeleting}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {bulkDeleting ? 'Eliminando...' : `Eliminar ${selectedInList.length}`}
+                </button>
+              )}
               <button
-                onClick={() => handleDelete(q.id)}
-                disabled={deleting === q.id}
-                className="shrink-0 rounded-lg p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                onClick={exitSelectMode}
+                className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               >
-                <Trash2 className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
+                Cancelar
               </button>
             </div>
-            {expandedId === q.id && (
-              <div className="mt-2 ml-7 text-xs text-neutral-600 dark:text-neutral-400 bg-black/[0.03] dark:bg-white/[0.02] rounded-lg p-3 border border-black/5 dark:border-white/5">
-                <p className="whitespace-pre-wrap">{q.texto}</p>
-                {isAdmin && (
-                  <QuestionImageUpload
-                    preguntaId={q.id}
-                    initialImageUrl={q.imagen_url ?? null}
-                  />
+          )}
+        </div>
+
+        <div className="rounded-2xl glass-card divide-y divide-black/5 dark:divide-white/5">
+          {questions.map((q) => (
+            <div key={q.id} className="px-4 py-3">
+              <div className="flex items-start gap-3">
+                {/* Checkbox (selection mode) or expand toggle */}
+                {selectMode ? (
+                  <button
+                    onClick={() => toggleSelect(q.id)}
+                    className="mt-0.5 shrink-0 cursor-pointer"
+                  >
+                    {selectedIds.has(q.id)
+                      ? <CheckSquare className="h-4 w-4 text-primary-500" />
+                      : <Square className="h-4 w-4 text-neutral-400" />
+                    }
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
+                    className="mt-0.5 shrink-0 text-neutral-500 cursor-pointer"
+                  >
+                    {expandedId === q.id
+                      ? <ChevronDown  className="h-4 w-4" />
+                      : <ChevronRight className="h-4 w-4" />
+                    }
+                  </button>
+                )}
+                <div
+                  className="flex-1 min-w-0"
+                  onClick={selectMode ? () => toggleSelect(q.id) : undefined}
+                  style={selectMode ? { cursor: 'pointer' } : undefined}
+                >
+                  <p className="text-sm text-neutral-700 dark:text-neutral-200 truncate">{q.texto}</p>
+                  <div className="mt-1 flex items-center gap-3 text-xs text-neutral-500">
+                    <span className="font-mono font-bold text-primary-400 uppercase">
+                      Resp: {q.respuesta_correcta}
+                    </span>
+                    {q.pagina_libro && <span>Pág. {q.pagina_libro}</span>}
+                  </div>
+                </div>
+                {!selectMode && (
+                  <button
+                    onClick={() => handleDelete(q.id)}
+                    disabled={deleting === q.id}
+                    className="shrink-0 rounded-lg p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 )}
               </div>
-            )}
-          </div>
-        ))}
+              {!selectMode && expandedId === q.id && (
+                <div className="mt-2 ml-7 text-xs text-neutral-600 dark:text-neutral-400 bg-black/[0.03] dark:bg-white/[0.02] rounded-lg p-3 border border-black/5 dark:border-white/5">
+                  <p className="whitespace-pre-wrap">{q.texto}</p>
+                  {isAdmin && (
+                    <>
+                      <QuestionImageUpload
+                        preguntaId={q.id}
+                        initialImageUrl={q.imagen_url ?? null}
+                      />
+                      <OptionImagesUpload
+                        preguntaId={q.id}
+                        initialImages={{
+                          a: q.opcion_a_imagen_url ?? null,
+                          b: q.opcion_b_imagen_url ?? null,
+                          c: q.opcion_c_imagen_url ?? null,
+                          d: q.opcion_d_imagen_url ?? null,
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
