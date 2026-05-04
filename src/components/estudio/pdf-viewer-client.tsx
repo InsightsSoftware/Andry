@@ -53,85 +53,46 @@ export function PDFViewerClient({
   const [matchCount, setMatchCount] = useState(0)
   const marksRef = useRef<Element[]>([])
 
-  // Page-turn feedback: brief flash at boundary before turning
-  const [boundaryDir, setBoundaryDir] = useState<'next' | 'prev' | null>(null)
-  const boundaryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastSavedProgress = useRef(initialProgress)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // ── Page navigation ───────────────────────────────────────────────
+  // ── Page navigation (scroll-based) ───────────────────────────────
   const goToPage = useCallback(
-    (page: number, scrollTo: 'top' | 'bottom' = 'top') => {
+    (page: number) => {
       const targetPage = Math.max(1, Math.min(numPages || 1, page))
-      if (targetPage === currentPage && numPages > 0) return
       setCurrentPage(targetPage)
       setPageInputValue(String(targetPage))
-      // Reset scroll on the container after the new page renders
-      requestAnimationFrame(() => {
-        const el = scrollRef.current
-        if (!el) return
-        if (scrollTo === 'bottom') {
-          el.scrollTop = el.scrollHeight
-        } else {
-          el.scrollTop = 0
-        }
-      })
-    },
-    [currentPage, numPages]
-  )
-
-  // ── Wheel-based page turning ──────────────────────────────────────
-  // When at the very top/bottom of the single-page scroll area,
-  // an extra scroll gesture turns the page.
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
       const el = scrollRef.current
-      if (!el || numPages === 0) return
-
-      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8
-      const atTop = el.scrollTop <= 0
-
-      if (atBottom && e.deltaY > 0 && currentPage < numPages) {
-        e.preventDefault()
-        if (boundaryTimeout.current) return // already firing
-        setBoundaryDir('next')
-        boundaryTimeout.current = setTimeout(() => {
-          goToPage(currentPage + 1, 'top')
-          setBoundaryDir(null)
-          boundaryTimeout.current = null
-        }, 350)
-      } else if (atTop && e.deltaY < 0 && currentPage > 1) {
-        e.preventDefault()
-        if (boundaryTimeout.current) return
-        setBoundaryDir('prev')
-        boundaryTimeout.current = setTimeout(() => {
-          goToPage(currentPage - 1, 'bottom')
-          setBoundaryDir(null)
-          boundaryTimeout.current = null
-        }, 350)
+      if (el && numPages > 0) {
+        const scrollTarget = ((targetPage - 1) / numPages) * el.scrollHeight
+        el.scrollTo({ top: scrollTarget, behavior: 'smooth' })
       }
     },
-    [currentPage, numPages, goToPage]
+    [numPages]
   )
 
-  // Cleanup boundary timeout on unmount
-  useEffect(() => () => {
-    if (boundaryTimeout.current) clearTimeout(boundaryTimeout.current)
-  }, [])
+  // ── Scroll → progress + current page ─────────────────────────────
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || numPages === 0) return
+    const scrollPercent = Math.round(
+      (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100
+    )
+    const clampedPercent = Math.min(100, Math.max(0, scrollPercent))
+    setProgress(clampedPercent)
+    const estimatedPage = Math.max(
+      1,
+      Math.min(numPages, Math.ceil((clampedPercent / 100) * numPages))
+    )
+    setCurrentPage(estimatedPage)
+    setPageInputValue(String(estimatedPage))
+  }, [numPages])
 
-  // ── Progress — based on page number ──────────────────────────────
   const progressPercent = numPages > 0
     ? Math.round((currentPage / numPages) * 100)
-    : 0
-
-  useEffect(() => {
-    if (numPages === 0) return
-    const pct = Math.round((currentPage / numPages) * 100)
-    setProgress(pct)
-  }, [currentPage, numPages])
+    : progress
 
   // Auto-save progress every ~10% change
   useEffect(() => {
@@ -225,6 +186,13 @@ export function PDFViewerClient({
         const startPage = Math.max(1, Math.ceil((initialProgress / 100) * total))
         setCurrentPage(startPage)
         setPageInputValue(String(startPage))
+        setTimeout(() => {
+          const el = scrollRef.current
+          if (el) {
+            const scrollTarget = (startPage / total) * (el.scrollHeight - el.clientHeight)
+            el.scrollTo({ top: scrollTarget, behavior: 'auto' })
+          }
+        }, 500)
       }
     },
     [initialProgress]
@@ -264,10 +232,10 @@ export function PDFViewerClient({
       if (e.target instanceof HTMLInputElement) return
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault()
-        goToPage(currentPage + 1, 'top')
+        goToPage(currentPage + 1)
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault()
-        goToPage(currentPage - 1, 'bottom')
+        goToPage(currentPage - 1)
       } else if (e.key === '+' || e.key === '=') {
         zoom('in')
       } else if (e.key === '-') {
@@ -372,7 +340,7 @@ export function PDFViewerClient({
             <ChevronFirst className="h-4 w-4" />
           </button>
           <button
-            onClick={() => goToPage(currentPage - 1, 'bottom')}
+            onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage <= 1}
             className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
             aria-label="Página anterior"
@@ -399,7 +367,7 @@ export function PDFViewerClient({
           </div>
 
           <button
-            onClick={() => goToPage(currentPage + 1, 'top')}
+            onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage >= numPages}
             className="rounded-lg p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 transition-colors cursor-pointer"
             aria-label="Página siguiente"
@@ -572,63 +540,54 @@ export function PDFViewerClient({
         </div>
       )}
 
-      {/* ── Single-page PDF viewer ─────────────────────────────────── */}
-      <div className="relative flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-
-        {/* Boundary flash — visual cue before page turn */}
-        {boundaryDir === 'next' && (
-          <div className="absolute inset-x-0 bottom-0 z-20 h-1.5 bg-primary-500 animate-pulse rounded-b-xl" />
-        )}
-        {boundaryDir === 'prev' && (
-          <div className="absolute inset-x-0 top-0 z-20 h-1.5 bg-primary-500 animate-pulse rounded-t-xl" />
-        )}
-
-        <div
-          ref={scrollRef}
-          onWheel={handleWheel}
-          className="h-full overflow-auto bg-neutral-200 dark:bg-neutral-900 select-none"
-        >
-          {pdfError ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-              <div className="h-16 w-16 rounded-2xl bg-danger-50 dark:bg-danger-900/20 flex items-center justify-center">
-                <X className="h-8 w-8 text-danger-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
-                  No se pudo cargar el PDF
-                </h3>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                  Puede ser un problema de conexión o el archivo no está disponible.
-                </p>
-                <a
-                  href={archivoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
-                >
-                  Abrir PDF directamente
-                </a>
-              </div>
+      {/* ── Continuous-scroll PDF viewer ─────────────────────────────── */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900 select-none"
+        style={{ minHeight: '500px' }}
+      >
+        {pdfError ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-danger-50 dark:bg-danger-900/20 flex items-center justify-center">
+              <X className="h-8 w-8 text-danger-500" />
             </div>
-          ) : (
-            <Document
-              file={archivoUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={() => setPdfError(true)}
-              loading={
-                <div className="flex flex-col items-center justify-center h-[500px] gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Cargando documento...
-                  </p>
-                </div>
-              }
-              className="flex flex-col items-center py-4"
-            >
-              {/* ── Only render the current page ── */}
+            <div>
+              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+                No se pudo cargar el PDF
+              </h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                Puede ser un problema de conexión o el archivo no está disponible.
+              </p>
+              <a
+                href={archivoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+              >
+                Abrir PDF directamente
+              </a>
+            </div>
+          </div>
+        ) : (
+          <Document
+            file={archivoUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={() => setPdfError(true)}
+            loading={
+              <div className="flex flex-col items-center justify-center h-[500px] gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Cargando documento...
+                </p>
+              </div>
+            }
+            className="flex flex-col items-center gap-2 py-4"
+          >
+            {Array.from({ length: numPages }, (_, i) => (
               <Page
-                key={`page_${currentPage}`}
-                pageNumber={currentPage}
+                key={`page_${i + 1}`}
+                pageNumber={i + 1}
                 scale={scale}
                 className="shadow-lg rounded-sm"
                 renderTextLayer={true}
@@ -643,55 +602,10 @@ export function PDFViewerClient({
                 }
                 customTextRenderer={textRenderer}
               />
-            </Document>
-          )}
-        </div>
+            ))}
+          </Document>
+        )}
       </div>
-
-      {/* Bottom page-turn hint */}
-      {numPages > 1 && (
-        <div className="mt-2 flex items-center justify-center gap-6">
-          <button
-            onClick={() => goToPage(currentPage - 1, 'bottom')}
-            disabled={currentPage <= 1}
-            className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400 disabled:opacity-30 transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            Anterior
-          </button>
-
-          {/* Dot progress */}
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(numPages, 9) }, (_, i) => {
-              const dotPage = numPages <= 9
-                ? i + 1
-                : Math.round(1 + (i / 8) * (numPages - 1))
-              const isActive = numPages <= 9
-                ? dotPage === currentPage
-                : i === Math.round(((currentPage - 1) / (numPages - 1)) * 8)
-              return (
-                <div
-                  key={i}
-                  className={`rounded-full transition-all duration-200 ${
-                    isActive
-                      ? 'w-4 h-1.5 bg-primary-500'
-                      : 'w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600'
-                  }`}
-                />
-              )
-            })}
-          </div>
-
-          <button
-            onClick={() => goToPage(currentPage + 1, 'top')}
-            disabled={currentPage >= numPages}
-            className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400 disabled:opacity-30 transition-colors cursor-pointer"
-          >
-            Siguiente
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
     </div>
   )
 }
