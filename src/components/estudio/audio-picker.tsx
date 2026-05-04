@@ -21,6 +21,7 @@ export interface AudioCurso {
 
 interface Props {
   cursos: AudioCurso[]
+  isAdmin?: boolean
 }
 
 // Gradients per course index
@@ -34,7 +35,7 @@ const ACCENT = ['text-violet-400', 'text-blue-400', 'text-amber-400', 'text-emer
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function AudioPicker({ cursos }: Props) {
+export function AudioPicker({ cursos, isAdmin = false }: Props) {
   const [selectedCurso, setSelectedCurso] = useState<AudioCurso | null>(
     cursos.length === 1 ? cursos[0] : null
   )
@@ -59,6 +60,7 @@ export function AudioPicker({ cursos }: Props) {
         <AudiosPlaylist
           tracks={selectedCapitulo.tracks}
           capitulos={[capOption]}
+          isAdmin={isAdmin}
         />
       </div>
     )

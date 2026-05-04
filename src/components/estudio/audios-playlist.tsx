@@ -63,12 +63,13 @@ function coverGradientFor(id: string): string {
 interface Props {
   tracks: Track[]
   capitulos: CapituloOption[]
+  isAdmin?: boolean
 }
 
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2]
 const PROGRESS_SAVE_INTERVAL_MS = 15000
 
-export function AudiosPlaylist({ tracks, capitulos }: Props) {
+export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
   // ── State ───────────────────────────────────────────────────
   const [selectedCapituloId, setSelectedCapituloId] = useState<string | null>(
     capitulos[0]?.id ?? null
@@ -472,9 +473,11 @@ export function AudiosPlaylist({ tracks, capitulos }: Props) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                      {t.codigo}
-                    </p>
+                    {isAdmin && (
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                        {t.codigo}
+                      </p>
+                    )}
                     <p
                       className={cn(
                         'truncate text-sm font-semibold',

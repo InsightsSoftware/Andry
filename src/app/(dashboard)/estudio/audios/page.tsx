@@ -7,6 +7,15 @@ export const metadata = { title: 'Audios' }
 export default async function AudiosPage() {
   const supabase = await createClient()
 
+  // Check admin role
+  const { data: { user } } = await supabase.auth.getUser()
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles').select('rol').eq('id', user.id).single()
+    isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+  }
+
   // ── Fetch data ────────────────────────────────────────────────────────────
 
   // Active courses in order
@@ -37,10 +46,7 @@ export default async function AudiosPage() {
         .order('orden')
     : { data: [] }
 
-  // Progress
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Progress (user already fetched above)
 
   const audioIds = (audios || []).map((a) => a.id)
   const { data: progreso } =
@@ -139,7 +145,7 @@ export default async function AudiosPage() {
           </p>
         </div>
       ) : (
-        <AudioPicker cursos={cursosConCapitulos} />
+        <AudioPicker cursos={cursosConCapitulos} isAdmin={isAdmin} />
       )}
     </div>
   )
