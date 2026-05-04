@@ -46,7 +46,7 @@ export async function CommunityStats() {
       .eq('resuelto', true),
     admin
       .from('profiles')
-      .select('nombre_completo, created_at')
+      .select('nombre_completo, avatar_url, created_at')
       .eq('subscription_status', 'activa')
       .order('created_at', { ascending: false })
       .limit(8),
@@ -108,6 +108,7 @@ export async function CommunityStats() {
               <AvatarInicial
                 key={i}
                 nombre={m.nombre_completo}
+                avatarUrl={m.avatar_url}
                 size="xs"
                 ring
                 className="border-2 border-white dark:border-neutral-900"
