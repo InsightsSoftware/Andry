@@ -231,8 +231,7 @@ export async function getQuestions() {
   const { data, error } = await admin
     .from('preguntas')
     .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, imagen_url, opcion_a_imagen_url, opcion_b_imagen_url, opcion_c_imagen_url, opcion_d_imagen_url, capitulos(nombre, cursos(nombre))')
-    .order('created_at', { ascending: false })
-    .limit(100)
+    .order('capitulo_id', { ascending: true })
 
   if (error) {
     console.error('Error fetching questions:', error)
