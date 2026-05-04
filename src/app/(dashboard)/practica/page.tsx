@@ -3,7 +3,13 @@ import { PracticaLanding } from '@/components/practica/practica-landing'
 
 export const metadata = { title: 'Práctica y Examen' }
 
-export default async function PracticaIndexPage() {
+export default async function PracticaIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>
+}) {
+  const params = await searchParams
+  const errorCode = params.error ?? null
   const supabase = await createClient()
 
   // Load active courses
@@ -45,7 +51,7 @@ export default async function PracticaIndexPage() {
         Elegí el modo que mejor se adapta a tu sesión de hoy
       </p>
 
-      <PracticaLanding cursosConCapitulos={cursosConCapitulos} />
+      <PracticaLanding cursosConCapitulos={cursosConCapitulos} errorCode={errorCode} />
     </div>
   )
 }

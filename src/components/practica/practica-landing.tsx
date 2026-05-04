@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { BookOpenCheck, Timer, ArrowRight, ChevronDown, CheckCircle2 } from 'lucide-react'
+import { BookOpenCheck, Timer, ArrowRight, ChevronDown, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { PracticaTour } from '@/components/tour/section-tours'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -23,6 +23,7 @@ interface Curso {
 
 interface Props {
   cursosConCapitulos: Curso[]
+  errorCode?: string | null
 }
 
 type Mode   = 'libre' | 'examen' | null
@@ -36,7 +37,7 @@ const DURACIONES_EXAMEN = ['2 horas', '3 horas', '4 horas', '5 horas', '6 horas'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PracticaLanding({ cursosConCapitulos }: Props) {
+export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
   const router = useRouter()
 
   const [mode,       setMode]       = useState<Mode>(null)
@@ -47,6 +48,13 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
 
   // Flatten chapters from all courses
   const allChapters = cursosConCapitulos.flatMap((c) => c.capitulos)
+
+  // Questions available for the currently selected chapter / mode
+  const selectedChapter = allChapters.find((c) => c.id === capituloId)
+  const totalQuestionsAvailable = fuente === 'especifico'
+    ? (selectedChapter?.questionCount ?? 0)
+    : allChapters.reduce((sum, c) => sum + c.questionCount, 0)
+  const noQuestions = totalQuestionsAvailable === 0
 
   function handleSelectMode(m: 'libre' | 'examen') {
     const next = mode === m ? null : m
@@ -86,6 +94,16 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
   return (
     <div>
       <PracticaTour />
+
+      {/* Error banner */}
+      {errorCode === 'sin_preguntas' && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            <strong>Sin preguntas disponibles</strong> — El capítulo seleccionado todavía no tiene preguntas cargadas. Elegí otro capítulo o pedile al administrador que suba el banco de preguntas.
+          </p>
+        </div>
+      )}
       {/* ── Mode cards ─────────────────────────────────────────────────────── */}
       <div className="mb-5 grid gap-4 sm:grid-cols-2">
 
@@ -247,7 +265,7 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
                         {cap.numero >= 11
                           ? cap.nombre
                           : `Capítulo ${String(cap.numero).padStart(2, '0')} — ${cap.nombre}`
-                        }
+                        }{cap.questionCount === 0 ? ' (sin preguntas)' : ` · ${cap.questionCount} preguntas`}
                       </option>
                     ))}
                   </select>
@@ -299,18 +317,32 @@ export function PracticaLanding({ cursosConCapitulos }: Props) {
 
           {/* CTA */}
           <div className="mt-6 flex items-center gap-3">
-            <button
-              onClick={handleComenzar}
-              disabled={fuente === 'especifico' && !capituloId}
-              className={`inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                mode === 'libre'
-                  ? 'bg-violet-600 hover:bg-violet-500 active:bg-violet-700'
-                  : 'bg-amber-500 hover:bg-amber-400 active:bg-amber-600'
-              }`}
-            >
-              Comenzar sesión
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={handleComenzar}
+                disabled={(fuente === 'especifico' && !capituloId) || noQuestions}
+                className={`inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                  mode === 'libre'
+                    ? 'bg-violet-600 hover:bg-violet-500 active:bg-violet-700'
+                    : 'bg-amber-500 hover:bg-amber-400 active:bg-amber-600'
+                }`}
+              >
+                Comenzar sesión
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              {noQuestions && capituloId && (
+                <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Este capítulo no tiene preguntas cargadas aún.
+                </p>
+              )}
+              {noQuestions && fuente !== 'especifico' && (
+                <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  No hay preguntas disponibles en ningún capítulo aún.
+                </p>
+              )}
+            </div>
             <button
               onClick={() => setMode(null)}
               className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer"
