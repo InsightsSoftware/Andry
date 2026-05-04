@@ -325,7 +325,7 @@ export function PDFViewerClient({
   return (
     <div
       ref={containerRef}
-      className={`flex flex-1 flex-col ${isFullscreen ? 'bg-neutral-950' : ''}`}
+      className={`flex flex-1 flex-col min-h-0 ${isFullscreen ? 'bg-neutral-950' : ''}`}
     >
       {/* Toolbar */}
       <div className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 p-2 mb-2 flex-wrap">
@@ -544,8 +544,7 @@ export function PDFViewerClient({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900 select-none"
-        style={{ minHeight: '500px' }}
+        className="flex-1 min-h-0 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-900 select-none"
       >
         {pdfError ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">

@@ -28,5 +28,9 @@ interface PDFViewerProps {
 }
 
 export function PDFViewer(props: PDFViewerProps) {
-  return <PDFViewerClient {...props} />
+  return (
+    <div className="flex flex-1 flex-col min-h-0">
+      <PDFViewerClient {...props} />
+    </div>
+  )
 }
