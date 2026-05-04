@@ -30,6 +30,7 @@ function getInitials(name: string): string {
 
 interface AvatarInicialProps {
   nombre: string | null | undefined
+  avatarUrl?: string | null
   size?: 'xs' | 'sm' | 'md' | 'lg'
   ring?: boolean
   className?: string
@@ -44,6 +45,7 @@ const sizeMap = {
 
 export function AvatarInicial({
   nombre,
+  avatarUrl,
   size = 'sm',
   ring = false,
   className = '',
@@ -51,6 +53,21 @@ export function AvatarInicial({
   const name = nombre?.trim() || 'Usuario'
   const initials = getInitials(name)
   const color = COLORS[hashString(name) % COLORS.length]
+
+  // If user has a real photo, show it
+  if (avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={name}
+        title={name}
+        className={`inline-block shrink-0 rounded-full object-cover ${sizeMap[size]} ${
+          ring ? `ring-2 ${color.ring}` : ''
+        } ${className}`}
+      />
+    )
+  }
 
   return (
     <div

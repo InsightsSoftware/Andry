@@ -33,6 +33,7 @@ export default async function AdminQuestionsPage() {
     respuesta_correcta: string
     pagina_libro: number | null
     capitulo_id: string
+    imagen_url: string | null
     capitulos: { nombre: string; cursos: { nombre: string } | null } | null
   }[]
 

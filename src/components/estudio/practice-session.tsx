@@ -16,6 +16,7 @@ interface PracticeSessionProps {
   preguntas: {
     id: string
     texto: string
+    imagenUrl?: string | null
     opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
   }[]
 }
@@ -152,6 +153,7 @@ export function PracticeSession({
         numero={currentIndex + 1}
         total={preguntas.length}
         texto={pregunta.texto}
+        imagenUrl={pregunta.imagenUrl ?? null}
         opciones={pregunta.opciones}
         onSubmit={handleSubmit}
         onNext={handleNext}

@@ -36,7 +36,7 @@ export default async function ExamenPage({
 
   let preguntasQuery = supabase
     .from('preguntas')
-    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, capitulo_id')
+    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, capitulo_id, imagen_url')
 
   if (capituloFilter) {
     preguntasQuery = preguntasQuery.eq('capitulo_id', capituloFilter.capitulo_id)
@@ -83,6 +83,7 @@ export default async function ExamenPage({
       preguntas={shuffled.map((p) => ({
         id: p.id,
         texto: p.texto,
+        imagenUrl: (p as any).imagen_url ?? null,
         opciones: [
           { key: 'a' as const, text: p.opcion_a },
           { key: 'b' as const, text: p.opcion_b },

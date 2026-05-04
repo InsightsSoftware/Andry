@@ -209,7 +209,7 @@ export async function getQuestions() {
 
   const { data, error } = await admin
     .from('preguntas')
-    .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, capitulos(nombre, cursos(nombre))')
+    .select('id, texto, respuesta_correcta, pagina_libro, capitulo_id, imagen_url, capitulos(nombre, cursos(nombre))')
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -704,6 +704,52 @@ export async function updateCursoImageConfig(cursoId: string, config: ImagenConf
     .eq('id', cursoId)
   if (error) return { error: error.message }
   revalidatePath('/estudio')
+  return { success: true }
+}
+
+// ── Question image ─────────────────────────────────────────────────────────────
+
+/**
+ * Generate a signed upload URL so the browser can POST an image for a
+ * question directly to Supabase Storage without body-size issues.
+ */
+export async function createQuestionImageUploadUrl(preguntaId: string, filename: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg'
+  const safe = filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .substring(0, 40)
+  const timestamp = Date.now()
+  const path = `preguntas/${preguntaId}/${safe}_${timestamp}.${ext}`
+
+  const { data, error } = await admin.storage
+    .from('contenido-cursos')
+    .createSignedUploadUrl(path)
+
+  if (error || !data) {
+    return { error: `No se pudo generar URL: ${error?.message || 'desconocido'}` }
+  }
+
+  return { success: true as const, signedUrl: data.signedUrl, path }
+}
+
+/**
+ * Persist the public URL (or storage path) of a question's image after
+ * the browser finishes the direct-to-storage upload.
+ */
+export async function updateQuestionImage(preguntaId: string, imagenUrl: string | null) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('preguntas')
+    .update({ imagen_url: imagenUrl })
+    .eq('id', preguntaId)
+  if (error) return { error: error.message }
+  revalidatePath('/estudio')
+  revalidatePath('/practica')
   return { success: true }
 }
 

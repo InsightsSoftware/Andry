@@ -14,6 +14,7 @@ interface ExamQuestionCardProps {
   numero: number
   total: number
   texto: string
+  imagenUrl?: string | null
   opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
   selectedAnswer: 'a' | 'b' | 'c' | 'd' | null
   flagged: boolean
@@ -32,6 +33,7 @@ export function ExamQuestionCard({
   numero,
   total,
   texto,
+  imagenUrl = null,
   opciones,
   selectedAnswer,
   flagged,
@@ -106,9 +108,21 @@ export function ExamQuestionCard({
       </div>
 
       {/* Question */}
-      <h3 className="mb-5 text-lg font-semibold text-neutral-900 dark:text-neutral-100 leading-relaxed">
+      <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100 leading-relaxed">
         {texto}
       </h3>
+
+      {/* Question image */}
+      {imagenUrl && (
+        <div className="mb-5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imagenUrl}
+            alt="Imagen de la pregunta"
+            className="rounded-xl max-h-64 w-auto object-contain border border-neutral-200 dark:border-neutral-700"
+          />
+        </div>
+      )}
 
       {/* Options */}
       <div className="flex flex-col gap-3 mb-5">

@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react'
+import { Mail, Phone, MapPin, Calendar } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { ManageSubscriptionButton } from '@/components/ui/manage-subscription-button'
 import { SignOutButton } from '@/components/ui/sign-out-button'
 import { ReplayTourButton } from '@/components/tour/replay-tour-button'
+import { AvatarUpload } from '@/components/perfil/avatar-upload'
 
 export const metadata = { title: 'Mi Perfil' }
 
@@ -40,10 +41,13 @@ export default async function ProfilePage() {
       <h1 className="mb-6 text-2xl font-bold text-neutral-900 dark:text-neutral-100">Mi Perfil</h1>
 
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
-        <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-800/30">
-            <User className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-          </div>
+        <div className="mb-6 flex items-center gap-5">
+          {/* Avatar with upload functionality */}
+          <AvatarUpload
+            userId={profile.id}
+            nombre={profile.nombre_completo}
+            initialAvatarUrl={profile.avatar_url ?? null}
+          />
           <div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
               {profile.nombre_completo || 'Sin nombre'}
@@ -57,6 +61,9 @@ export default async function ProfilePage() {
             >
               {planLabel} - {statusLabel}
             </span>
+            <p className="mt-1 text-[11px] text-neutral-500 dark:text-neutral-500">
+              Hacé click en la foto para cambiarla
+            </p>
           </div>
         </div>
 

@@ -16,6 +16,7 @@ interface ExamRunnerProps {
   preguntas: {
     id: string
     texto: string
+    imagenUrl?: string | null
     opciones: { key: 'a' | 'b' | 'c' | 'd'; text: string }[]
     answered: 'a' | 'b' | 'c' | 'd' | null
   }[]
@@ -211,6 +212,7 @@ export function ExamRunner({
           numero={currentIndex + 1}
           total={totalCount}
           texto={pregunta.texto}
+          imagenUrl={pregunta.imagenUrl ?? null}
           opciones={pregunta.opciones}
           selectedAnswer={answers.get(pregunta.id) || null}
           flagged={flagged.has(pregunta.id)}

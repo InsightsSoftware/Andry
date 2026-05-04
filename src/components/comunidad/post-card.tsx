@@ -15,6 +15,7 @@ import { AvatarInicial } from './avatar-inicial'
 
 interface Profile {
   nombre_completo: string
+  avatar_url?: string | null
   es_mentor?: boolean | null
   oficio?: string | null
   ubicacion?: string | null
@@ -136,6 +137,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       <div className="mb-3 flex items-start gap-3">
         <AvatarInicial
           nombre={post.profiles?.nombre_completo}
+          avatarUrl={post.profiles?.avatar_url}
           size="md"
           ring={!!post.profiles?.es_mentor}
         />
@@ -284,6 +286,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
             >
               <AvatarInicial
                 nombre={comment.profiles?.nombre_completo}
+                avatarUrl={comment.profiles?.avatar_url}
                 size="sm"
                 ring={!!comment.profiles?.es_mentor}
                 className="mt-0.5"

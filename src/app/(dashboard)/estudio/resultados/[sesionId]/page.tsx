@@ -27,6 +27,7 @@ type PreguntaData = {
   explicacion: string | null
   pagina_libro: number | null
   capitulo_id: string
+  imagen_url: string | null
 }
 
 type RespuestaData = {
@@ -75,7 +76,7 @@ export default async function ResultadosPage({
   let preguntasQuery = supabase
     .from('preguntas')
     .select(
-      'id, texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, explicacion, pagina_libro, capitulo_id'
+      'id, texto, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, explicacion, pagina_libro, capitulo_id, imagen_url'
     )
 
   if (sesion.capitulo_id) {
@@ -329,7 +330,7 @@ export default async function ResultadosPage({
                       key={op.key}
                       className={`rounded-lg px-3 py-2 text-xs ${
                         isCorrect
-                          ? 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-400 font-semibold'
+                          ? 'bg-success-100 dark:bg-success-900/50 text-success-800 dark:text-success-200 font-bold border-2 border-success-500 dark:border-success-400'
                           : isSelected && !respuesta?.es_correcta
                             ? 'bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 line-through'
                             : 'text-neutral-500 dark:text-neutral-400'
@@ -345,6 +346,18 @@ export default async function ResultadosPage({
                 })}
               </div>
 
+              {/* Question image */}
+              {pregunta.imagen_url && (
+                <div className="ml-10 mb-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={pregunta.imagen_url}
+                    alt="Imagen de la pregunta"
+                    className="rounded-lg max-h-64 w-auto object-contain border border-neutral-200 dark:border-neutral-700"
+                  />
+                </div>
+              )}
+
               {/* Explanation — green when correct, red when wrong, neutral when skipped */}
               {pregunta.explicacion && (
                 <div
@@ -356,7 +369,7 @@ export default async function ResultadosPage({
                         : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
-                  {pregunta.explicacion}
+                  <span className="font-bold">Análisis:</span>{' '}{pregunta.explicacion}
                 </div>
               )}
 

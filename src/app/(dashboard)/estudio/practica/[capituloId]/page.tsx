@@ -38,7 +38,7 @@ export default async function PracticaPage({
   // Fetch questions for this chapter
   const { data: preguntas } = await supabase
     .from('preguntas')
-    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d')
+    .select('id, texto, opcion_a, opcion_b, opcion_c, opcion_d, imagen_url')
     .eq('capitulo_id', capituloId)
 
   if (!preguntas || preguntas.length === 0) {
@@ -72,6 +72,7 @@ export default async function PracticaPage({
       preguntas={shuffled.map((p) => ({
         id: p.id,
         texto: p.texto,
+        imagenUrl: (p as any).imagen_url ?? null,
         opciones: [
           { key: 'a' as const, text: p.opcion_a },
           { key: 'b' as const, text: p.opcion_b },

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Trash2, ChevronDown, ChevronRight, ArrowLeft, HelpCircle, BookOpen } from 'lucide-react'
 import { deleteQuestion } from '@/actions/admin'
 import { useRouter } from 'next/navigation'
+import { QuestionImageUpload } from './question-image-upload'
 
 interface Question {
   id: string
@@ -11,6 +12,7 @@ interface Question {
   respuesta_correcta: string
   pagina_libro: number | null
   capitulo_id: string
+  imagen_url?: string | null
   capitulos: { nombre: string; cursos: { nombre: string } | null } | null
 }
 
@@ -28,10 +30,13 @@ interface NavCapitulo {
 export function QuestionList({
   questions,
   embedded = false,
+  isAdmin = true,
 }: {
   questions: Question[]
   /** When true, skip course/chapter navigation and render the flat list directly */
   embedded?: boolean
+  /** Show admin controls (image upload, etc.) */
+  isAdmin?: boolean
 }) {
   const router  = useRouter()
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -113,6 +118,12 @@ export function QuestionList({
             {expandedId === q.id && (
               <div className="mt-2 ml-7 text-xs text-neutral-600 dark:text-neutral-400 bg-black/[0.03] dark:bg-white/[0.02] rounded-lg p-3 border border-black/5 dark:border-white/5">
                 <p className="whitespace-pre-wrap">{q.texto}</p>
+                {isAdmin && (
+                  <QuestionImageUpload
+                    preguntaId={q.id}
+                    initialImageUrl={q.imagen_url ?? null}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -276,6 +287,12 @@ export function QuestionList({
               {expandedId === q.id && (
                 <div className="mt-2 ml-7 text-xs text-neutral-600 dark:text-neutral-400 bg-black/[0.03] dark:bg-white/[0.02] rounded-lg p-3 border border-black/5 dark:border-white/5">
                   <p className="whitespace-pre-wrap">{q.texto}</p>
+                  {isAdmin && (
+                    <QuestionImageUpload
+                      preguntaId={q.id}
+                      initialImageUrl={q.imagen_url ?? null}
+                    />
+                  )}
                 </div>
               )}
             </div>
