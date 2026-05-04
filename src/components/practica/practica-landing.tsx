@@ -64,7 +64,11 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
       setDuracion('Sin límite')
       setFuente('especifico')
       setCantidad(15)
-      if (!capituloId && allChapters.length > 0) setCapituloId(allChapters[0].id)
+      if (!capituloId && allChapters.length > 0) {
+        // Prefer first chapter that has questions
+        const firstWithQ = allChapters.find((c) => c.questionCount > 0)
+        setCapituloId((firstWithQ ?? allChapters[0]).id)
+      }
     }
     if (next === 'examen') {
       setDuracion('2 horas')
