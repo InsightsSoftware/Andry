@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Upload, X, FileText, Headphones, Video, Loader2, CheckCircle2 } from 'lucide-react'
+import { Upload, X, FileText, Headphones, Video, Loader2, CheckCircle2, ImageIcon } from 'lucide-react'
 import { createUploadSignedUrl } from '@/actions/admin'
 import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 interface FileUploaderProps {
-  tipo: 'pdf' | 'audio' | 'video'
+  tipo: 'pdf' | 'audio' | 'video' | 'image'
   folder?: string
   onUploadComplete: (url: string) => void
   currentUrl?: string
@@ -16,18 +16,21 @@ const ACCEPT_MAP: Record<string, string> = {
   pdf: '.pdf',
   audio: '.mp3,.wav,.ogg,.aac,.m4a',
   video: '.mp4,.webm,.mov,.avi',
+  image: '.jpg,.jpeg,.png,.webp,.gif',
 }
 
 const MAX_SIZE_MAP: Record<string, number> = {
   pdf: 100,
   audio: 300,
   video: 500,
+  image: 10,
 }
 
 const ICON_MAP: Record<string, typeof FileText> = {
   pdf: FileText,
   audio: Headphones,
   video: Video,
+  image: ImageIcon,
 }
 
 function formatFileSize(bytes: number): string {
@@ -84,8 +87,20 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
 
       setProgress(100)
       const storagePath = data?.path || signed.path
-      setUploadedUrl(storagePath)
-      onUploadComplete(storagePath)
+
+      // For images: resolve and store the full public URL so it can be used
+      // directly in <img> tags without any further transformation.
+      if (tipo === 'image') {
+        const { data: pub } = sb.storage
+          .from('contenido-cursos')
+          .getPublicUrl(storagePath)
+        const publicUrl = pub?.publicUrl || storagePath
+        setUploadedUrl(publicUrl)
+        onUploadComplete(publicUrl)
+      } else {
+        setUploadedUrl(storagePath)
+        onUploadComplete(storagePath)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al subir archivo')
       setProgress(0)
@@ -126,6 +141,30 @@ export function FileUploader({ tipo, folder = 'general', onUploadComplete, curre
   }, [onUploadComplete])
 
   if (uploadedUrl && !uploading) {
+    // Image preview
+    if (tipo === 'image') {
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+          <img
+            src={uploadedUrl}
+            alt="Preview"
+            className="h-32 w-full object-cover"
+          />
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute top-2 right-2 rounded-lg bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-2 px-3 py-2 bg-black/20">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+            <p className="text-xs text-emerald-400 truncate">{fileName || 'Imagen subida'}</p>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
         <div className="flex items-center gap-3">

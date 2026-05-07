@@ -883,20 +883,20 @@ function CategoryModal({
             />
           </label>
 
-          <label className="block">
+          <div>
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
-              URL de imagen <span className="text-neutral-400 font-normal normal-case">— opcional</span>
+              Imagen de portada{' '}
+              <span className="text-neutral-400 font-normal normal-case">— opcional</span>
             </span>
-            <input
-              type="text"
-              value={form.imagen_url}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, imagen_url: e.target.value }))
+            <FileUploader
+              tipo="image"
+              folder="categorias-videos"
+              onUploadComplete={(url) =>
+                setForm((f) => ({ ...f, imagen_url: url }))
               }
-              placeholder="https://..."
-              className="block w-full rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-950 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              currentUrl={form.imagen_url}
             />
-          </label>
+          </div>
 
           {error && (
             <p className="rounded-xl border border-danger-200 dark:border-danger-800 bg-danger-50 dark:bg-danger-900/20 px-3 py-2.5 text-sm text-danger-600 dark:text-danger-400">

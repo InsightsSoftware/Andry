@@ -969,7 +969,7 @@ export async function deleteContent(contentId: string) {
  * MIME whitelist). RLS + this admin check still gate upload access.
  */
 export async function createUploadSignedUrl(input: {
-  tipo: 'pdf' | 'audio' | 'video'
+  tipo: 'pdf' | 'audio' | 'video' | 'image'
   folder: string
   filename: string
 }) {
