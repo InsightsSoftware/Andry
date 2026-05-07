@@ -3,8 +3,8 @@ import {
   Video as VideoIcon,
   CheckCircle2,
   PlayCircle,
-  FolderOpen,
   ChevronRight,
+  ArrowRight,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -16,7 +16,6 @@ export default async function VideosPage() {
   const admin = createAdminClient()
   const supabase = await createClient()
 
-  // Fetch all active categories + all videos (with category assignment)
   const [{ data: categorias }, { data: allVideos }] = await Promise.all([
     admin
       .from('video_categorias')
@@ -30,7 +29,6 @@ export default async function VideosPage() {
       .order('orden'),
   ])
 
-  // Fetch user progress for video completion counts
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -52,7 +50,6 @@ export default async function VideosPage() {
   const videos = allVideos || []
   const cats = categorias || []
 
-  // Videos that belong to a category
   const catVideoMap = new Map<string, typeof videos>()
   for (const cat of cats) {
     catVideoMap.set(
@@ -61,28 +58,24 @@ export default async function VideosPage() {
     )
   }
 
-  // Videos with no category — shown in a separate section below
   const sinCategoria = videos.filter((v) => v.video_categoria_id === null)
-
-  const hasCats = cats.length > 0
   const total = videos.length
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/20">
-          <VideoIcon className="h-7 w-7 text-success-600 dark:text-success-400" />
-        </div>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            Videos
-          </h1>
-          <p className="mt-1 text-neutral-500 dark:text-neutral-400">
-            Contenido en video para tu preparación.
-          </p>
-        </div>
-      </div>
+      <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+        Videos
+      </h1>
+      <p className="mb-6 text-neutral-500 dark:text-neutral-400">
+        {total === 0
+          ? 'Los videos se están preparando.'
+          : cats.length === 1
+            ? cats[0].nombre
+            : cats.length > 1
+              ? `${cats.length} categorías disponibles`
+              : 'Contenido en video para tu preparación.'}
+      </p>
 
       {total === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
@@ -93,64 +86,53 @@ export default async function VideosPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-8">
-          {/* Category cards grid */}
-          {hasCats && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {cats.map((cat) => {
+
+          {/* Category cards — same style as audio chapter cards */}
+          {cats.length > 0 && (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {cats.map((cat, idx) => {
                 const catVideos = catVideoMap.get(cat.id) || []
                 const completados = catVideos.filter(
                   (v) => progresoMap.get(v.id)?.completado
                 ).length
-                const duracion = catVideos.reduce(
-                  (acc, v) => acc + (v.duracion_segundos || 0),
-                  0
-                )
-                const allDone =
-                  catVideos.length > 0 && completados === catVideos.length
+                const allDone = catVideos.length > 0 && completados === catVideos.length
+                const videoCount = catVideos.length
 
                 return (
                   <Link
                     key={cat.id}
                     href={`/estudio/videos/${cat.id}`}
-                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-success-400 dark:hover:border-success-600 transition-colors"
+                    className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-7 text-left transition-all hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md min-h-[200px] cursor-pointer"
                   >
-                    {/* Thumbnail / cover */}
-                    <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
-                      {cat.imagen_url ? (
-                        <img
-                          src={cat.imagen_url}
-                          alt={cat.nombre}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <FolderOpen className="h-14 w-14 text-success-400/50 group-hover:text-success-500/60 transition-colors" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    {/* Glow */}
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary-500/20 opacity-40 blur-2xl" />
+
+                    {/* Label */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
+                        {`CATEGORÍA ${String(idx + 1).padStart(2, '0')}`}
+                      </span>
                       {allDone && (
-                        <div className="absolute top-2 right-2">
-                          <CheckCircle2 className="h-5 w-5 text-success-400 drop-shadow" />
-                        </div>
+                        <CheckCircle2 className="h-4 w-4 text-success-500 shrink-0" />
                       )}
                     </div>
 
-                    {/* Info */}
-                    <div className="flex flex-1 items-end justify-between gap-2 p-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
-                          {cat.nombre}
-                        </p>
-                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-                          {catVideos.length} video{catVideos.length !== 1 ? 's' : ''}
-                          {duracion > 0 && ` · ${formatSeconds(duracion)}`}
-                          {completados > 0 && ` · ${completados} visto${completados !== 1 ? 's' : ''}`}
-                        </p>
-                        {cat.descripcion && (
-                          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500 line-clamp-2">
-                            {cat.descripcion}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronRight className="h-5 w-5 shrink-0 text-neutral-300 dark:text-neutral-600 group-hover:text-success-500 transition-colors" />
+                    {/* Name */}
+                    <h3 className="flex-1 text-xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-3">
+                      {cat.nombre}
+                    </h3>
+
+                    {/* Video count */}
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                      <VideoIcon className="h-3.5 w-3.5" />
+                      {videoCount} {videoCount === 1 ? 'video' : 'videos'}
+                      {completados > 0 && ` · ${completados} visto${completados !== 1 ? 's' : ''}`}
+                    </p>
+
+                    {/* CTA */}
+                    <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
+                      Ver videos
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                     </div>
                   </Link>
                 )
@@ -158,11 +140,11 @@ export default async function VideosPage() {
             </div>
           )}
 
-          {/* Videos with no category (always shown below categories) */}
+          {/* Videos sin categoría */}
           {sinCategoria.length > 0 && (
             <section>
-              {hasCats && (
-                <h2 className="mb-3 font-semibold text-neutral-700 dark:text-neutral-300">
+              {cats.length > 0 && (
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400">
                   Videos generales
                 </h2>
               )}
@@ -175,8 +157,7 @@ export default async function VideosPage() {
                       href={`/estudio/video/${video.id}`}
                       className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60 cursor-pointer"
                     >
-                      {/* Mini thumbnail placeholder */}
-                      <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
+                      <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary-500/10 to-neutral-100 dark:from-primary-900/30 dark:to-neutral-800">
                         <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
                           <PlayCircle className="h-6 w-6 text-white drop-shadow" />
                         </div>
@@ -186,18 +167,16 @@ export default async function VideosPage() {
                           </span>
                         )}
                       </div>
-
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-1 leading-snug">
                           {video.titulo}
                         </p>
                       </div>
-
                       <div className="shrink-0">
                         {progress?.completado ? (
                           <CheckCircle2 className="h-5 w-5 text-success-500" />
                         ) : (
-                          <ChevronRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 transition-colors" />
                         )}
                       </div>
                     </Link>
