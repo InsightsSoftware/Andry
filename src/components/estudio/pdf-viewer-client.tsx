@@ -181,24 +181,15 @@ export function PDFViewerClient({
   )
 
   // ── On document load ──────────────────────────────────────────────
+  // Always start at page 1 regardless of previous progress.
   const onDocumentLoadSuccess = useCallback(
     ({ numPages: total }: { numPages: number }) => {
       setNumPages(total)
       setLoadingDoc(false)
-      if (initialProgress > 0 && total > 1) {
-        const startPage = Math.max(1, Math.ceil((initialProgress / 100) * total))
-        setCurrentPage(startPage)
-        setPageInputValue(String(startPage))
-        setTimeout(() => {
-          const el = scrollRef.current
-          if (el) {
-            const scrollTarget = (startPage / total) * (el.scrollHeight - el.clientHeight)
-            el.scrollTo({ top: scrollTarget, behavior: 'auto' })
-          }
-        }, 500)
-      }
+      setCurrentPage(1)
+      setPageInputValue('1')
     },
-    [initialProgress]
+    []
   )
 
   // ── Zoom ─────────────────────────────────────────────────────────
