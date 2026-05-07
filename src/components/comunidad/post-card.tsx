@@ -331,11 +331,12 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
         {post.contenido}
       </p>
 
-      {/* Media: images — small squares, Facebook style */}
-      {mediaImages.length > 0 && (
+      {/* Media: images + videos — small squares, Facebook style */}
+      {(mediaImages.length > 0 || mediaVideos.length > 0) && (
         <div className="mb-3 flex flex-wrap gap-1.5">
+          {/* Images */}
           {mediaImages.map((url, i) => (
-            <div key={i} className="relative group/img shrink-0">
+            <div key={`img-${i}`} className="relative group/img shrink-0">
               <button
                 type="button"
                 onClick={() => setLightboxUrl(url)}
@@ -347,7 +348,6 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   className="h-full w-full object-cover transition-transform duration-200 group-hover/img:scale-105"
                 />
               </button>
-              {/* Admin: remove image */}
               {isAdmin && (
                 <button
                   onClick={() => handleRemoveMedia(url)}
@@ -363,31 +363,25 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               )}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Media: videos */}
-      {mediaVideos.length > 0 && (
-        <div className="mb-3 flex flex-col gap-2">
+          {/* Videos — same small squares */}
           {mediaVideos.map((url, i) => (
-            <div key={i} className="relative group/vid">
+            <div key={`vid-${i}`} className="relative group/vid shrink-0">
               <video
                 src={url}
                 controls
                 preload="metadata"
-                className="w-full max-h-40 rounded-xl bg-neutral-900 object-contain"
+                className="h-16 w-28 rounded-lg bg-neutral-900 object-cover"
               />
-              {/* Admin: remove video */}
               {isAdmin && (
                 <button
                   onClick={() => handleRemoveMedia(url)}
                   disabled={removingMedia === url}
                   title="Eliminar video"
-                  className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white hover:bg-danger-600 transition-colors cursor-pointer opacity-0 group-hover/vid:opacity-100"
+                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-danger-600 transition-colors cursor-pointer z-10 opacity-0 group-hover/vid:opacity-100"
                 >
                   {removingMedia === url
-                    ? <Loader2 className="h-3 w-3 animate-spin" />
-                    : <><X className="h-3 w-3" /> Eliminar</>
+                    ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                    : <X className="h-2.5 w-2.5" />
                   }
                 </button>
               )}
