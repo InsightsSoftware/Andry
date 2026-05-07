@@ -267,8 +267,8 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 {resolving ? 'Guardando…' : 'Marcar resuelto'}
               </button>
             ) : null}
-            {/* Admin: unmark resuelto */}
-            {isAdmin && resuelto && (
+            {/* Owner or admin: unmark resuelto */}
+            {resuelto && (currentUserId === post.user_id || isAdmin) && (
               <button
                 onClick={handleUnmarkResuelto}
                 disabled={resolving}

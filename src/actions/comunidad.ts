@@ -255,10 +255,24 @@ export async function toggleComentarioDestacado(commentId: string, destacado: bo
 }
 
 export async function setPostResuelto(postId: string, resuelto: boolean) {
-  const adminUser = await requireAdminUser()
-  if (!adminUser) return { error: 'Sin permiso' }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
 
+  const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single()
+  const isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+
+  // Only admin or post owner can change resuelto
   const admin = createAdminClient()
+  const { data: post } = await admin
+    .from('posts_comunidad')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  if (!post) return { error: 'Post no encontrado' }
+  if (!isAdmin && post.user_id !== user.id) return { error: 'Sin permiso' }
+
   const { error } = await admin
     .from('posts_comunidad')
     .update({ resuelto })
