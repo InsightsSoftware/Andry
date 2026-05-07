@@ -127,10 +127,10 @@ export default async function VideosPage() {
         </div>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            Videos de Aliados
+            Videos
           </h1>
           <p className="mt-1 text-neutral-500 dark:text-neutral-400">
-            Recursos en video de nuestras empresas asociadas.
+            Contenido en video para tu preparación.
           </p>
         </div>
       </div>
