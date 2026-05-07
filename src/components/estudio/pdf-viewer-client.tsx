@@ -36,7 +36,7 @@ export function PDFViewerClient({
 }: PDFViewerProps) {
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const [scale, setScale] = useState(1.25)           // ← 125% by default
+  const [scale, setScale] = useState(1.25)           // adjusted to 50% on mobile via effect
   const [progress, setProgress] = useState(initialProgress)
   const [completed, setCompleted] = useState(initialProgress >= 95)
   const [saving, setSaving] = useState(false)
@@ -55,6 +55,11 @@ export function PDFViewerClient({
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastSavedProgress = useRef(initialProgress)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Initial scale: 50% on mobile, 125% on desktop ────────────────
+  useEffect(() => {
+    if (window.innerWidth < 640) setScale(0.5)
+  }, [])
 
   // ── Page navigation (scroll-based) ───────────────────────────────
   const goToPage = useCallback(
