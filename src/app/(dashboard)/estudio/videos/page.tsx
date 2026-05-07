@@ -27,8 +27,13 @@ export default async function VideosPage() {
     .eq('tipo', 'video')
     .order('orden')
 
+  // Filter out null before querying — Supabase .in() doesn't handle null values
   const capituloIds = Array.from(
-    new Set((videos || []).map((v) => v.capitulo_id))
+    new Set(
+      (videos || [])
+        .map((v) => v.capitulo_id)
+        .filter((id): id is string => id !== null)
+    )
   )
   const { data: capitulos } = capituloIds.length
     ? await supabase.from('capitulos').select('*').in('id', capituloIds)
@@ -81,13 +86,14 @@ export default async function VideosPage() {
   }
   const grupos = new Map<string, Group>()
   for (const v of videos || []) {
-    const cap = capituloMap.get(v.capitulo_id)
+    const cap = v.capitulo_id ? capituloMap.get(v.capitulo_id) : null
     const curso = cap ? cursoMap.get(cap.curso_id) : null
-    const key = curso?.id || 'sin-curso'
+    // Videos with no chapter go into a "Generales" group shown first
+    const key = curso?.id || 'generales'
     if (!grupos.has(key)) {
       grupos.set(key, {
         cursoId: key,
-        cursoNombre: curso?.nombre || 'Sin curso asignado',
+        cursoNombre: curso?.nombre || 'Videos Generales',
         items: [],
       })
     }
@@ -95,13 +101,20 @@ export default async function VideosPage() {
   }
   for (const g of grupos.values()) {
     g.items.sort((a, b) => {
-      const capA = capituloMap.get(a.capitulo_id)
-      const capB = capituloMap.get(b.capitulo_id)
+      const capA = a.capitulo_id ? capituloMap.get(a.capitulo_id) : null
+      const capB = b.capitulo_id ? capituloMap.get(b.capitulo_id) : null
       if (capA && capB && capA.numero !== capB.numero)
         return capA.numero - capB.numero
       return a.orden - b.orden
     })
   }
+
+  // Sort: "generales" (no chapter) always first, then by course name
+  const gruposOrdenados = Array.from(grupos.values()).sort((a, b) => {
+    if (a.cursoId === 'generales') return -1
+    if (b.cursoId === 'generales') return 1
+    return a.cursoNombre.localeCompare(b.cursoNombre)
+  })
 
   const total = videos?.length || 0
 
@@ -125,7 +138,7 @@ export default async function VideosPage() {
       {/* Partner cards — one card per company/course */}
       {total > 0 ? (
         <div className="flex flex-col gap-5">
-          {Array.from(grupos.values()).map((grupo) => {
+          {gruposOrdenados.map((grupo) => {
             const grupoCompletados = grupo.items.filter(
               (v) => progresoMap.get(v.id)?.completado
             ).length
