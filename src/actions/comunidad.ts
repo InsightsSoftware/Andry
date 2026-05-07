@@ -262,6 +262,36 @@ export async function toggleComentarioDestacado(commentId: string, destacado: bo
   return { success: true }
 }
 
+export async function setResolucionComment(postId: string, commentId: string | null) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single()
+  const isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+
+  const admin = createAdminClient()
+  const { data: post } = await admin
+    .from('posts_comunidad')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  if (!post) return { error: 'Post no encontrado' }
+  if (!isAdmin && post.user_id !== user.id) return { error: 'Sin permiso' }
+
+  const { error } = await admin
+    .from('posts_comunidad')
+    .update({ resolucion_comment_id: commentId })
+    .eq('id', postId)
+
+  if (error) return { error: 'Error al marcar la resolución' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
 export async function setPostResuelto(postId: string, resuelto: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

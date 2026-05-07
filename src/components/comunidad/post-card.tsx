@@ -15,6 +15,7 @@ import {
   Trash2,
   Star,
   RotateCcw,
+  BadgeCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ import {
   removePostMedia,
   toggleComentarioDestacado,
   setPostResuelto,
+  setResolucionComment,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -55,6 +57,7 @@ interface Post {
   ubicacion: string | null
   presupuesto: string | null
   resuelto: boolean
+  resolucion_comment_id?: string | null
   created_at: string
   media_urls?: string[] | null
   profiles: Profile | null
@@ -118,6 +121,8 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [deleting, setDeleting] = useState(false)
   const [localMedia, setLocalMedia] = useState(post.media_urls ?? [])
   const [localComments, setLocalComments] = useState(post.comentarios ?? [])
+  const [resolucionCommentId, setResolucionCommentId] = useState(post.resolucion_comment_id ?? null)
+  const [settingResolucion, setSettingResolucion] = useState<string | null>(null)
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
   const [removingMedia, setRemovingMedia] = useState<string | null>(null)
@@ -189,6 +194,15 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       prev.map((c) => c.id === comment.id ? { ...c, destacado: next } : c)
     )
     setTogglingCommentId(null)
+  }
+
+  async function handleSetResolucion(commentId: string) {
+    const next = resolucionCommentId === commentId ? null : commentId
+    setSettingResolucion(commentId)
+    const result = await setResolucionComment(post.id, next)
+    if (result.error) setError(result.error)
+    else setResolucionCommentId(next)
+    setSettingResolucion(null)
   }
 
   async function handleRemoveMedia(url: string) {
@@ -441,11 +455,23 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       {/* Comments section */}
       {showComments && (
         <div className="mt-4 border-t border-neutral-100 dark:border-neutral-800 pt-4">
-          {localComments?.map((comment) => (
+          {[...localComments]
+            .sort((a, b) => {
+              // Pin resolving comment first
+              if (a.id === resolucionCommentId) return -1
+              if (b.id === resolucionCommentId) return 1
+              return 0
+            })
+            .map((comment) => {
+            const isResolucion = comment.id === resolucionCommentId
+            const canMarkResolucion = resuelto && (currentUserId === post.user_id || isAdmin)
+            return (
             <div
               key={comment.id}
               className={`mb-3 flex gap-2.5 rounded-lg p-3 ${
-                comment.destacado
+                isResolucion
+                  ? 'bg-success-50 dark:bg-success-900/20 border border-success-300 dark:border-success-700'
+                  : comment.destacado
                   ? 'bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800'
                   : 'bg-neutral-50 dark:bg-neutral-800'
               }`}
@@ -463,7 +489,13 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                     {comment.profiles?.nombre_completo || 'Usuario'}
                   </span>
                   <MentorBadge profile={comment.profiles} />
-                  {comment.destacado && (
+                  {isResolucion && (
+                    <span className="inline-flex items-center gap-0.5 text-success-600 dark:text-success-400 font-semibold">
+                      <BadgeCheck className="h-3 w-3 fill-current" />
+                      Resolvió el problema
+                    </span>
+                  )}
+                  {comment.destacado && !isResolucion && (
                     <span className="inline-flex items-center gap-0.5 text-accent-600 dark:text-accent-400 font-semibold">
                       <Star className="h-3 w-3 fill-current" />
                       Destacado
@@ -503,39 +535,60 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   )
                 })()}
               </div>
-              {/* Admin: destacar + delete comment */}
-              {isAdmin && (
-                <div className="flex flex-col gap-1 shrink-0">
+              {/* Actions: resolución (owner/admin) + destacar + delete (admin) */}
+              <div className="flex flex-col gap-1 shrink-0">
+                {/* Mark as resolución — visible to post owner or admin when post is resuelto */}
+                {canMarkResolucion && (
                   <button
-                    onClick={() => handleToggleDestacado(comment)}
-                    disabled={togglingCommentId === comment.id}
-                    title={comment.destacado ? 'Quitar destacado' : 'Destacar comentario'}
+                    onClick={() => handleSetResolucion(comment.id)}
+                    disabled={settingResolucion === comment.id}
+                    title={isResolucion ? 'Quitar como resolución' : 'Marcar como respuesta que resolvió'}
                     className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                      comment.destacado
-                        ? 'text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
-                        : 'text-neutral-400 hover:text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
+                      isResolucion
+                        ? 'text-success-500 bg-success-50 dark:bg-success-900/30'
+                        : 'text-neutral-400 hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-900/30'
                     }`}
                   >
-                    {togglingCommentId === comment.id
+                    {settingResolucion === comment.id
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <Star className={`h-3.5 w-3.5 ${comment.destacado ? 'fill-current' : ''}`} />
+                      : <BadgeCheck className={`h-3.5 w-3.5 ${isResolucion ? 'fill-current' : ''}`} />
                     }
                   </button>
-                  <button
-                    onClick={() => handleDeleteComment(comment.id)}
-                    disabled={deletingCommentId === comment.id}
-                    title="Eliminar comentario"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {deletingCommentId === comment.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <Trash2 className="h-3.5 w-3.5" />
-                    }
-                  </button>
-                </div>
-              )}
+                )}
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => handleToggleDestacado(comment)}
+                      disabled={togglingCommentId === comment.id}
+                      title={comment.destacado ? 'Quitar destacado' : 'Destacar comentario'}
+                      className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                        comment.destacado
+                          ? 'text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
+                          : 'text-neutral-400 hover:text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
+                      }`}
+                    >
+                      {togglingCommentId === comment.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Star className={`h-3.5 w-3.5 ${comment.destacado ? 'fill-current' : ''}`} />
+                      }
+                    </button>
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      disabled={deletingCommentId === comment.id}
+                      title="Eliminar comentario"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {deletingCommentId === comment.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Trash2 className="h-3.5 w-3.5" />
+                      }
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          ))}
+            )
+          })}
 
           <form onSubmit={handleComment} className="mt-3 flex flex-col gap-2">
             {/* Image previews (up to 5) */}
