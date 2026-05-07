@@ -324,27 +324,20 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
         {post.contenido}
       </p>
 
-      {/* Media: images */}
+      {/* Media: images — small squares, Facebook style */}
       {mediaImages.length > 0 && (
-        <div className={`mb-3 grid gap-1.5 ${
-          mediaImages.length === 1
-            ? 'grid-cols-1'
-            : mediaImages.length === 2
-              ? 'grid-cols-2'
-              : 'grid-cols-3'
-        }`}>
+        <div className="mb-3 flex flex-wrap gap-1.5">
           {mediaImages.map((url, i) => (
-            <div key={i} className="relative group/img">
+            <div key={i} className="relative group/img shrink-0">
               <button
                 type="button"
                 onClick={() => setLightboxUrl(url)}
-                className="relative w-full overflow-hidden rounded-xl cursor-zoom-in group block"
-                style={{ height: mediaImages.length === 1 ? '180px' : '120px' }}
+                className="block h-16 w-16 overflow-hidden rounded-lg cursor-zoom-in"
               >
                 <img
                   src={url}
                   alt={`Imagen ${i + 1}`}
-                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-200 group-hover/img:scale-105"
                 />
               </button>
               {/* Admin: remove image */}
@@ -353,11 +346,11 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   onClick={() => handleRemoveMedia(url)}
                   disabled={removingMedia === url}
                   title="Eliminar imagen"
-                  className="absolute top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-danger-600 transition-colors cursor-pointer z-10 opacity-0 group-hover/img:opacity-100"
+                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-danger-600 transition-colors cursor-pointer z-10 opacity-0 group-hover/img:opacity-100"
                 >
                   {removingMedia === url
-                    ? <Loader2 className="h-3 w-3 animate-spin" />
-                    : <X className="h-3 w-3" />
+                    ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                    : <X className="h-2.5 w-2.5" />
                   }
                 </button>
               )}
