@@ -122,6 +122,18 @@ export default async function ResultadosPage({
     }
   }
 
+  // Sort: correctas first → incorrectas → omitidas
+  const sortOrder = { correcta: 0, incorrecta: 1, omitida: 2 } as const
+  preguntasEnExamen.sort((a, b) => {
+    const estadoA = respuestasMap.get(a.id)
+      ? respuestasMap.get(a.id)!.es_correcta ? 'correcta' : 'incorrecta'
+      : 'omitida'
+    const estadoB = respuestasMap.get(b.id)
+      ? respuestasMap.get(b.id)!.es_correcta ? 'correcta' : 'incorrecta'
+      : 'omitida'
+    return sortOrder[estadoA] - sortOrder[estadoB]
+  })
+
   const cursoNombre =
     (sesion as { cursos?: { nombre?: string } }).cursos?.nombre || 'Curso'
 
