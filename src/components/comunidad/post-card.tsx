@@ -124,6 +124,15 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (lightboxUrl) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = prev }
+    }
+  }, [lightboxUrl])
+
   const VIDEO_EXTS = ['.mp4', '.mov', '.webm']
   const mediaImages = localMedia.filter((u) => !VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
   const mediaVideos = localMedia.filter((u) => VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
@@ -329,8 +338,8 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               <button
                 type="button"
                 onClick={() => setLightboxUrl(url)}
-                className="relative w-full overflow-hidden rounded-xl cursor-pointer group"
-                style={{ aspectRatio: mediaImages.length === 1 ? '16/9' : '1/1', display: 'block' }}
+                className="relative w-full overflow-hidden rounded-xl cursor-zoom-in group block"
+                style={{ height: mediaImages.length === 1 ? '180px' : '120px' }}
               >
                 <img
                   src={url}
@@ -366,7 +375,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 src={url}
                 controls
                 preload="metadata"
-                className="w-full max-h-72 rounded-xl bg-neutral-900 object-contain"
+                className="w-full max-h-40 rounded-xl bg-neutral-900 object-contain"
               />
               {/* Admin: remove video */}
               {isAdmin && (
@@ -390,7 +399,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       {/* Lightbox */}
       {lightboxUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-hidden"
           onClick={() => setLightboxUrl(null)}
         >
           <button
