@@ -40,6 +40,7 @@ interface Comment {
   id: string
   contenido: string
   imagen_url?: string | null
+  media_urls?: string[] | null
   created_at: string
   destacado?: boolean
   profiles: Profile | null
@@ -107,7 +108,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [showComments, setShowComments] = useState(false)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
-  const [commentImage, setCommentImage] = useState<{ previewUrl: string; remoteUrl: string | null; uploading: boolean } | null>(null)
+  const [commentImages, setCommentImages] = useState<{ previewUrl: string; remoteUrl: string | null; uploading: boolean }[]>([])
   const [error, setError] = useState('')
   const [resolving, setResolving] = useState(false)
   const [resuelto, setResuelto] = useState(post.resuelto)
@@ -202,9 +203,11 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+    if (commentImages.length >= 5) return
 
     const previewUrl = URL.createObjectURL(file)
-    setCommentImage({ previewUrl, remoteUrl: null, uploading: true })
+    const idx = commentImages.length
+    setCommentImages((prev) => [...prev, { previewUrl, remoteUrl: null, uploading: true }])
 
     const fd = new FormData()
     fd.append('file', file)
@@ -212,19 +215,21 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
     const data = await res.json()
 
     if (!res.ok || !data.url) {
-      setCommentImage(null)
+      setCommentImages((prev) => prev.filter((_, i) => i !== idx))
       setError('No se pudo subir la imagen. Intentalo de nuevo.')
       return
     }
-    setCommentImage({ previewUrl, remoteUrl: data.url, uploading: false })
+    setCommentImages((prev) =>
+      prev.map((img, i) => i === idx ? { ...img, remoteUrl: data.url, uploading: false } : img)
+    )
   }
 
   async function handleComment(e: React.FormEvent) {
     e.preventDefault()
     setError('')
 
-    if (commentImage?.uploading) {
-      setError('Esperá a que termine de subir la imagen.')
+    if (commentImages.some((img) => img.uploading)) {
+      setError('Esperá a que terminen de subir todas las imágenes.')
       return
     }
 
@@ -233,7 +238,9 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
     const formData = new FormData()
     formData.set('post_id', post.id)
     formData.set('contenido', commentText)
-    if (commentImage?.remoteUrl) formData.set('imagen_url', commentImage.remoteUrl)
+    commentImages.forEach((img, i) => {
+      if (img.remoteUrl) formData.set(`media_url_${i}`, img.remoteUrl)
+    })
 
     const result = await createComment(formData)
 
@@ -241,7 +248,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       setError(result.error)
     } else {
       setCommentText('')
-      setCommentImage(null)
+      setCommentImages([])
     }
     setCommenting(false)
   }
@@ -474,19 +481,33 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
                   {comment.contenido}
                 </p>
-                {comment.imagen_url && (
-                  <button
-                    type="button"
-                    onClick={() => setLightboxUrl(comment.imagen_url!)}
-                    className="mt-2 block overflow-hidden rounded-xl cursor-pointer group"
-                  >
-                    <img
-                      src={comment.imagen_url}
-                      alt="Imagen adjunta"
-                      className="max-h-48 w-auto rounded-xl object-cover transition-opacity group-hover:opacity-90"
-                    />
-                  </button>
-                )}
+                {/* Comment images: media_urls (new) + imagen_url fallback (legacy) */}
+                {(() => {
+                  const imgs: string[] = comment.media_urls?.length
+                    ? comment.media_urls
+                    : comment.imagen_url
+                    ? [comment.imagen_url]
+                    : []
+                  if (!imgs.length) return null
+                  return (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {imgs.map((url, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setLightboxUrl(url)}
+                          className="h-16 w-16 shrink-0 overflow-hidden rounded-lg cursor-zoom-in group"
+                        >
+                          <img
+                            src={url}
+                            alt={`Imagen ${i + 1}`}
+                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
               {/* Admin: destacar + delete comment */}
               {isAdmin && (
@@ -523,24 +544,28 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
           ))}
 
           <form onSubmit={handleComment} className="mt-3 flex flex-col gap-2">
-            {/* Image preview */}
-            {commentImage && (
-              <div className="relative inline-flex w-20 h-20 shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
-                <img src={commentImage.previewUrl} alt="" className="h-full w-full object-cover" />
-                {commentImage.uploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
-                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+            {/* Image previews (up to 5) */}
+            {commentImages.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {commentImages.map((img, i) => (
+                  <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
+                    <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+                    {img.uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      </div>
+                    )}
+                    {!img.uploading && (
+                      <button
+                        type="button"
+                        onClick={() => setCommentImages((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
                   </div>
-                )}
-                {!commentImage.uploading && (
-                  <button
-                    type="button"
-                    onClick={() => setCommentImage(null)}
-                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
+                ))}
               </div>
             )}
 
@@ -549,9 +574,9 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               <button
                 type="button"
                 onClick={() => imgInputRef.current?.click()}
-                disabled={!!commentImage}
+                disabled={commentImages.length >= 5}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 hover:border-primary-400 dark:hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Adjuntar imagen"
+                title="Adjuntar imagen (máx. 5)"
               >
                 <ImagePlus className="h-4 w-4" />
               </button>

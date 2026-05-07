@@ -163,14 +163,22 @@ export async function createComment(formData: FormData) {
 
   const contenido = result.data.contenido
 
-  // Optional image attachment
-  const imagenUrl = (formData.get('imagen_url') as string)?.trim() || null
+  // Optional media attachments (up to 5 images)
+  // Client sends media_url_0, media_url_1, ... for each uploaded image
+  const mediaUrls: string[] = []
+  for (let i = 0; i < 5; i++) {
+    const url = (formData.get(`media_url_${i}`) as string)?.trim()
+    if (url) mediaUrls.push(url)
+  }
+  // Backward-compat: also accept legacy single imagen_url key
+  const legacyUrl = (formData.get('imagen_url') as string)?.trim()
+  if (legacyUrl && !mediaUrls.includes(legacyUrl)) mediaUrls.push(legacyUrl)
 
   const { error } = await supabase.from('comentarios').insert({
     post_id: postId,
     user_id: user.id,
     contenido,
-    ...(imagenUrl ? { imagen_url: imagenUrl } : {}),
+    ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
   })
 
   if (error) {
