@@ -59,8 +59,11 @@ export default async function VideoPlayerPage({
   }
 
   const cursoSlug = (contenido as any).capitulos?.cursos?.slug || ''
-  const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || 'Curso'
+  const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || ''
   const capituloNombre = (contenido as any).capitulos?.nombre || ''
+  // Videos without a chapter go back to the flat videos list
+  const backHref = cursoSlug ? `/estudio/${cursoSlug}` : '/estudio/videos'
+  const backLabel = cursoNombre || 'Videos'
 
   // Generate a short-lived signed URL — content bucket is private
   let signedUrl: string
@@ -76,11 +79,11 @@ export default async function VideoPlayerPage({
       {/* Header */}
       <div className="mb-4">
         <Link
-          href={`/estudio/${cursoSlug}`}
+          href={backHref}
           className="mb-2 inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          {cursoNombre}
+          {backLabel}
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-50 dark:bg-success-900/20">
