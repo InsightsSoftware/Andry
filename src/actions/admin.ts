@@ -883,6 +883,7 @@ export async function createContent(contentData: {
   archivo_url: string
   duracion_segundos?: number
   orden?: number
+  video_categoria_id?: string | null
 }) {
   await requireAdmin()
   const admin = createAdminClient()

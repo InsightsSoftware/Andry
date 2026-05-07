@@ -7,11 +7,19 @@ export const metadata = { title: 'Admin - Videos' }
 export default async function AdminVideosPage() {
   const admin = createAdminClient()
 
-  const { data: videos } = await admin
-    .from('contenido')
-    .select('id, titulo, descripcion, archivo_url, duracion_segundos, orden, created_at')
-    .eq('tipo', 'video')
-    .order('created_at', { ascending: false })
+  const [{ data: categorias }, { data: videos }] = await Promise.all([
+    admin
+      .from('video_categorias')
+      .select('id, nombre, descripcion, imagen_url, orden, activo')
+      .order('orden'),
+    admin
+      .from('contenido')
+      .select(
+        'id, titulo, descripcion, archivo_url, duracion_segundos, orden, video_categoria_id, created_at'
+      )
+      .eq('tipo', 'video')
+      .order('created_at', { ascending: false }),
+  ])
 
   return (
     <div>
@@ -24,12 +32,15 @@ export default async function AdminVideosPage() {
             Videos
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Videos con título y descripción que aparecen en la sección Videos de la app
+            Organizá los videos en categorías — los estudiantes los ven como tarjetas
           </p>
         </div>
       </div>
 
-      <VideosManager items={(videos || []) as any} />
+      <VideosManager
+        categorias={(categorias || []) as any}
+        videos={(videos || []) as any}
+      />
     </div>
   )
 }

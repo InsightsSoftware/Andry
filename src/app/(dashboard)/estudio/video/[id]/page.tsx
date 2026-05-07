@@ -29,10 +29,10 @@ export default async function VideoPlayerPage({
   const { id } = await params
   const supabase = await createClient()
 
-  // Fetch content item with chapter info
+  // Fetch content item with chapter + category info
   const { data: contenido } = await supabase
     .from('contenido')
-    .select('*, capitulos(nombre, curso_id, cursos(slug, nombre))')
+    .select('*, capitulos(nombre, curso_id, cursos(slug, nombre)), video_categoria_id')
     .eq('id', id)
     .eq('tipo', 'video')
     .single()
@@ -61,9 +61,21 @@ export default async function VideoPlayerPage({
   const cursoSlug = (contenido as any).capitulos?.cursos?.slug || ''
   const cursoNombre = (contenido as any).capitulos?.cursos?.nombre || ''
   const capituloNombre = (contenido as any).capitulos?.nombre || ''
-  // Videos without a chapter go back to the flat videos list
-  const backHref = cursoSlug ? `/estudio/${cursoSlug}` : '/estudio/videos'
-  const backLabel = cursoNombre || 'Videos'
+  const videoCategoriaId = (contenido as any).video_categoria_id || null
+
+  // Back button priority:
+  //   1. If linked to a course chapter → go to the course page
+  //   2. If linked to a video category → go to that category page
+  //   3. Otherwise → back to the flat videos list
+  let backHref = '/estudio/videos'
+  let backLabel = 'Videos'
+  if (cursoSlug) {
+    backHref = `/estudio/${cursoSlug}`
+    backLabel = cursoNombre || 'Curso'
+  } else if (videoCategoriaId) {
+    backHref = `/estudio/videos/${videoCategoriaId}`
+    backLabel = 'Videos'
+  }
 
   // Generate a short-lived signed URL — content bucket is private
   let signedUrl: string

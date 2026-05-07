@@ -1,122 +1,71 @@
 import Link from 'next/link'
 import {
   Video as VideoIcon,
-  ArrowRight,
   CheckCircle2,
   PlayCircle,
-  Building2,
+  FolderOpen,
   ChevronRight,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { getSignedContentUrl } from '@/lib/supabase/storage'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { formatSeconds } from '@/lib/utils'
 
 export const metadata = { title: 'Videos' }
 
-/**
- * Aggregated list of all videos across every course/chapter. Videos are used
- * for (a) explanatory content and (b) partner cards per the 21/4 feedback.
- * This page shows both, grouped by course.
- */
 export default async function VideosPage() {
+  const admin = createAdminClient()
   const supabase = await createClient()
 
-  const { data: videos } = await supabase
-    .from('contenido')
-    .select('*')
-    .eq('tipo', 'video')
-    .order('orden')
+  // Fetch all active categories + all videos (with category assignment)
+  const [{ data: categorias }, { data: allVideos }] = await Promise.all([
+    admin
+      .from('video_categorias')
+      .select('id, nombre, descripcion, imagen_url, orden')
+      .eq('activo', true)
+      .order('orden'),
+    admin
+      .from('contenido')
+      .select('id, titulo, duracion_segundos, video_categoria_id')
+      .eq('tipo', 'video')
+      .order('orden'),
+  ])
 
-  // Filter out null before querying — Supabase .in() doesn't handle null values
-  const capituloIds = Array.from(
-    new Set(
-      (videos || [])
-        .map((v) => v.capitulo_id)
-        .filter((id): id is string => id !== null)
-    )
-  )
-  const { data: capitulos } = capituloIds.length
-    ? await supabase.from('capitulos').select('*').in('id', capituloIds)
-    : { data: [] }
-
-  const cursoIds = Array.from(
-    new Set((capitulos || []).map((c) => c.curso_id))
-  )
-  const { data: cursos } = cursoIds.length
-    ? await supabase.from('cursos').select('*').in('id', cursoIds)
-    : { data: [] }
-
+  // Fetch user progress for video completion counts
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const videoIds = (videos || []).map((v) => v.id)
+
+  const videoIds = (allVideos || []).map((v) => v.id)
   const { data: progreso } =
     user && videoIds.length
       ? await supabase
           .from('progreso_estudio')
-          .select('contenido_id, progreso_porcentaje, completado')
+          .select('contenido_id, completado')
           .eq('user_id', user.id)
           .in('contenido_id', videoIds)
       : { data: [] }
 
-  const capituloMap = new Map((capitulos || []).map((c) => [c.id, c]))
-  const cursoMap = new Map((cursos || []).map((c) => [c.id, c]))
   const progresoMap = new Map(
     (progreso || []).map((p) => [p.contenido_id, p])
   )
 
-  // Resolve public URLs so the card can use <video preload="metadata"> to
-  // auto-preview the first frame as thumbnail.
-  const urlMap = new Map<string, string>()
-  await Promise.all(
-    (videos || []).map(async (v) => {
-      try {
-        const url = await getSignedContentUrl(supabase, v.archivo_url, 3600)
-        urlMap.set(v.id, url)
-      } catch {
-        // Skip if URL cannot be generated — card falls back to placeholder.
-      }
-    })
-  )
+  const videos = allVideos || []
+  const cats = categorias || []
 
-  type Group = {
-    cursoId: string
-    cursoNombre: string
-    items: NonNullable<typeof videos>
-  }
-  const grupos = new Map<string, Group>()
-  for (const v of videos || []) {
-    const cap = v.capitulo_id ? capituloMap.get(v.capitulo_id) : null
-    const curso = cap ? cursoMap.get(cap.curso_id) : null
-    // Videos with no chapter go into a "Generales" group shown first
-    const key = curso?.id || 'generales'
-    if (!grupos.has(key)) {
-      grupos.set(key, {
-        cursoId: key,
-        cursoNombre: curso?.nombre || 'Videos Generales',
-        items: [],
-      })
-    }
-    grupos.get(key)!.items.push(v)
-  }
-  for (const g of grupos.values()) {
-    g.items.sort((a, b) => {
-      const capA = a.capitulo_id ? capituloMap.get(a.capitulo_id) : null
-      const capB = b.capitulo_id ? capituloMap.get(b.capitulo_id) : null
-      if (capA && capB && capA.numero !== capB.numero)
-        return capA.numero - capB.numero
-      return a.orden - b.orden
-    })
+  // Videos that belong to a category
+  const catVideoMap = new Map<string, typeof videos>()
+  for (const cat of cats) {
+    catVideoMap.set(
+      cat.id,
+      videos.filter((v) => v.video_categoria_id === cat.id)
+    )
   }
 
-  // Sort: "generales" (no chapter) always first, then by course name
-  const gruposOrdenados = Array.from(grupos.values()).sort((a, b) => {
-    if (a.cursoId === 'generales') return -1
-    if (b.cursoId === 'generales') return 1
-    return a.cursoNombre.localeCompare(b.cursoNombre)
-  })
+  // Videos with no category — shown in a separate section below
+  const sinCategoria = videos.filter((v) => v.video_categoria_id === null)
 
-  const total = videos?.length || 0
+  const hasCats = cats.length > 0
+  const total = videos.length
 
   return (
     <div>
@@ -135,118 +84,128 @@ export default async function VideosPage() {
         </div>
       </div>
 
-      {/* Partner cards — one card per company/course */}
-      {total > 0 ? (
-        <div className="flex flex-col gap-5">
-          {gruposOrdenados.map((grupo) => {
-            const grupoCompletados = grupo.items.filter(
-              (v) => progresoMap.get(v.id)?.completado
-            ).length
-            const grupoDuracion = grupo.items.reduce(
-              (acc, v) => acc + (v.duracion_segundos || 0),
-              0
-            )
-
-            return (
-              <section
-                key={grupo.cursoId}
-                className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-              >
-                {/* Partner header */}
-                <div className="flex items-center gap-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 px-5 py-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-800">
-                    <Building2 className="h-6 w-6 text-success-600 dark:text-success-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
-                      {grupo.cursoNombre}
-                    </h2>
-                    <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-                      {grupo.items.length} video{grupo.items.length !== 1 ? 's' : ''}
-                      {grupoDuracion > 0 && ` · ${formatSeconds(grupoDuracion)}`}
-                      {grupoCompletados > 0 && ` · ${grupoCompletados} visto${grupoCompletados !== 1 ? 's' : ''}`}
-                    </p>
-                  </div>
-                  {grupoCompletados === grupo.items.length && grupo.items.length > 0 && (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-success-500" />
-                  )}
-                </div>
-
-                {/* Video list */}
-                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                  {grupo.items.map((video) => {
-                    const progress = progresoMap.get(video.id)
-                    const publicUrl = urlMap.get(video.id)
-                    return (
-                      <Link
-                        key={video.id}
-                        href={`/estudio/video/${video.id}`}
-                        className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60 cursor-pointer"
-                      >
-                        {/* Mini thumbnail */}
-                        <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
-                          {publicUrl && (
-                            <video
-                              src={`${publicUrl}#t=1`}
-                              preload="metadata"
-                              muted
-                              playsInline
-                              aria-hidden="true"
-                              className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-                            />
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
-                            <PlayCircle className="h-6 w-6 text-white drop-shadow" />
-                          </div>
-                          {video.duracion_segundos && (
-                            <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1 py-0.5 text-[9px] font-semibold text-white">
-                              {formatSeconds(video.duracion_segundos)}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-1 leading-snug">
-                            {video.titulo}
-                          </p>
-                          {video.descripcion && (
-                            <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500 line-clamp-2 leading-relaxed">
-                              {video.descripcion}
-                            </p>
-                          )}
-                          {progress && !progress.completado && (
-                            <div className="mt-1.5 h-1 w-full max-w-[120px] rounded-full bg-neutral-100 dark:bg-neutral-800">
-                              <div
-                                className="h-1 rounded-full bg-success-500"
-                                style={{ width: `${Math.round(progress.progreso_porcentaje)}%` }}
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* State */}
-                        <div className="shrink-0">
-                          {progress?.completado ? (
-                            <CheckCircle2 className="h-5 w-5 text-success-500" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 transition-colors" />
-                          )}
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </section>
-            )
-          })}
-        </div>
-      ) : (
+      {total === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-12 text-center">
           <VideoIcon className="mx-auto mb-3 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
           <p className="text-neutral-500 dark:text-neutral-400">
-            Los videos de aliados se están preparando. Pronto tendrás contenido disponible.
+            Los videos se están preparando. Pronto tendrás contenido disponible.
           </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-8">
+          {/* Category cards grid */}
+          {hasCats && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {cats.map((cat) => {
+                const catVideos = catVideoMap.get(cat.id) || []
+                const completados = catVideos.filter(
+                  (v) => progresoMap.get(v.id)?.completado
+                ).length
+                const duracion = catVideos.reduce(
+                  (acc, v) => acc + (v.duracion_segundos || 0),
+                  0
+                )
+                const allDone =
+                  catVideos.length > 0 && completados === catVideos.length
+
+                return (
+                  <Link
+                    key={cat.id}
+                    href={`/estudio/videos/${cat.id}`}
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-success-400 dark:hover:border-success-600 transition-colors"
+                  >
+                    {/* Thumbnail / cover */}
+                    <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
+                      {cat.imagen_url ? (
+                        <img
+                          src={cat.imagen_url}
+                          alt={cat.nombre}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <FolderOpen className="h-14 w-14 text-success-400/50 group-hover:text-success-500/60 transition-colors" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      {allDone && (
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle2 className="h-5 w-5 text-success-400 drop-shadow" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex flex-1 items-end justify-between gap-2 p-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
+                          {cat.nombre}
+                        </p>
+                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                          {catVideos.length} video{catVideos.length !== 1 ? 's' : ''}
+                          {duracion > 0 && ` · ${formatSeconds(duracion)}`}
+                          {completados > 0 && ` · ${completados} visto${completados !== 1 ? 's' : ''}`}
+                        </p>
+                        {cat.descripcion && (
+                          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500 line-clamp-2">
+                            {cat.descripcion}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-neutral-300 dark:text-neutral-600 group-hover:text-success-500 transition-colors" />
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Videos with no category (always shown below categories) */}
+          {sinCategoria.length > 0 && (
+            <section>
+              {hasCats && (
+                <h2 className="mb-3 font-semibold text-neutral-700 dark:text-neutral-300">
+                  Videos generales
+                </h2>
+              )}
+              <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 divide-y divide-neutral-100 dark:divide-neutral-800">
+                {sinCategoria.map((video) => {
+                  const progress = progresoMap.get(video.id)
+                  return (
+                    <Link
+                      key={video.id}
+                      href={`/estudio/video/${video.id}`}
+                      className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60 cursor-pointer"
+                    >
+                      {/* Mini thumbnail placeholder */}
+                      <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-success-500/10 to-neutral-100 dark:from-success-900/30 dark:to-neutral-800">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
+                          <PlayCircle className="h-6 w-6 text-white drop-shadow" />
+                        </div>
+                        {video.duracion_segundos && (
+                          <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1 py-0.5 text-[9px] font-semibold text-white">
+                            {formatSeconds(video.duracion_segundos)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-1 leading-snug">
+                          {video.titulo}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0">
+                        {progress?.completado ? (
+                          <CheckCircle2 className="h-5 w-5 text-success-500" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 transition-colors" />
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>
