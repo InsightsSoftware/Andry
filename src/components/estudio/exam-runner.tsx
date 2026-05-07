@@ -80,21 +80,25 @@ export function ExamRunner({
     }
   }, [])
 
-  // ── Practice: select → submit immediately → show feedback ──────────────
-  const handlePracticaSelect = useCallback(async (respuesta: 'a' | 'b' | 'c' | 'd') => {
+  // ── Practice: select locally only (no server call yet) ─────────────────
+  const handlePracticaSelect = useCallback((respuesta: 'a' | 'b' | 'c' | 'd') => {
     const pregunta = preguntas[currentIndex]
-    if (feedbackMap.has(pregunta.id)) return // already answered
-    if (submitting) return
-
+    if (feedbackMap.has(pregunta.id)) return // already reviewed — lock
     setAnswers((prev) => {
       const next = new Map(prev)
       next.set(pregunta.id, respuesta)
       return next
     })
+  }, [preguntas, currentIndex, feedbackMap])
+
+  // ── Practice: "Revisar respuesta" — submit + show feedback ─────────────
+  const handlePracticaRevisar = useCallback(async () => {
+    const pregunta = preguntas[currentIndex]
+    const respuesta = answers.get(pregunta.id)
+    if (!respuesta || feedbackMap.has(pregunta.id) || submitting) return
+
     setSubmitting(true)
-
     const result = await submitAnswer(sesionId, pregunta.id, respuesta)
-
     if (result.success) {
       setFeedbackMap((prev) => {
         const next = new Map(prev)
@@ -108,7 +112,7 @@ export function ExamRunner({
       })
     }
     setSubmitting(false)
-  }, [preguntas, currentIndex, feedbackMap, submitting, sesionId])
+  }, [preguntas, currentIndex, answers, feedbackMap, submitting, sesionId])
 
   // ── Exam: just record selection locally ────────────────────────────────
   const handleExamSelect = (respuesta: 'a' | 'b' | 'c' | 'd') => {
@@ -136,7 +140,17 @@ export function ExamRunner({
     if (finishing) return
     setFinishing(true)
 
-    if (!isPractica) {
+    if (isPractica) {
+      // Practice: submit any answered-but-not-yet-reviewed questions
+      await Promise.all(
+        preguntas.map(async (p) => {
+          const answer = answers.get(p.id)
+          if (answer && !feedbackMap.has(p.id)) {
+            await submitAnswer(sesionId, p.id, answer)
+          }
+        })
+      )
+    } else {
       // Exam mode: submit all answers at once
       await Promise.all(
         preguntas.map(async (p) => {
@@ -145,12 +159,11 @@ export function ExamRunner({
         })
       )
     }
-    // Practice: answers already submitted one by one
 
     const tiempoUsado = Math.floor((Date.now() - startTimeRef.current) / 1000)
     await finishSession(sesionId, tiempoUsado)
     router.push(`/estudio/resultados/${sesionId}`)
-  }, [finishing, isPractica, preguntas, answers, sesionId, router])
+  }, [finishing, isPractica, preguntas, answers, feedbackMap, sesionId, router])
 
   const handleTimeUp = useCallback(() => { handleFinish() }, [handleFinish])
 
@@ -182,21 +195,27 @@ export function ExamRunner({
         )}
       </div>
 
-      {/* Progress pills — exam only (practice is linear) */}
-      {!isPractica && (
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {preguntas.map((p, i) => {
-            const isAnswered = answers.has(p.id)
-            const isFlagged = flagged.has(p.id)
-            const isCurrent = i === currentIndex
-            return (
-              <button
-                key={p.id}
-                onClick={() => setCurrentIndex(i)}
-                className={cn(
-                  'relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-colors cursor-pointer',
-                  isCurrent
-                    ? 'bg-primary-600 text-white dark:bg-primary-500 ring-2 ring-primary-300 dark:ring-primary-700 ring-offset-1 ring-offset-white dark:ring-offset-neutral-950'
+      {/* Progress pills — exam + practice */}
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {preguntas.map((p, i) => {
+          const isAnswered = answers.has(p.id)
+          const isReviewed = feedbackMap.has(p.id)
+          const isFlagged = flagged.has(p.id)
+          const isCurrent = i === currentIndex
+          return (
+            <button
+              key={p.id}
+              onClick={() => setCurrentIndex(i)}
+              className={cn(
+                'relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-colors cursor-pointer',
+                isCurrent
+                  ? 'bg-primary-600 text-white dark:bg-primary-500 ring-2 ring-primary-300 dark:ring-primary-700 ring-offset-1 ring-offset-white dark:ring-offset-neutral-950'
+                  : isPractica
+                    ? isReviewed
+                      ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400'
+                      : isAnswered
+                        ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                     : isFlagged && isAnswered
                       ? 'bg-warning-100 dark:bg-warning-900/40 text-warning-800 dark:text-warning-300 ring-1 ring-warning-400 dark:ring-warning-600'
                       : isFlagged
@@ -204,20 +223,19 @@ export function ExamRunner({
                         : isAnswered
                           ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400'
                           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-                )}
-                aria-label={`Pregunta ${i + 1}${isAnswered ? ' respondida' : ''}${isFlagged ? ' marcada' : ''}`}
-              >
-                {i + 1}
-                {isFlagged && (
-                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center">
-                    <Flag className="h-2.5 w-2.5 fill-warning-500 text-warning-500" />
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
+              )}
+              aria-label={`Pregunta ${i + 1}${isAnswered ? ' respondida' : ''}${isFlagged ? ' marcada' : ''}`}
+            >
+              {i + 1}
+              {!isPractica && isFlagged && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center">
+                  <Flag className="h-2.5 w-2.5 fill-warning-500 text-warning-500" />
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
 
       {/* Status bar */}
       <div className="mb-4 flex items-center justify-center gap-4 text-xs text-neutral-500 dark:text-neutral-400 flex-wrap">
@@ -255,6 +273,7 @@ export function ExamRunner({
           onNext={() => setCurrentIndex((prev) => Math.min(prev + 1, totalCount - 1))}
           onPrev={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
           onFinish={handleFinish}
+          onRevisar={isPractica ? handlePracticaRevisar : undefined}
           isPractica={isPractica}
           feedback={currentFeedback}
           submitting={submitting}

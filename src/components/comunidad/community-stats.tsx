@@ -2,14 +2,16 @@ import { Users, MessageCircle, Briefcase } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AvatarInicial } from './avatar-inicial'
 
-/**
- * Community pulse — dynamic stats that reflect active/open items only.
- *
- * Dudas: shows open (unresolved) count as the main metric, resolved count
- * as sub-label. Trabajos: shows active (non-closed) count, closed count
- * as sub-label. Miembros: total active subscribers (static rising counter).
- */
-export async function CommunityStats() {
+interface CurrentUser {
+  nombre_completo: string
+  avatar_url?: string | null
+}
+
+interface Props {
+  currentUser?: CurrentUser | null
+}
+
+export async function CommunityStats({ currentUser }: Props = {}) {
   const admin = createAdminClient()
 
   const [
@@ -53,8 +55,16 @@ export async function CommunityStats() {
   ])
 
   const members = recentMembers || []
-  const hasMembers = members.length > 0
+  const hasMembers = members.length > 0 || !!currentUser
   const memberWord = (miembros || 0) === 1 ? 'miembro' : 'miembros'
+
+  // Build avatar list: current user first, then up to 4 others (excluding current user by name)
+  const otherMembers = currentUser
+    ? members.filter((m) => m.nombre_completo !== currentUser.nombre_completo).slice(0, 4)
+    : members.slice(0, 5)
+  const avatarList: { nombre_completo: string; avatar_url?: string | null }[] = currentUser
+    ? [currentUser, ...otherMembers]
+    : otherMembers
 
   return (
     <div className="mb-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950 p-4">
@@ -100,11 +110,11 @@ export async function CommunityStats() {
         </div>
       </div>
 
-      {/* Recent members row */}
+      {/* Avatar row: current user first, then others */}
       {hasMembers && (
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
-            {members.slice(0, 5).map((m, i) => (
+            {avatarList.slice(0, 5).map((m, i) => (
               <AvatarInicial
                 key={i}
                 nombre={m.nombre_completo}

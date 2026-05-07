@@ -1,9 +1,19 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { postDudaSchema, postTrabajoSchema, comentarioSchema } from '@/lib/validations'
 import { postLimiter, commentLimiter } from '@/lib/rate-limit'
+
+async function requireAdminUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single()
+  if (profile?.rol !== 'admin' && profile?.rol !== 'root') return null
+  return user
+}
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
@@ -167,6 +177,94 @@ export async function createComment(formData: FormData) {
     console.error('Error creating comment:', error)
     return { error: 'Error al comentar' }
   }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
+// ── Admin-only actions ────────────────────────────────────────────────────────
+
+export async function deletePost(postId: string) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('posts_comunidad').delete().eq('id', postId)
+  if (error) return { error: 'Error al eliminar el post' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
+export async function deleteComment(commentId: string) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('comentarios').delete().eq('id', commentId)
+  if (error) return { error: 'Error al eliminar el comentario' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
+export async function removePostMedia(postId: string, mediaUrl: string) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { data: post } = await admin
+    .from('posts_comunidad')
+    .select('media_urls')
+    .eq('id', postId)
+    .single()
+
+  if (!post) return { error: 'Post no encontrado' }
+
+  const updated = (post.media_urls as string[] || []).filter((u) => u !== mediaUrl)
+  const { error } = await admin
+    .from('posts_comunidad')
+    .update({ media_urls: updated })
+    .eq('id', postId)
+
+  if (error) return { error: 'Error al eliminar el archivo' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
+export async function toggleComentarioDestacado(commentId: string, destacado: boolean) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('comentarios')
+    .update({ destacado })
+    .eq('id', commentId)
+
+  if (error) return { error: 'Error al actualizar el comentario' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { success: true }
+}
+
+export async function setPostResuelto(postId: string, resuelto: boolean) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('posts_comunidad')
+    .update({ resuelto })
+    .eq('id', postId)
+
+  if (error) return { error: 'Error al actualizar el post' }
 
   revalidatePath('/comunidad/dudas')
   revalidatePath('/comunidad/trabajos')

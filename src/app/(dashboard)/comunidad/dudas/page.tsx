@@ -17,7 +17,7 @@ export default async function DudasPage() {
         `
         id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ),
-        comentarios ( id, contenido, imagen_url, created_at, profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ) )
+        comentarios ( id, contenido, imagen_url, created_at, destacado, profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ) )
       `
       )
       .eq('tipo', 'duda')
@@ -26,20 +26,24 @@ export default async function DudasPage() {
     supabase.auth.getUser(),
   ])
 
-  // Check admin role
+  // Check admin role + fetch profile for avatar
   let isAdmin = false
+  let currentUser: { nombre_completo: string; avatar_url?: string | null } | null = null
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('rol')
+      .select('rol, nombre_completo, avatar_url')
       .eq('id', user.id)
       .single()
     isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
+    if (profile?.nombre_completo) {
+      currentUser = { nombre_completo: profile.nombre_completo, avatar_url: profile.avatar_url }
+    }
   }
 
   return (
     <>
-      <CommunityStats />
+      <CommunityStats currentUser={currentUser} />
       <CommunityPage
         tipo="duda"
         posts={(posts as never[]) || []}

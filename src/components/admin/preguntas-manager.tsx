@@ -223,6 +223,7 @@ export function PreguntasManager({ cursos, capitulos, questions, backups }: Prop
           allChapters={chaptersForUploader}
           initialCursoId={selectedCurso.id}
           initialCapituloId={selectedCapitulo.id}
+          hideSelectors
         />
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { updateUserRole, deleteUser } from '@/actions/admin'
-import { Shield, User, Crown, Trash2 } from 'lucide-react'
+import { Shield, User, Crown, Trash2, Users2 } from 'lucide-react'
 
 interface UserRoleToggleProps {
   userId: string
@@ -22,9 +22,14 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
 
   const handleToggle = async () => {
     if (role === 'root' || isSelf) return
-    const newRole = role === 'admin' ? 'estudiante' : 'admin'
+    const cycle: Record<string, 'estudiante' | 'admin' | 'comunidad'> = {
+      admin: 'estudiante',
+      estudiante: 'comunidad',
+      comunidad: 'admin',
+    }
+    const newRole = cycle[role] ?? 'estudiante'
     setLoading(true)
-    const result = await updateUserRole(userId, newRole as 'estudiante' | 'admin')
+    const result = await updateUserRole(userId, newRole)
     if (result.success) {
       setRole(newRole)
     }
@@ -60,6 +65,11 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
       label: 'Admin',
       cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     },
+    comunidad: {
+      icon: Users2,
+      label: 'Comunidad',
+      cls: 'bg-sky-500/10 text-sky-400 border-sky-500/20 hover:bg-sky-500/[0.15]',
+    },
     estudiante: {
       icon: User,
       label: 'Estudiante',
@@ -84,7 +94,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
             ? 'Root — no se puede modificar'
             : isSelf
               ? 'No puedes cambiar tu propio rol'
-              : `Click para cambiar a ${role === 'admin' ? 'estudiante' : 'admin'}`
+              : `Click para cambiar a ${role === 'admin' ? 'estudiante' : role === 'estudiante' ? 'comunidad' : 'admin'}`
         }
       >
         <Icon className="h-3 w-3" />

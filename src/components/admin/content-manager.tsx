@@ -17,6 +17,8 @@ import {
   BookPlus,
   FolderPlus,
   X,
+  Pencil,
+  Check,
 } from 'lucide-react'
 import { ChapterImageUpload } from '@/components/admin/chapter-image-upload'
 import {
@@ -28,6 +30,8 @@ import {
   createChapter,
   deleteCourse,
   deleteChapter,
+  renameCurso,
+  renameCapitulo,
 } from '@/actions/admin'
 import { FileUploader } from './file-uploader'
 
@@ -114,6 +118,12 @@ export function ContentManager({ courses: initialCourses }: { courses: Course[] 
   })
   const [chapterError, setChapterError] = useState('')
   const [savingChapter, setSavingChapter] = useState(false)
+
+  // Rename state
+  const [renamingCourseId, setRenamingCourseId] = useState<string | null>(null)
+  const [renamingChapterId, setRenamingChapterId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [renaming, setRenaming] = useState(false)
 
   const handleExpandCourse = async (courseId: string) => {
     if (expandedCourse === courseId) {
@@ -322,6 +332,28 @@ export function ContentManager({ courses: initialCourses }: { courses: Course[] 
     router.refresh()
   }
 
+  const handleRenameCourse = async (courseId: string) => {
+    if (!renameValue.trim()) { setRenamingCourseId(null); return }
+    setRenaming(true)
+    const result = await renameCurso(courseId, renameValue)
+    if (result.success) {
+      setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, nombre: renameValue.trim() } : c))
+    }
+    setRenamingCourseId(null)
+    setRenaming(false)
+  }
+
+  const handleRenameChapter = async (chapterId: string) => {
+    if (!renameValue.trim()) { setRenamingChapterId(null); return }
+    setRenaming(true)
+    const result = await renameCapitulo(chapterId, renameValue)
+    if (result.success) {
+      setChapters((prev) => prev.map((c) => c.id === chapterId ? { ...c, nombre: renameValue.trim() } : c))
+    }
+    setRenamingChapterId(null)
+    setRenaming(false)
+  }
+
   // Build folder path for uploads: cursoSlug/capituloId
   const currentCourse = courses.find((c) => c.id === expandedCourse)
   const uploadFolder = currentCourse
@@ -363,37 +395,78 @@ export function ContentManager({ courses: initialCourses }: { courses: Course[] 
             className="rounded-2xl glass-card overflow-hidden"
           >
             <div className="flex items-center hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
-              <button
-                onClick={() => handleExpandCourse(course.id)}
-                className="flex flex-1 items-center gap-3 px-5 py-4 text-left cursor-pointer"
-              >
-                {expandedCourse === course.id ? (
-                  <ChevronDown className="h-4 w-4 text-neutral-500" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-neutral-500" />
-                )}
-                <BookOpen className="h-5 w-5 text-primary-400" />
-                <span className="flex-1 font-semibold text-neutral-900 dark:text-white">
-                  {course.nombre}
-                </span>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full border ${
-                    course.activo
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-black/[0.03] dark:bg-white/5 text-neutral-500 border-black/10 dark:border-white/10'
-                  }`}
+              {renamingCourseId === course.id ? (
+                <div className="flex flex-1 items-center gap-2 px-5 py-3" onClick={(e) => e.stopPropagation()}>
+                  <BookOpen className="h-5 w-5 text-primary-400 shrink-0" />
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRenameCourse(course.id)
+                      if (e.key === 'Escape') setRenamingCourseId(null)
+                    }}
+                    className="flex-1 rounded-lg border border-primary-400 bg-white dark:bg-neutral-800 px-2 py-1 text-sm font-semibold text-neutral-900 dark:text-white focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleRenameCourse(course.id)}
+                    disabled={renaming}
+                    className="rounded-lg p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {renaming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setRenamingCourseId(null)}
+                    className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleExpandCourse(course.id)}
+                  className="flex flex-1 items-center gap-3 px-5 py-4 text-left cursor-pointer"
                 >
-                  {course.activo ? 'Activo' : 'Inactivo'}
-                </span>
-              </button>
-              <button
-                onClick={() => handleDeleteCourse(course)}
-                className="mr-3 rounded-lg p-2 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 transition-colors cursor-pointer"
-                aria-label="Eliminar curso"
-                title="Eliminar curso"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+                  {expandedCourse === course.id ? (
+                    <ChevronDown className="h-4 w-4 text-neutral-500" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-neutral-500" />
+                  )}
+                  <BookOpen className="h-5 w-5 text-primary-400" />
+                  <span className="flex-1 font-semibold text-neutral-900 dark:text-white">
+                    {course.nombre}
+                  </span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full border ${
+                      course.activo
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-black/[0.03] dark:bg-white/5 text-neutral-500 border-black/10 dark:border-white/10'
+                    }`}
+                  >
+                    {course.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </button>
+              )}
+              {renamingCourseId !== course.id && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setRenamingCourseId(course.id); setRenameValue(course.nombre) }}
+                    className="mr-1 rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 transition-colors cursor-pointer"
+                    aria-label="Renombrar curso"
+                    title="Renombrar"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCourse(course)}
+                    className="mr-3 rounded-lg p-2 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 transition-colors cursor-pointer"
+                    aria-label="Eliminar curso"
+                    title="Eliminar curso"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </>
+              )}
             </div>
 
             {expandedCourse === course.id && (
@@ -419,41 +492,82 @@ export function ContentManager({ courses: initialCourses }: { courses: Course[] 
                   chapters.map((ch) => (
                     <div key={ch.id} className="border-t border-black/[0.03] dark:border-white/[0.03]">
                       <div className="flex items-center hover:bg-black/[0.03] dark:hover:bg-white/[0.02] transition-colors">
-                        <button
-                          onClick={() => handleExpandChapter(ch.id)}
-                          className="flex flex-1 items-center gap-3 px-8 py-3 text-left cursor-pointer"
-                        >
-                          {expandedChapter === ch.id ? (
-                            <ChevronDown className="h-3.5 w-3.5 text-neutral-500" />
-                          ) : (
-                            <ChevronRight className="h-3.5 w-3.5 text-neutral-500" />
-                          )}
-                          <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                            <span className="font-medium">Cap. {ch.numero}:</span>{' '}
-                            {ch.nombre}
-                          </span>
-                        </button>
-                        <div className="mr-2">
-                          <ChapterImageUpload
-                            capituloId={ch.id}
-                            currentImageUrl={ch.imagen_url ?? null}
-                            onUpdate={(url) =>
-                              setChapters((prev) =>
-                                prev.map((c) =>
-                                  c.id === ch.id ? { ...c, imagen_url: url } : c
-                                )
-                              )
-                            }
-                          />
-                        </div>
-                        <button
-                          onClick={() => handleDeleteChapter(ch.id, ch.nombre)}
-                          className="mr-3 rounded-lg p-1.5 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 transition-colors cursor-pointer"
-                          aria-label="Eliminar capítulo"
-                          title="Eliminar capítulo"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        {renamingChapterId === ch.id ? (
+                          <div className="flex flex-1 items-center gap-2 px-8 py-2" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-xs font-medium text-neutral-500 shrink-0">Cap. {ch.numero}:</span>
+                            <input
+                              autoFocus
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameChapter(ch.id)
+                                if (e.key === 'Escape') setRenamingChapterId(null)
+                              }}
+                              className="flex-1 rounded-lg border border-primary-400 bg-white dark:bg-neutral-800 px-2 py-1 text-sm text-neutral-900 dark:text-white focus:outline-none"
+                            />
+                            <button
+                              onClick={() => handleRenameChapter(ch.id)}
+                              disabled={renaming}
+                              className="rounded-lg p-1 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              {renaming ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            </button>
+                            <button
+                              onClick={() => setRenamingChapterId(null)}
+                              className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleExpandChapter(ch.id)}
+                            className="flex flex-1 items-center gap-3 px-8 py-3 text-left cursor-pointer"
+                          >
+                            {expandedChapter === ch.id ? (
+                              <ChevronDown className="h-3.5 w-3.5 text-neutral-500" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5 text-neutral-500" />
+                            )}
+                            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                              <span className="font-medium">Cap. {ch.numero}:</span>{' '}
+                              {ch.nombre}
+                            </span>
+                          </button>
+                        )}
+                        {renamingChapterId !== ch.id && (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setRenamingChapterId(ch.id); setRenameValue(ch.nombre) }}
+                              className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 transition-colors cursor-pointer"
+                              aria-label="Renombrar capítulo"
+                              title="Renombrar"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                            <div className="mr-2">
+                              <ChapterImageUpload
+                                capituloId={ch.id}
+                                currentImageUrl={ch.imagen_url ?? null}
+                                onUpdate={(url) =>
+                                  setChapters((prev) =>
+                                    prev.map((c) =>
+                                      c.id === ch.id ? { ...c, imagen_url: url } : c
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleDeleteChapter(ch.id, ch.nombre)}
+                              className="mr-3 rounded-lg p-1.5 text-neutral-500 hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 transition-colors cursor-pointer"
+                              aria-label="Eliminar capítulo"
+                              title="Eliminar capítulo"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {expandedChapter === ch.id && (

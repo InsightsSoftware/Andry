@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   MessageCircle,
   MapPin,
@@ -11,9 +12,20 @@ import {
   ImagePlus,
   X,
   Loader2,
+  Trash2,
+  Star,
+  RotateCcw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createComment, markResuelto } from '@/actions/comunidad'
+import {
+  createComment,
+  markResuelto,
+  deletePost,
+  deleteComment,
+  removePostMedia,
+  toggleComentarioDestacado,
+  setPostResuelto,
+} from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
 interface Profile {
@@ -29,6 +41,7 @@ interface Comment {
   contenido: string
   imagen_url?: string | null
   created_at: string
+  destacado?: boolean
   profiles: Profile | null
 }
 
@@ -90,6 +103,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
+  const router = useRouter()
   const [showComments, setShowComments] = useState(false)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -97,25 +111,82 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [error, setError] = useState('')
   const [resolving, setResolving] = useState(false)
   const [resuelto, setResuelto] = useState(post.resuelto)
+
+  // Admin state
+  const [deleted, setDeleted] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [localMedia, setLocalMedia] = useState(post.media_urls ?? [])
+  const [localComments, setLocalComments] = useState(post.comentarios ?? [])
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
+  const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
+  const [removingMedia, setRemovingMedia] = useState<string | null>(null)
+
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
   const VIDEO_EXTS = ['.mp4', '.mov', '.webm']
-  const media = post.media_urls ?? []
-  const mediaImages = media.filter((u) => !VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
-  const mediaVideos = media.filter((u) => VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
+  const mediaImages = localMedia.filter((u) => !VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
+  const mediaVideos = localMedia.filter((u) => VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
 
   const canResolve = !resuelto && (currentUserId === post.user_id || isAdmin)
+
+  if (deleted) return null
 
   async function handleMarkResuelto() {
     setResolving(true)
     const result = await markResuelto(post.id)
+    if (result.error) setError(result.error)
+    else setResuelto(true)
+    setResolving(false)
+  }
+
+  async function handleUnmarkResuelto() {
+    setResolving(true)
+    const result = await setPostResuelto(post.id, false)
+    if (result.error) setError(result.error)
+    else setResuelto(false)
+    setResolving(false)
+  }
+
+  async function handleDeletePost() {
+    if (!confirm('¿Eliminar este post? Esta acción no se puede deshacer.')) return
+    setDeleting(true)
+    const result = await deletePost(post.id)
     if (result.error) {
       setError(result.error)
+      setDeleting(false)
     } else {
-      setResuelto(true)
+      setDeleted(true)
+      router.refresh()
     }
-    setResolving(false)
+  }
+
+  async function handleDeleteComment(commentId: string) {
+    if (!confirm('¿Eliminar este comentario?')) return
+    setDeletingCommentId(commentId)
+    const result = await deleteComment(commentId)
+    if (result.error) setError(result.error)
+    else setLocalComments((prev) => prev.filter((c) => c.id !== commentId))
+    setDeletingCommentId(null)
+  }
+
+  async function handleToggleDestacado(comment: Comment) {
+    setTogglingCommentId(comment.id)
+    const next = !comment.destacado
+    const result = await toggleComentarioDestacado(comment.id, next)
+    if (result.error) setError(result.error)
+    else setLocalComments((prev) =>
+      prev.map((c) => c.id === comment.id ? { ...c, destacado: next } : c)
+    )
+    setTogglingCommentId(null)
+  }
+
+  async function handleRemoveMedia(url: string) {
+    setRemovingMedia(url)
+    const result = await removePostMedia(post.id, url)
+    if (result.error) setError(result.error)
+    else setLocalMedia((prev) => prev.filter((u) => u !== url))
+    setRemovingMedia(null)
   }
 
   async function handleCommentImagePick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -196,6 +267,18 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 {resolving ? 'Guardando…' : 'Marcar resuelto'}
               </button>
             ) : null}
+            {/* Admin: unmark resuelto */}
+            {isAdmin && resuelto && (
+              <button
+                onClick={handleUnmarkResuelto}
+                disabled={resolving}
+                title="Desmarcar como resuelto"
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-300 dark:border-neutral-600 px-2 py-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:border-warning-400 hover:text-warning-600 dark:hover:text-warning-400 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Desmarcar
+              </button>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-400 dark:text-neutral-500">
             <span className="font-medium text-neutral-600 dark:text-neutral-400">
@@ -214,6 +297,17 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
             </span>
           </div>
         </div>
+        {/* Admin: delete post */}
+        {isAdmin && (
+          <button
+            onClick={handleDeletePost}
+            disabled={deleting}
+            title="Eliminar post"
+            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 dark:text-neutral-500 hover:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -231,19 +325,34 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               : 'grid-cols-3'
         }`}>
           {mediaImages.map((url, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setLightboxUrl(url)}
-              className="relative overflow-hidden rounded-xl cursor-pointer group"
-              style={{ aspectRatio: mediaImages.length === 1 ? '16/9' : '1/1' }}
-            >
-              <img
-                src={url}
-                alt={`Imagen ${i + 1}`}
-                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-              />
-            </button>
+            <div key={i} className="relative group/img">
+              <button
+                type="button"
+                onClick={() => setLightboxUrl(url)}
+                className="relative w-full overflow-hidden rounded-xl cursor-pointer group"
+                style={{ aspectRatio: mediaImages.length === 1 ? '16/9' : '1/1', display: 'block' }}
+              >
+                <img
+                  src={url}
+                  alt={`Imagen ${i + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+              </button>
+              {/* Admin: remove image */}
+              {isAdmin && (
+                <button
+                  onClick={() => handleRemoveMedia(url)}
+                  disabled={removingMedia === url}
+                  title="Eliminar imagen"
+                  className="absolute top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-danger-600 transition-colors cursor-pointer z-10 opacity-0 group-hover/img:opacity-100"
+                >
+                  {removingMedia === url
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <X className="h-3 w-3" />
+                  }
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -252,13 +361,28 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       {mediaVideos.length > 0 && (
         <div className="mb-3 flex flex-col gap-2">
           {mediaVideos.map((url, i) => (
-            <video
-              key={i}
-              src={url}
-              controls
-              preload="metadata"
-              className="w-full max-h-72 rounded-xl bg-neutral-900 object-contain"
-            />
+            <div key={i} className="relative group/vid">
+              <video
+                src={url}
+                controls
+                preload="metadata"
+                className="w-full max-h-72 rounded-xl bg-neutral-900 object-contain"
+              />
+              {/* Admin: remove video */}
+              {isAdmin && (
+                <button
+                  onClick={() => handleRemoveMedia(url)}
+                  disabled={removingMedia === url}
+                  title="Eliminar video"
+                  className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white hover:bg-danger-600 transition-colors cursor-pointer opacity-0 group-hover/vid:opacity-100"
+                >
+                  {removingMedia === url
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <><X className="h-3 w-3" /> Eliminar</>
+                  }
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -308,16 +432,20 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
         className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400"
       >
         <MessageCircle className="h-4 w-4" />
-        {post.comentarios?.length || 0} comentarios
+        {localComments?.length || 0} comentarios
       </button>
 
       {/* Comments section */}
       {showComments && (
         <div className="mt-4 border-t border-neutral-100 dark:border-neutral-800 pt-4">
-          {post.comentarios?.map((comment) => (
+          {localComments?.map((comment) => (
             <div
               key={comment.id}
-              className="mb-3 flex gap-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-3"
+              className={`mb-3 flex gap-2.5 rounded-lg p-3 ${
+                comment.destacado
+                  ? 'bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800'
+                  : 'bg-neutral-50 dark:bg-neutral-800'
+              }`}
             >
               <AvatarInicial
                 nombre={comment.profiles?.nombre_completo}
@@ -332,6 +460,12 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                     {comment.profiles?.nombre_completo || 'Usuario'}
                   </span>
                   <MentorBadge profile={comment.profiles} />
+                  {comment.destacado && (
+                    <span className="inline-flex items-center gap-0.5 text-accent-600 dark:text-accent-400 font-semibold">
+                      <Star className="h-3 w-3 fill-current" />
+                      Destacado
+                    </span>
+                  )}
                   <span>·</span>
                   <span>{timeAgo(comment.created_at)}</span>
                 </div>
@@ -352,6 +486,37 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   </button>
                 )}
               </div>
+              {/* Admin: destacar + delete comment */}
+              {isAdmin && (
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button
+                    onClick={() => handleToggleDestacado(comment)}
+                    disabled={togglingCommentId === comment.id}
+                    title={comment.destacado ? 'Quitar destacado' : 'Destacar comentario'}
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                      comment.destacado
+                        ? 'text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
+                        : 'text-neutral-400 hover:text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
+                    }`}
+                  >
+                    {togglingCommentId === comment.id
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <Star className={`h-3.5 w-3.5 ${comment.destacado ? 'fill-current' : ''}`} />
+                    }
+                  </button>
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    disabled={deletingCommentId === comment.id}
+                    title="Eliminar comentario"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {deletingCommentId === comment.id
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <Trash2 className="h-3.5 w-3.5" />
+                    }
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

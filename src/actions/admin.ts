@@ -102,7 +102,7 @@ export async function getUsers() {
   const { data, error } = await admin
     .from('profiles')
     .select(
-      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado'
+      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado, oficio'
     )
     .order('created_at', { ascending: false })
     .limit(200)
@@ -131,7 +131,7 @@ export async function getCurrentUserRole() {
   return { rol: profile?.rol || null, userId: user.id }
 }
 
-export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin') {
+export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin' | 'comunidad') {
   const currentUser = await requireAdmin()
   const admin = createAdminClient()
 
@@ -876,7 +876,7 @@ export async function getContent(capituloId: string) {
 }
 
 export async function createContent(contentData: {
-  capitulo_id: string
+  capitulo_id: string | null
   tipo: 'pdf' | 'audio' | 'video'
   titulo: string
   descripcion?: string
@@ -1135,6 +1135,38 @@ export async function getAllContentByType(tipo: 'audio' | 'video' | 'pdf') {
 }
 
 // ── Payments ───────────────────────────────────────────────────────
+
+export async function renameCurso(id: string, nombre: string) {
+  await requireAdmin()
+  if (!nombre.trim()) return { error: 'El nombre no puede estar vacío' }
+  const admin = createAdminClient()
+  const { error } = await admin.from('cursos').update({ nombre: nombre.trim() }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
+export async function renameCapitulo(id: string, nombre: string) {
+  await requireAdmin()
+  if (!nombre.trim()) return { error: 'El nombre no puede estar vacío' }
+  const admin = createAdminClient()
+  const { error } = await admin.from('capitulos').update({ nombre: nombre.trim() }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  revalidatePath('/estudio')
+  return { success: true }
+}
+
+export async function inviteUser(email: string, rol: 'comunidad' | 'estudiante' = 'comunidad') {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { rol },
+  })
+  if (error) return { error: error.message }
+  return { success: true, userId: data.user?.id }
+}
 
 export async function getPayments() {
   await requireAdmin()

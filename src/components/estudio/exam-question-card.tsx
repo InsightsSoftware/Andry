@@ -24,6 +24,7 @@ interface ExamQuestionCardProps {
   onNext: () => void
   onPrev: () => void
   onFinish: () => void
+  onRevisar?: () => void
   // Practice mode
   isPractica?: boolean
   feedback?: QuestionFeedback | null
@@ -43,6 +44,7 @@ export function ExamQuestionCard({
   onNext,
   onPrev,
   onFinish,
+  onRevisar,
   isPractica = false,
   feedback = null,
   submitting = false,
@@ -198,10 +200,42 @@ export function ExamQuestionCard({
       <div className="flex justify-between gap-3">
 
         {isPractica ? (
-          /* Practice: show Siguiente/Finalizar only after feedback */
-          <div className="ml-auto">
-            {feedback && (
-              numero < total ? (
+          /* Practice: Finalizar | Anterior + [Revisar] + Siguiente */
+          <>
+            {/* Left: Finalizar */}
+            <button
+              onClick={() => setShowFinishModal(true)}
+              className="rounded-xl border border-success-300 dark:border-success-700 px-4 py-3 text-sm font-medium text-success-700 dark:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20 transition-colors cursor-pointer"
+            >
+              Finalizar
+            </button>
+
+            {/* Right: Anterior + Revisar + Siguiente */}
+            <div className="flex gap-2">
+              <button
+                onClick={onPrev}
+                disabled={numero <= 1}
+                className="rounded-xl border border-neutral-300 dark:border-neutral-600 px-5 py-3 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              >
+                ← Anterior
+              </button>
+
+              {/* Revisar: only when selection exists and not yet reviewed */}
+              {selectedAnswer && !feedback && (
+                <button
+                  onClick={onRevisar}
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 dark:bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {submitting
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : 'Revisar respuesta'
+                  }
+                </button>
+              )}
+
+              {/* Siguiente / Finalizar */}
+              {numero < total ? (
                 <button
                   onClick={onNext}
                   className="rounded-xl bg-primary-600 dark:bg-primary-500 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors cursor-pointer"
@@ -210,19 +244,14 @@ export function ExamQuestionCard({
                 </button>
               ) : (
                 <button
-                  onClick={onFinish}
+                  onClick={() => setShowFinishModal(true)}
                   className="rounded-xl bg-success-500 px-6 py-3 text-sm font-semibold text-white hover:bg-success-600 transition-colors cursor-pointer"
                 >
-                  Ver resultados
+                  Finalizar práctica
                 </button>
-              )
-            )}
-            {!feedback && !submitting && (
-              <p className="text-xs text-neutral-400 dark:text-neutral-500 italic pt-3">
-                Seleccioná una opción para ver el resultado
-              </p>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         ) : (
           /* Exam mode: Finalizar on the left, Anterior + Siguiente on the right */
           <>
@@ -278,18 +307,21 @@ export function ExamQuestionCard({
                 <AlertTriangle className="h-5 w-5 text-warning-600 dark:text-warning-400" />
               </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                ¿Finalizar el examen?
+                {isPractica ? '¿Finalizar la práctica?' : '¿Finalizar el examen?'}
               </h3>
             </div>
             <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Una vez que finalices no podrás volver a responder preguntas. Se calcularán tus resultados con las respuestas que diste hasta ahora.
+              {isPractica
+                ? 'Las preguntas que revisaste quedan guardadas. Las que seleccionaste sin revisar se contarán igual. ¿Querés ver tus resultados ahora?'
+                : 'Una vez que finalices no podrás volver a responder preguntas. Se calcularán tus resultados con las respuestas que diste hasta ahora.'
+              }
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFinishModal(false)}
                 className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-600 px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               >
-                Seguir respondiendo
+                {isPractica ? 'Seguir practicando' : 'Seguir respondiendo'}
               </button>
               <button
                 onClick={() => { setShowFinishModal(false); onFinish() }}

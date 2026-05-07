@@ -83,6 +83,18 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
+    // Users with 'comunidad' role: only allow /comunidad and /perfil, block everything else
+    if (profile?.rol === 'comunidad') {
+      const allowedForComunidad = ['/comunidad', '/perfil']
+      if (!allowedForComunidad.some((r) => pathname.startsWith(r))) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/comunidad'
+        return NextResponse.redirect(url)
+      }
+      // Skip subscription check for comunidad role
+      return response
+    }
+
     // Check subscription for protected routes
     if (isProtected && profile?.subscription_status !== 'activa') {
       const url = request.nextUrl.clone()

@@ -21,6 +21,7 @@ interface HomeCard {
   accent: string
   iconColor: string
   coverImage: string
+  coverVideo?: string
   tourKey?: string
 }
 
@@ -124,15 +125,27 @@ export default async function DashboardPage() {
               data-tour={card.tourKey}
               className="group flex flex-col rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-neutral-300 dark:hover:border-neutral-700 cursor-pointer overflow-hidden"
             >
-              {/* Cover image */}
-              <div className="relative h-28 sm:h-32 overflow-hidden">
-                <Image
-                  src={card.coverImage}
-                  alt={card.label}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+              {/* Cover — video loop with image fallback */}
+              <div className="relative h-28 sm:h-32 overflow-hidden bg-neutral-900">
+                {card.coverVideo ? (
+                  <video
+                    src={card.coverVideo}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    poster={card.coverImage}
+                    className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
+                  />
+                ) : (
+                  <Image
+                    src={card.coverImage}
+                    alt={card.label}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className={`absolute bottom-2 left-2 flex h-8 w-8 items-center justify-center rounded-lg border ${card.accent} backdrop-blur-sm`}>
                   <Icon className={`h-4 w-4 ${card.iconColor}`} />

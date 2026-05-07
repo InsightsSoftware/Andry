@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { BookOpenCheck, Timer, ArrowRight, ChevronDown, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { PracticaTour } from '@/components/tour/section-tours'
@@ -121,12 +120,14 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
               : 'hover:scale-[1.01]'
           }`}
         >
-          <Image
-            src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
-            alt="Práctica Libre"
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            unoptimized
+          <video
+            src="/videos/practica/libre.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
+            className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
           {/* Selected badge */}
@@ -166,12 +167,14 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
               : 'hover:scale-[1.01]'
           }`}
         >
-          <Image
-            src="https://images.unsplash.com/photo-1704265586142-db3e17d0dea0?auto=format&fit=crop&w=800&q=80"
-            alt="Simulación Real"
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            unoptimized
+          <video
+            src="/videos/practica/simulacion.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="https://images.unsplash.com/photo-1704265586142-db3e17d0dea0?auto=format&fit=crop&w=800&q=80"
+            className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
           {/* Selected badge */}
@@ -269,7 +272,7 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
                         {cap.numero >= 11
                           ? cap.nombre
                           : `Capítulo ${String(cap.numero).padStart(2, '0')} — ${cap.nombre}`
-                        }{cap.questionCount === 0 ? ' (sin preguntas)' : ` · ${cap.questionCount} preguntas`}
+                        }{cap.questionCount === 0 ? ' (sin preguntas)' : ''}
                       </option>
                     ))}
                   </select>

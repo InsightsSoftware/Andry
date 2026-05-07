@@ -32,6 +32,8 @@ interface CSVUploaderProps {
   initialCursoId?: string
   /** Pre-select a chapter */
   initialCapituloId?: string
+  /** Hide course/chapter selectors when already inside a specific chapter */
+  hideSelectors?: boolean
 }
 
 export function CSVUploader({
@@ -39,6 +41,7 @@ export function CSVUploader({
   allChapters,
   initialCursoId   = '',
   initialCapituloId = '',
+  hideSelectors    = false,
 }: CSVUploaderProps = {}) {
   const [step, setStep] = useState<'select' | 'preview' | 'done'>('select')
   const [courses, setCourses] = useState<Course[]>(allCursos ?? [])
@@ -143,45 +146,47 @@ export function CSVUploader({
         </div>
       ) : (
         <>
-          {/* Course / Chapter selector */}
-          <div className="mb-4 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Curso
-              </label>
-              <select
-                value={selectedCourse}
-                onChange={(e) => handleCourseChange(e.target.value)}
-                onFocus={loadCourses}
-                className="w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="">Seleccionar curso...</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
+          {/* Course / Chapter selector — hidden when already inside a chapter */}
+          {!hideSelectors && (
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Curso
+                </label>
+                <select
+                  value={selectedCourse}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                  onFocus={loadCourses}
+                  className="w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none"
+                >
+                  <option value="">Seleccionar curso...</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Capítulo
+                </label>
+                <select
+                  value={selectedChapter}
+                  onChange={(e) => setSelectedChapter(e.target.value)}
+                  disabled={!selectedCourse}
+                  className="w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+                >
+                  <option value="">Seleccionar capítulo...</option>
+                  {chapters.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      Cap. {c.numero}: {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Capítulo
-              </label>
-              <select
-                value={selectedChapter}
-                onChange={(e) => setSelectedChapter(e.target.value)}
-                disabled={!selectedCourse}
-                className="w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none disabled:opacity-50"
-              >
-                <option value="">Seleccionar capítulo...</option>
-                {chapters.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    Cap. {c.numero}: {c.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           {/* File input */}
           {step === 'select' && (

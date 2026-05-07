@@ -42,6 +42,8 @@ const links: NavLink[] = [
     excludePrefixes: [
       '/estudio/audios',
       '/estudio/videos',
+      '/estudio/examen',
+      '/estudio/resultados',
       '/practica',
     ],
   },
@@ -98,12 +100,21 @@ export function Sidebar() {
           const excluded = (link.excludePrefixes || []).some((p) =>
             pathname.startsWith(p)
           )
+          // Exam & results pages live under /estudio/... but belong to Práctica
+          const isPracticaPath =
+            pathname.startsWith('/estudio/examen/') ||
+            pathname.startsWith('/estudio/resultados/')
+
           const isActive =
-            !excluded &&
-            (pathname === link.href ||
-              pathname.startsWith(link.href + '/') ||
-              (link.href === '/comunidad' &&
-                pathname.startsWith('/comunidad/')))
+            link.href === '/practica'
+              ? pathname === '/practica' ||
+                pathname.startsWith('/practica/') ||
+                isPracticaPath
+              : !excluded &&
+                (pathname === link.href ||
+                  pathname.startsWith(link.href + '/') ||
+                  (link.href === '/comunidad' &&
+                    pathname.startsWith('/comunidad/')))
           const Icon = link.icon
 
           const tourKey =

@@ -10,10 +10,10 @@ import { sendWelcomeEmail } from '@/lib/email'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getClientIp(): string {
+async function getClientIp(): Promise<string> {
   // In production behind Render's proxy the real IP is in x-forwarded-for
-  const headersList = headers()
-  const forwarded = (headersList as any).get?.('x-forwarded-for') as string | null
+  const headersList = await headers()
+  const forwarded = headersList.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
   return 'unknown'
 }
@@ -31,7 +31,7 @@ export async function loginAction(formData: FormData) {
   }
 
   // Rate limit by IP: 10 attempts per 15 minutes
-  const ip = getClientIp()
+  const ip = await getClientIp()
   const { success, resetAt } = authLimiter.check(`login:${ip}`)
   if (!success) {
     const waitMin = Math.ceil((resetAt - Date.now()) / 60_000)
@@ -69,7 +69,7 @@ export async function registerAction(formData: FormData) {
   }
 
   // Rate limit by IP: 10 attempts per 15 minutes
-  const ip = getClientIp()
+  const ip = await getClientIp()
   const { success, resetAt } = authLimiter.check(`register:${ip}`)
   if (!success) {
     const waitMin = Math.ceil((resetAt - Date.now()) / 60_000)

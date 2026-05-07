@@ -30,8 +30,20 @@ export function BottomTabs() {
     <nav aria-label="Navegación principal" className="fixed bottom-0 left-0 right-0 z-40 glass-nav pb-safe md:hidden">
       <div className="flex items-center justify-around" role="tablist">
         {tabs.map((tab) => {
+          // Exam & results pages live under /estudio/... but belong to Práctica tab
+          const isPracticaPath =
+            pathname.startsWith('/estudio/examen/') ||
+            pathname.startsWith('/estudio/resultados/')
+
           const isActive =
-            pathname === tab.href || pathname.startsWith(tab.href + '/')
+            tab.href === '/practica'
+              ? pathname === '/practica' ||
+                pathname.startsWith('/practica/') ||
+                isPracticaPath
+              : tab.href === '/estudio'
+                ? !isPracticaPath &&
+                  (pathname === '/estudio' || pathname.startsWith('/estudio/'))
+                : pathname === tab.href || pathname.startsWith(tab.href + '/')
           const Icon = tab.icon
 
           // Data attribute used by the onboarding tour

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { updateEnvioEstado } from '@/actions/admin'
+import { updateEnvioEstado, inviteUser } from '@/actions/admin'
 import { UserRoleToggle } from './user-role-toggle'
 import {
   ChevronDown,
@@ -12,6 +12,9 @@ import {
   MapPin,
   Phone,
   Filter,
+  UserPlus,
+  X,
+  Loader2,
 } from 'lucide-react'
 
 type User = {
@@ -26,6 +29,7 @@ type User = {
   telefono?: string | null
   direccion?: string | null
   envio_estado?: string | null
+  oficio?: string | null
 }
 
 type EnvioTab = 'todos' | 'pendiente' | 'enviado'
@@ -128,6 +132,9 @@ function UserRow({
         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 text-sm">
           {user.email}
         </td>
+        <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-sm">
+          {user.oficio || '—'}
+        </td>
         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize text-sm">
           {user.subscription_plan || 'ninguno'}
         </td>
@@ -153,7 +160,7 @@ function UserRow({
       {/* Expanded detail row */}
       {expanded && (
         <tr className="border-b border-black/5 dark:border-white/5 bg-neutral-50/60 dark:bg-neutral-800/30">
-          <td colSpan={7} className="px-8 py-4">
+          <td colSpan={8} className="px-8 py-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
               {/* Contact */}
               <div>
@@ -219,9 +226,111 @@ interface Props {
   callerId: string | null
 }
 
+function InviteModal({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState('')
+  const [rol, setRol] = useState<'comunidad' | 'estudiante'>('comunidad')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<{ ok?: boolean; msg: string } | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setLoading(true)
+    const r = await inviteUser(email.trim(), rol)
+    if (r.success) {
+      setResult({ ok: true, msg: `Invitación enviada a ${email}` })
+    } else {
+      setResult({ ok: false, msg: r.error || 'Error al invitar' })
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-2xl glass-card p-6"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+            Invitar usuario
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-neutral-400 hover:bg-black/[0.03] dark:hover:bg-white/[0.04] cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {result ? (
+          <div className={`rounded-xl p-3 text-sm ${result.ok ? 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300' : 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-300'}`}>
+            {result.msg}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="usuario@email.com"
+                className="mt-1 w-full rounded-xl glass-input px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Rol
+              </label>
+              <select
+                value={rol}
+                onChange={(e) => setRol(e.target.value as 'comunidad' | 'estudiante')}
+                className="mt-1 w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none"
+              >
+                <option value="comunidad">Comunidad (solo foros)</option>
+                <option value="estudiante">Estudiante (acceso completo)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-4 py-2 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer"
+          >
+            {result ? 'Cerrar' : 'Cancelar'}
+          </button>
+          {!result && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-500 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {loading ? 'Enviando...' : 'Enviar invitación'}
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  )
+}
+
 export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) {
   const [tab, setTab] = useState<EnvioTab>('todos')
   const [search, setSearch] = useState('')
+  const [showInvite, setShowInvite] = useState(false)
 
   const pending = useMemo(
     () => initialUsers.filter((u) => u.envio_estado === 'pendiente'),
@@ -250,6 +359,8 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
 
   return (
     <div>
+      {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
+
       {/* Filters row */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {/* Tab pills */}
@@ -278,13 +389,22 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
           ))}
         </div>
 
-        {/* Search */}
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nombre, email o dirección..."
-          className="ml-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 w-64"
-        />
+        {/* Search + Invite */}
+        <div className="ml-auto flex items-center gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre, email o dirección..."
+            className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 w-64"
+          />
+          <button
+            onClick={() => setShowInvite(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-500 transition-colors cursor-pointer"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Invitar
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -297,6 +417,9 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Email
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
+                Oficio
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Plan
@@ -326,7 +449,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-neutral-500">
+                <td colSpan={8} className="px-4 py-12 text-center text-neutral-500">
                   {search ? 'Sin resultados para esa búsqueda' : 'No hay usuarios en esta categoría'}
                 </td>
               </tr>

@@ -91,7 +91,7 @@ export function ForYouSection() {
                     'object-cover',
                     // Continuous Ken Burns — slow zoom + pan, pauses on card hover
                     c.kenBurnsVariant,
-                    'group-hover:[animation-play-state:paused] group-hover:scale-[1.04] transition-transform duration-700'
+                    'group-hover:[animation-play-state:paused] group-hover:scale-[1.08] group-hover:brightness-110 transition-all duration-700 ease-out'
                   )}
                   priority={i === 0}
                 />
