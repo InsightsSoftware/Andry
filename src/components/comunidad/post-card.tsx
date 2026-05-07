@@ -370,7 +370,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 src={url}
                 controls
                 preload="metadata"
-                className="h-36 w-56 rounded-lg bg-neutral-900 object-cover"
+                className="h-48 w-72 rounded-lg bg-neutral-900 object-cover"
               />
               {isAdmin && (
                 <button
