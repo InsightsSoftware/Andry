@@ -207,9 +207,14 @@ export default async function VideosPage() {
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-2 leading-snug">
+                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 line-clamp-1 leading-snug">
                             {video.titulo}
                           </p>
+                          {video.descripcion && (
+                            <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500 line-clamp-2 leading-relaxed">
+                              {video.descripcion}
+                            </p>
+                          )}
                           {progress && !progress.completado && (
                             <div className="mt-1.5 h-1 w-full max-w-[120px] rounded-full bg-neutral-100 dark:bg-neutral-800">
                               <div
