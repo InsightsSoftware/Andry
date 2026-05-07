@@ -527,6 +527,20 @@ export function VideosManager({
           onSubmit={handleCatSubmit}
           onClose={closeCatModal}
         />
+
+        {/* Video modal — also needed here for editing uncategorized videos */}
+        <VideoModal
+          show={showVideoModal}
+          editing={editingVideo}
+          form={videoForm}
+          setForm={setVideoForm}
+          uploadMode={uploadMode}
+          setUploadMode={setUploadMode}
+          error={videoError}
+          submitting={videoSubmitting}
+          onSubmit={handleVideoSubmit}
+          onClose={closeVideoModal}
+        />
       </div>
     )
   }
