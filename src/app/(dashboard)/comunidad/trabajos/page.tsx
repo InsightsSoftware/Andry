@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { CommunityPage } from '@/components/comunidad/community-page'
 import { CommunityStats } from '@/components/comunidad/community-stats'
 
@@ -6,12 +7,15 @@ export const metadata = { title: 'Comunidad - Trabajos' }
 
 export default async function TrabajosPage() {
   const supabase = await createClient()
+  // Use admin client for the posts query so profiles of ALL users (not just
+  // the current user) are returned even if RLS restricts profile reads.
+  const admin = createAdminClient()
 
   const [
     { data: posts },
     { data: { user } },
   ] = await Promise.all([
-    supabase
+    admin
       .from('posts_comunidad')
       .select(
         `
