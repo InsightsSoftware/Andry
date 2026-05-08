@@ -28,6 +28,7 @@ import {
   setPostResuelto,
   setResolucionComment,
   getResolucionComment,
+  getCommentMediaUrls,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -43,7 +44,6 @@ interface Comment {
   id: string
   contenido: string
   imagen_url?: string | null
-  media_urls?: string[] | null
   created_at: string
   destacado?: boolean
   profiles: Profile | null
@@ -123,15 +123,28 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [localComments, setLocalComments] = useState(post.comentarios ?? [])
   const [resolucionCommentId, setResolucionCommentId] = useState<string | null>(null)
   const [settingResolucion, setSettingResolucion] = useState<string | null>(null)
+  const [commentMediaMap, setCommentMediaMap] = useState<Record<string, string[]>>({})
+  const lazyLoadedRef = useRef(false)
 
-  // Lazy-load resolucion_comment_id when comments are first opened
+  // Lazy-load extra comment data (resolucion + media_urls) on first open
   useEffect(() => {
-    if (showComments && resolucionCommentId === null) {
-      getResolucionComment(post.id).then((id) => {
-        if (id) setResolucionCommentId(id)
+    if (!showComments || lazyLoadedRef.current) return
+    lazyLoadedRef.current = true
+
+    // Load resolución
+    getResolucionComment(post.id).then((id) => {
+      if (id) setResolucionCommentId(id)
+    })
+
+    // Load media_urls for each comment that has images
+    localComments.forEach((c) => {
+      getCommentMediaUrls(c.id).then((urls) => {
+        if (urls && urls.length > 0) {
+          setCommentMediaMap((prev) => ({ ...prev, [c.id]: urls }))
+        }
       })
-    }
-  }, [showComments, post.id])
+    })
+  }, [showComments])
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
   const [removingMedia, setRemovingMedia] = useState<string | null>(null)
@@ -516,10 +529,10 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
                   {comment.contenido}
                 </p>
-                {/* Comment images: media_urls (new) + imagen_url fallback (legacy) */}
+                {/* Comment images: lazy-loaded media_urls + imagen_url fallback (legacy) */}
                 {(() => {
-                  const imgs: string[] = comment.media_urls?.length
-                    ? comment.media_urls
+                  const imgs: string[] = (commentMediaMap[comment.id]?.length)
+                    ? commentMediaMap[comment.id]
                     : comment.imagen_url
                     ? [comment.imagen_url]
                     : []

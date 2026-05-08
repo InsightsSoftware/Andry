@@ -262,6 +262,16 @@ export async function toggleComentarioDestacado(commentId: string, destacado: bo
   return { success: true }
 }
 
+export async function getCommentMediaUrls(commentId: string): Promise<string[] | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('comentarios')
+    .select('media_urls')
+    .eq('id', commentId)
+    .single()
+  return (data as { media_urls?: string[] | null } | null)?.media_urls ?? null
+}
+
 export async function getResolucionComment(postId: string): Promise<string | null> {
   const supabase = await createClient()
   const { data } = await supabase

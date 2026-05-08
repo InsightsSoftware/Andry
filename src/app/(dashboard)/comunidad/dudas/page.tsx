@@ -21,7 +21,7 @@ export default async function DudasPage() {
         `
         id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ),
-        comentarios ( id, contenido, imagen_url, media_urls, created_at, destacado, profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ) )
+        comentarios ( id, contenido, imagen_url, created_at, destacado, profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ) )
       `
       )
       .eq('tipo', 'duda')
