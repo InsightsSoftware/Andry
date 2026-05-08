@@ -12,7 +12,7 @@ export default async function DudasPage() {
   const admin = createAdminClient()
 
   const [
-    { data: posts },
+    { data: posts, error: postsError },
     { data: { user } },
   ] = await Promise.all([
     admin
@@ -21,7 +21,9 @@ export default async function DudasPage() {
         `
         id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ),
-        comentarios ( id, contenido, imagen_url, created_at, destacado, profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion ) )
+        comentarios!comentarios_post_id_fkey ( id, contenido, imagen_url, created_at, destacado,
+          profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion )
+        )
       `
       )
       .eq('tipo', 'duda')
@@ -29,6 +31,7 @@ export default async function DudasPage() {
       .limit(50),
     supabase.auth.getUser(),
   ])
+  if (postsError) console.error('[DudasPage] posts query error:', JSON.stringify(postsError))
 
   // Check admin role + fetch profile for avatar
   let isAdmin = false
