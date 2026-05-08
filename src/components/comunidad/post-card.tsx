@@ -27,6 +27,7 @@ import {
   toggleComentarioDestacado,
   setPostResuelto,
   setResolucionComment,
+  getResolucionComment,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -57,7 +58,6 @@ interface Post {
   ubicacion: string | null
   presupuesto: string | null
   resuelto: boolean
-  resolucion_comment_id?: string | null
   created_at: string
   media_urls?: string[] | null
   profiles: Profile | null
@@ -121,8 +121,17 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [deleting, setDeleting] = useState(false)
   const [localMedia, setLocalMedia] = useState(post.media_urls ?? [])
   const [localComments, setLocalComments] = useState(post.comentarios ?? [])
-  const [resolucionCommentId, setResolucionCommentId] = useState(post.resolucion_comment_id ?? null)
+  const [resolucionCommentId, setResolucionCommentId] = useState<string | null>(null)
   const [settingResolucion, setSettingResolucion] = useState<string | null>(null)
+
+  // Lazy-load resolucion_comment_id when comments are first opened
+  useEffect(() => {
+    if (showComments && resolucionCommentId === null) {
+      getResolucionComment(post.id).then((id) => {
+        if (id) setResolucionCommentId(id)
+      })
+    }
+  }, [showComments, post.id])
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
   const [removingMedia, setRemovingMedia] = useState<string | null>(null)

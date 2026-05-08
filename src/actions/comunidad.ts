@@ -262,6 +262,16 @@ export async function toggleComentarioDestacado(commentId: string, destacado: bo
   return { success: true }
 }
 
+export async function getResolucionComment(postId: string): Promise<string | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('posts_comunidad')
+    .select('resolucion_comment_id')
+    .eq('id', postId)
+    .single()
+  return (data as { resolucion_comment_id?: string | null } | null)?.resolucion_comment_id ?? null
+}
+
 export async function setResolucionComment(postId: string, commentId: string | null) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
