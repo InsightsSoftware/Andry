@@ -16,6 +16,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
   const [loading, setLoading] = useState(false)
   const [deleted, setDeleted] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const isRoot = callerRole === 'root'
   const isSelf = callerId === userId
@@ -29,11 +30,19 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
     }
     const newRole = cycle[role] ?? 'estudiante'
     setLoading(true)
-    const result = await updateUserRole(userId, newRole)
-    if (result.success) {
-      setRole(newRole)
+    setErrorMsg(null)
+    try {
+      const result = await updateUserRole(userId, newRole)
+      if ('success' in result && result.success) {
+        setRole(newRole)
+      } else if ('error' in result) {
+        setErrorMsg(result.error)
+      }
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : 'Error al cambiar rol')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleDelete = async () => {
@@ -42,12 +51,20 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
       return
     }
     setLoading(true)
-    const result = await deleteUser(userId)
-    if (result.success) {
-      setDeleted(true)
+    setErrorMsg(null)
+    try {
+      const result = await deleteUser(userId)
+      if ('success' in result && result.success) {
+        setDeleted(true)
+      } else if ('error' in result) {
+        setErrorMsg(result.error)
+      }
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : 'Error al eliminar')
+    } finally {
+      setLoading(false)
+      setConfirmDelete(false)
     }
-    setLoading(false)
-    setConfirmDelete(false)
   }
 
   if (deleted) {
@@ -82,6 +99,10 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
   const canToggle = !isSelf && role !== 'root' && (isRoot || role !== 'admin')
 
   return (
+    <div className="flex flex-col items-start gap-1">
+    {errorMsg && (
+      <span className="text-[10px] text-red-400 leading-tight max-w-[160px]">{errorMsg}</span>
+    )}
     <div className="flex items-center gap-2">
       <button
         onClick={handleToggle}
@@ -130,6 +151,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
           </button>
         )
       )}
+    </div>
     </div>
   )
 }
