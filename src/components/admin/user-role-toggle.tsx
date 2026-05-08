@@ -36,7 +36,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
       if ('success' in result && result.success) {
         setRole(newRole)
       } else if ('error' in result) {
-        setErrorMsg(result.error)
+        setErrorMsg(result.error ?? 'Error al cambiar rol')
       }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Error al cambiar rol')
@@ -57,7 +57,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
       if ('success' in result && result.success) {
         setDeleted(true)
       } else if ('error' in result) {
-        setErrorMsg(result.error)
+        setErrorMsg(result.error ?? 'Error al eliminar')
       }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Error al eliminar')
