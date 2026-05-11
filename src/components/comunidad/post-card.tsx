@@ -18,6 +18,8 @@ import {
   Heart,
   Users,
   Reply,
+  Pin,
+  PinOff,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +35,7 @@ import {
   getCommentMediaUrls,
   toggleLike,
   toggleCommentLike,
+  togglePinPost,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -63,6 +66,7 @@ interface Post {
   ubicacion: string | null
   presupuesto: string | null
   resuelto: boolean
+  pinned?: boolean
   created_at: string
   media_urls?: string[] | null
   likes_count?: number
@@ -136,6 +140,8 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [resuelto, setResuelto] = useState(post.resuelto)
 
   // Admin state
+  const [pinned, setPinned] = useState(post.pinned ?? false)
+  const [pinning, setPinning] = useState(false)
   const [deleted, setDeleted] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [localMedia, setLocalMedia] = useState(post.media_urls ?? [])
@@ -206,6 +212,13 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       setLikeCount(result.count)
     }
     setLikingPost(false)
+  }
+
+  async function handleTogglePin() {
+    setPinning(true)
+    const result = await togglePinPost(post.id)
+    if (!result.error) setPinned(result.pinned ?? !pinned)
+    setPinning(false)
   }
 
   async function handleCommentLike(commentId: string) {
@@ -367,6 +380,12 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {pinned && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 border border-amber-400/30 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                <Pin className="h-2.5 w-2.5 fill-current" />
+                Fijado
+              </span>
+            )}
             <h3 className="font-bold text-neutral-900 dark:text-neutral-100">
               {post.titulo}
             </h3>
@@ -416,16 +435,35 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
             </span>
           </div>
         </div>
-        {/* Admin: delete post */}
+        {/* Admin: pin + delete */}
         {isAdmin && (
-          <button
-            onClick={handleDeletePost}
-            disabled={deleting}
-            title="Eliminar post"
-            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 dark:text-neutral-500 hover:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={handleTogglePin}
+              disabled={pinning}
+              title={pinned ? 'Desfijar post' : 'Fijar post arriba'}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                pinned
+                  ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                  : 'text-neutral-400 dark:text-neutral-500 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+              }`}
+            >
+              {pinning
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : pinned
+                  ? <PinOff className="h-4 w-4" />
+                  : <Pin className="h-4 w-4" />
+              }
+            </button>
+            <button
+              onClick={handleDeletePost}
+              disabled={deleting}
+              title="Eliminar post"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 dark:text-neutral-500 hover:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            </button>
+          </div>
         )}
       </div>
 

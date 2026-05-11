@@ -314,6 +314,31 @@ export async function setResolucionComment(postId: string, commentId: string | n
 
 // ── Likes ─────────────────────────────────────────────────────────────────────
 
+export async function togglePinPost(postId: string) {
+  const adminUser = await requireAdminUser()
+  if (!adminUser) return { error: 'Sin permiso' }
+
+  const admin = createAdminClient()
+  const { data: post } = await admin
+    .from('posts_comunidad')
+    .select('pinned, tipo')
+    .eq('id', postId)
+    .single()
+
+  if (!post) return { error: 'Post no encontrado' }
+
+  const { error } = await admin
+    .from('posts_comunidad')
+    .update({ pinned: !post.pinned })
+    .eq('id', postId)
+
+  if (error) return { error: 'Error al fijar el post' }
+
+  revalidatePath('/comunidad/dudas')
+  revalidatePath('/comunidad/trabajos')
+  return { pinned: !post.pinned }
+}
+
 export async function toggleCommentLike(
   comentarioId: string
 ): Promise<{ liked: boolean; count: number; error?: string }> {

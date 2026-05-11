@@ -62,7 +62,7 @@ async function DudasContent() {
       .from('posts_comunidad')
       .select(
         `
-        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls,
+        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls, pinned,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol ),
         comentarios!comentarios_post_id_fkey ( id, contenido, imagen_url, created_at, destacado,
           profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol )
@@ -70,6 +70,7 @@ async function DudasContent() {
       `
       )
       .eq('tipo', 'duda')
+      .order('pinned', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50),
     supabase.auth.getUser(),

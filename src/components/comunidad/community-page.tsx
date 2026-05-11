@@ -48,6 +48,7 @@ interface Post {
   ubicacion: string | null
   presupuesto: string | null
   resuelto: boolean
+  pinned?: boolean
   created_at: string
   profiles: Profile | null
   comentarios: Comment[]
