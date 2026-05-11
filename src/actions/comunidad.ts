@@ -314,6 +314,37 @@ export async function setResolucionComment(postId: string, commentId: string | n
 
 // ── Likes ─────────────────────────────────────────────────────────────────────
 
+export async function toggleCommentLike(
+  comentarioId: string
+): Promise<{ liked: boolean; count: number; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { liked: false, count: 0, error: 'No autenticado' }
+
+  const { data: existing } = await supabase
+    .from('likes_comentarios')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .eq('comentario_id', comentarioId)
+    .maybeSingle()
+
+  if (existing) {
+    await supabase.from('likes_comentarios').delete().eq('user_id', user.id).eq('comentario_id', comentarioId)
+  } else {
+    await supabase.from('likes_comentarios').insert({ user_id: user.id, comentario_id: comentarioId })
+  }
+
+  const { count } = await supabase
+    .from('likes_comentarios')
+    .select('*', { count: 'exact', head: true })
+    .eq('comentario_id', comentarioId)
+
+  const newCount = count ?? 0
+  await supabase.from('comentarios').update({ likes_count: newCount }).eq('id', comentarioId)
+
+  return { liked: !existing, count: newCount }
+}
+
 export async function toggleLike(
   postId: string
 ): Promise<{ liked: boolean; count: number; error?: string }> {

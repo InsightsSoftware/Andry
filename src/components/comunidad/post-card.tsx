@@ -13,7 +13,6 @@ import {
   X,
   Loader2,
   Trash2,
-  Star,
   RotateCcw,
   BadgeCheck,
   Heart,
@@ -33,6 +32,7 @@ import {
   getResolucionComment,
   getCommentMediaUrls,
   toggleLike,
+  toggleCommentLike,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -167,6 +167,8 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
   const [removingMedia, setRemovingMedia] = useState<string | null>(null)
+  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({})
+  const [likingCommentId, setLikingCommentId] = useState<string | null>(null)
 
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
@@ -204,6 +206,24 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       setLikeCount(result.count)
     }
     setLikingPost(false)
+  }
+
+  async function handleCommentLike(commentId: string) {
+    if (!currentUserId || likingCommentId) return
+    setLikingCommentId(commentId)
+    const prev = commentLikes[commentId] ?? { count: 0, liked: false }
+    const optimisticLiked = !prev.liked
+    setCommentLikes((m) => ({
+      ...m,
+      [commentId]: { count: optimisticLiked ? prev.count + 1 : Math.max(0, prev.count - 1), liked: optimisticLiked },
+    }))
+    const result = await toggleCommentLike(commentId)
+    if (result.error) {
+      setCommentLikes((m) => ({ ...m, [commentId]: prev })) // rollback
+    } else {
+      setCommentLikes((m) => ({ ...m, [commentId]: { count: result.count, liked: result.liked } }))
+    }
+    setLikingCommentId(null)
   }
 
   async function handleMarkResuelto() {
@@ -558,8 +578,6 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               className={`mb-3 flex gap-2.5 rounded-lg p-3 ${
                 isResolucion
                   ? 'bg-success-50 dark:bg-success-900/20 border border-success-300 dark:border-success-700'
-                  : comment.destacado
-                  ? 'bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800'
                   : 'bg-neutral-50 dark:bg-neutral-800'
               }`}
             >
@@ -583,33 +601,47 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                       Resolvió el problema
                     </span>
                   )}
-                  {comment.destacado && !isResolucion && (
-                    <span className="inline-flex items-center gap-0.5 text-accent-600 dark:text-accent-400 font-semibold">
-                      <Star className="h-3 w-3 fill-current" />
-                      Destacado
-                    </span>
-                  )}
                   <span>·</span>
                   <span>{timeAgo(comment.created_at)}</span>
                 </div>
                 <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
                   {comment.contenido}
                 </p>
-                {/* Reply button */}
-                {currentUserId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const name = comment.profiles?.nombre_completo || 'Usuario'
-                      setCommentText(`@${name} `)
-                      setShowComments(true)
-                    }}
-                    className="mt-1 inline-flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
-                  >
-                    <Reply className="h-3 w-3" />
-                    Responder
-                  </button>
-                )}
+                {/* Inline actions: like + reply */}
+                <div className="mt-1.5 flex items-center gap-3">
+                  {currentUserId && (() => {
+                    const cLike = commentLikes[comment.id] ?? { count: 0, liked: false }
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleCommentLike(comment.id)}
+                        disabled={likingCommentId === comment.id}
+                        className={`inline-flex items-center gap-1 text-[11px] transition-colors cursor-pointer disabled:opacity-40 ${
+                          cLike.liked
+                            ? 'text-rose-500 dark:text-rose-400'
+                            : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
+                        }`}
+                      >
+                        <Heart className={`h-3 w-3 ${cLike.liked ? 'fill-current' : ''}`} />
+                        {cLike.count > 0 && <span>{cLike.count}</span>}
+                      </button>
+                    )
+                  })()}
+                  {currentUserId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = comment.profiles?.nombre_completo || 'Usuario'
+                        setCommentText(`@${name} `)
+                        setShowComments(true)
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
+                    >
+                      <Reply className="h-3 w-3" />
+                      Responder
+                    </button>
+                  )}
+                </div>
                 {/* Comment images: lazy-loaded media_urls + imagen_url fallback (legacy) */}
                 {(() => {
                   const imgs: string[] = (commentMediaMap[comment.id]?.length)
@@ -659,34 +691,17 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   </button>
                 )}
                 {isAdmin && (
-                  <>
-                    <button
-                      onClick={() => handleToggleDestacado(comment)}
-                      disabled={togglingCommentId === comment.id}
-                      title={comment.destacado ? 'Quitar destacado' : 'Destacar comentario'}
-                      className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                        comment.destacado
-                          ? 'text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
-                          : 'text-neutral-400 hover:text-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/30'
-                      }`}
-                    >
-                      {togglingCommentId === comment.id
-                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        : <Star className={`h-3.5 w-3.5 ${comment.destacado ? 'fill-current' : ''}`} />
-                      }
-                    </button>
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      disabled={deletingCommentId === comment.id}
-                      title="Eliminar comentario"
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      {deletingCommentId === comment.id
-                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        : <Trash2 className="h-3.5 w-3.5" />
-                      }
-                    </button>
-                  </>
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    disabled={deletingCommentId === comment.id}
+                    title="Eliminar comentario"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {deletingCommentId === comment.id
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <Trash2 className="h-3.5 w-3.5" />
+                    }
+                  </button>
                 )}
               </div>
             </div>
