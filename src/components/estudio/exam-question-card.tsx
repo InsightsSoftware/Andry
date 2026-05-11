@@ -164,7 +164,7 @@ export function ExamQuestionCard({
                 />
               )}
               {op.text && (
-                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 block pt-0.5">
+                <span className="text-base font-medium text-neutral-800 dark:text-neutral-200 block pt-0.5">
                   {op.text}
                 </span>
               )}
@@ -175,15 +175,15 @@ export function ExamQuestionCard({
 
       {/* Practice feedback */}
       {isPractica && feedback && (
-        <div className="mb-5 rounded-xl border border-success-500 bg-success-600 dark:bg-success-700 p-4 text-sm leading-relaxed text-white">
-          <p className="font-semibold mb-1">
-            {feedback.esCorrecta ? '✓ ¡Correcto!' : '✗ Incorrecto'}
+        <div className="mb-5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-4 text-sm leading-relaxed">
+          <p className="font-semibold mb-1 text-neutral-800 dark:text-neutral-200">
+            Análisis
           </p>
           {feedback.explicacion && (
-            <p className="text-xs leading-relaxed opacity-90">{feedback.explicacion}</p>
+            <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">{feedback.explicacion}</p>
           )}
           {feedback.paginaLibro && feedback.paginaLibro > 0 && (
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-white/70">
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500">
               <BookOpen className="h-3 w-3" />
               Página {feedback.paginaLibro}
             </p>

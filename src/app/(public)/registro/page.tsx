@@ -116,7 +116,7 @@ function RegisterForm() {
         />
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            Oficio <span className="text-danger-500">*</span>
+            Licencia <span className="text-danger-500">*</span>
           </label>
           <select
             name="oficio"
@@ -125,7 +125,7 @@ function RegisterForm() {
             required
             className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
           >
-            <option value="">Seleccionar oficio...</option>
+            <option value="">Seleccionar licencia...</option>
             {OFICIOS_LISTA.map((oficio) => (
               <option key={oficio} value={oficio}>
                 {oficio}

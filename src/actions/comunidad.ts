@@ -312,6 +312,41 @@ export async function setResolucionComment(postId: string, commentId: string | n
   return { success: true }
 }
 
+// ── Likes ─────────────────────────────────────────────────────────────────────
+
+export async function toggleLike(
+  postId: string
+): Promise<{ liked: boolean; count: number; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { liked: false, count: 0, error: 'No autenticado' }
+
+  // Check if already liked
+  const { data: existing } = await supabase
+    .from('likes_comunidad')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .eq('post_id', postId)
+    .maybeSingle()
+
+  if (existing) {
+    await supabase.from('likes_comunidad').delete().eq('user_id', user.id).eq('post_id', postId)
+  } else {
+    await supabase.from('likes_comunidad').insert({ user_id: user.id, post_id: postId })
+  }
+
+  // Recount and sync denormalised column
+  const { count } = await supabase
+    .from('likes_comunidad')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', postId)
+
+  const newCount = count ?? 0
+  await supabase.from('posts_comunidad').update({ likes_count: newCount }).eq('id', postId)
+
+  return { liked: !existing, count: newCount }
+}
+
 export async function setPostResuelto(postId: string, resuelto: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

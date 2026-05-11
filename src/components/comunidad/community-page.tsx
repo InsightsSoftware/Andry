@@ -29,6 +29,7 @@ interface Profile {
   es_mentor?: boolean | null
   oficio?: string | null
   ubicacion?: string | null
+  rol?: string | null
 }
 
 interface Comment {

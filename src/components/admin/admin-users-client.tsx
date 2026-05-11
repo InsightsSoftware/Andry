@@ -351,7 +351,8 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
         (u) =>
           u.email.toLowerCase().includes(q) ||
           (u.nombre_completo || '').toLowerCase().includes(q) ||
-          (u.direccion || '').toLowerCase().includes(q)
+          (u.direccion || '').toLowerCase().includes(q) ||
+          (u.oficio || '').toLowerCase().includes(q)
       )
     }
     return list
@@ -394,7 +395,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, email o dirección..."
+            placeholder="Buscar por nombre, email, dirección o licencia..."
             className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 w-64"
           />
           <button
@@ -419,7 +420,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
                 Email
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
-                Oficio
+                Licencia
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Plan

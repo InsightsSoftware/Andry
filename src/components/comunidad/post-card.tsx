@@ -16,6 +16,9 @@ import {
   Star,
   RotateCcw,
   BadgeCheck,
+  Heart,
+  Users,
+  Reply,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +32,7 @@ import {
   setResolucionComment,
   getResolucionComment,
   getCommentMediaUrls,
+  toggleLike,
 } from '@/actions/comunidad'
 import { AvatarInicial } from './avatar-inicial'
 
@@ -38,6 +42,7 @@ interface Profile {
   es_mentor?: boolean | null
   oficio?: string | null
   ubicacion?: string | null
+  rol?: string | null
 }
 
 interface Comment {
@@ -60,6 +65,7 @@ interface Post {
   resuelto: boolean
   created_at: string
   media_urls?: string[] | null
+  likes_count?: number
   profiles: Profile | null
   comentarios: Comment[]
 }
@@ -87,6 +93,16 @@ function MentorBadge({ profile }: { profile: Profile | null | undefined }) {
   )
 }
 
+function ComunidadBadge({ profile }: { profile: Profile | null | undefined }) {
+  if (profile?.rol !== 'comunidad') return null
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-600 dark:text-violet-400">
+      <Users className="h-2.5 w-2.5" />
+      Comunidad
+    </span>
+  )
+}
+
 function timeAgo(date: string) {
   const seconds = Math.floor(
     (Date.now() - new Date(date).getTime()) / 1000
@@ -109,6 +125,9 @@ interface PostCardProps {
 export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const router = useRouter()
   const [showComments, setShowComments] = useState(false)
+  const [likeCount, setLikeCount] = useState(post.likes_count ?? 0)
+  const [isLiked, setIsLiked] = useState(false)
+  const [likingPost, setLikingPost] = useState(false)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [commentImages, setCommentImages] = useState<{ previewUrl: string; remoteUrl: string | null; uploading: boolean }[]>([])
@@ -168,6 +187,24 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const canResolve = !resuelto && (currentUserId === post.user_id || isAdmin)
 
   if (deleted) return null
+
+  async function handleLike() {
+    if (!currentUserId || likingPost) return
+    setLikingPost(true)
+    const optimisticLiked = !isLiked
+    setIsLiked(optimisticLiked)
+    setLikeCount((c) => optimisticLiked ? c + 1 : Math.max(0, c - 1))
+    const result = await toggleLike(post.id)
+    if (result.error) {
+      // Rollback
+      setIsLiked(!optimisticLiked)
+      setLikeCount((c) => optimisticLiked ? Math.max(0, c - 1) : c + 1)
+    } else {
+      setIsLiked(result.liked)
+      setLikeCount(result.count)
+    }
+    setLikingPost(false)
+  }
 
   async function handleMarkResuelto() {
     setResolving(true)
@@ -283,6 +320,15 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
     if (result.error) {
       setError(result.error)
     } else {
+      // Optimistic: show comment immediately without waiting for page refresh
+      const optimistic: Comment = {
+        id: `opt-${Date.now()}`,
+        contenido: commentText,
+        created_at: new Date().toISOString(),
+        destacado: false,
+        profiles: null,
+      }
+      setLocalComments((prev) => [...prev, optimistic])
       setCommentText('')
       setCommentImages([])
     }
@@ -337,6 +383,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
               {post.profiles?.nombre_completo || 'Usuario'}
             </span>
             <MentorBadge profile={post.profiles} />
+            <ComunidadBadge profile={post.profiles} />
             {post.profiles?.ubicacion && (
               <span className="flex items-center gap-0.5">
                 <MapPin className="h-3 w-3" />
@@ -406,7 +453,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 src={url}
                 controls
                 preload="metadata"
-                className="h-48 w-72 rounded-lg bg-neutral-900 object-cover"
+                className="w-full max-w-xs rounded-lg bg-neutral-900 aspect-video object-contain"
               />
               {isAdmin && (
                 <button
@@ -466,13 +513,31 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
       )}
 
       {/* Actions */}
-      <button
-        onClick={() => setShowComments(!showComments)}
-        className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400"
-      >
-        <MessageCircle className="h-4 w-4" />
-        {localComments?.length || 0} comentarios
-      </button>
+      <div className="flex items-center gap-4">
+        {/* Like */}
+        <button
+          onClick={handleLike}
+          disabled={!currentUserId || likingPost}
+          title={currentUserId ? (isLiked ? 'Quitar me gusta' : 'Me gusta') : 'Inicia sesión para dar me gusta'}
+          className={`flex items-center gap-1.5 text-xs transition-colors cursor-pointer disabled:opacity-40 ${
+            isLiked
+              ? 'text-rose-500 dark:text-rose-400'
+              : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
+          }`}
+        >
+          <Heart className={`h-4 w-4 transition-transform ${isLiked ? 'fill-current scale-110' : ''}`} />
+          {likeCount > 0 && <span>{likeCount}</span>}
+        </button>
+
+        {/* Comments */}
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
+        >
+          <MessageCircle className="h-4 w-4" />
+          {localComments?.length || 0} {localComments?.length === 1 ? 'comentario' : 'comentarios'}
+        </button>
+      </div>
 
       {/* Comments section */}
       {showComments && (
@@ -511,6 +576,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                     {comment.profiles?.nombre_completo || 'Usuario'}
                   </span>
                   <MentorBadge profile={comment.profiles} />
+                  <ComunidadBadge profile={comment.profiles} />
                   {isResolucion && (
                     <span className="inline-flex items-center gap-0.5 text-success-600 dark:text-success-400 font-semibold">
                       <BadgeCheck className="h-3 w-3 fill-current" />
@@ -529,6 +595,21 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
                   {comment.contenido}
                 </p>
+                {/* Reply button */}
+                {currentUserId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const name = comment.profiles?.nombre_completo || 'Usuario'
+                      setCommentText(`@${name} `)
+                      setShowComments(true)
+                    }}
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
+                  >
+                    <Reply className="h-3 w-3" />
+                    Responder
+                  </button>
+                )}
                 {/* Comment images: lazy-loaded media_urls + imagen_url fallback (legacy) */}
                 {(() => {
                   const imgs: string[] = (commentMediaMap[comment.id]?.length)

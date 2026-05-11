@@ -15,14 +15,15 @@ export const loginSchema = z.object({
 })
 
 export const OFICIOS_LISTA = [
-  'Electricidad',
-  'Plomería',
-  'HVAC / A-C',
-  'Albañilería',
-  'Carpintería',
-  'Pintura',
-  'Techos',
-  'Remodelación',
+  'General Contractor',
+  'Building Contractor',
+  'Residential Contractor',
+  'Electrical Contractor',
+  'Specialty Residential Electrical Contractor',
+  'Class A Air-Conditioning Contractor',
+  'Class B Air-Conditioning Contractor',
+  'Plumbing Contractor',
+  'Solar Contractor',
   'Otro',
 ] as const
 
