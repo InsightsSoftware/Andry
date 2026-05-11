@@ -8,18 +8,18 @@ import { PostForm } from './post-form'
 import { PostCard } from './post-card'
 import { ComunidadTour } from '@/components/tour/section-tours'
 
-// Predefined trades for the Trabajos filter — based on the most common
-// FL contractor specialties. Matching is case-insensitive substring
+// FL contractor license types — matching is case-insensitive substring
 // against the post title + content.
 const OFICIOS = [
-  { key: 'electricidad', label: 'Electricidad', match: /electric/i },
-  { key: 'plomeria', label: 'Plomería', match: /plomer|fonta|pipe/i },
-  { key: 'hvac', label: 'HVAC / A-C', match: /hvac|aire\s*acond|climatiza/i },
-  { key: 'albanileria', label: 'Albañilería', match: /alba[nñ]il|mason|concret/i },
-  { key: 'carpinteria', label: 'Carpintería', match: /carpinter|wood/i },
-  { key: 'pintura', label: 'Pintura', match: /pintur|paint/i },
-  { key: 'techos', label: 'Techos', match: /techo|roof/i },
-  { key: 'remodelacion', label: 'Remodelación', match: /remodel|renov/i },
+  { key: 'general', label: 'General Contractor', match: /general\s*contractor/i },
+  { key: 'building', label: 'Building Contractor', match: /building\s*contractor/i },
+  { key: 'residential', label: 'Residential Contractor', match: /residential\s*contractor/i },
+  { key: 'electrical', label: 'Electrical Contractor', match: /electric/i },
+  { key: 'specialty-electrical', label: 'Specialty Residential Electrical', match: /specialty.*electric|electric.*specialty/i },
+  { key: 'ac-a', label: 'Class A Air-Conditioning', match: /class\s*a.*air|a\/c.*class\s*a|air.cond/i },
+  { key: 'ac-b', label: 'Class B Air-Conditioning', match: /class\s*b.*air|a\/c.*class\s*b/i },
+  { key: 'plumbing', label: 'Plumbing Contractor', match: /plumb|plomer|pipe/i },
+  { key: 'solar', label: 'Solar Contractor', match: /solar/i },
 ] as const
 
 type OficioKey = (typeof OFICIOS)[number]['key']
@@ -149,7 +149,7 @@ export function CommunityPage({ tipo, posts, currentUserId, isAdmin }: Community
             <div data-tour="comunidad-filters" className="flex items-start gap-2">
               <div className="mt-1.5 flex shrink-0 items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                 <Filter className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Oficio:</span>
+                <span className="hidden sm:inline">Licencia:</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {OFICIOS.map((o) => {
