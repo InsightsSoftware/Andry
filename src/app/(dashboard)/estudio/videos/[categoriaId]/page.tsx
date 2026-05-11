@@ -109,23 +109,10 @@ export default async function VideosCategoriaPage({
 
         {/* Category header card */}
         <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-          {/* Cover image */}
-          {categoria.imagen_url && (
-            <div className="h-32 overflow-hidden">
-              <img
-                src={categoria.imagen_url}
-                alt={categoria.nombre}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-
           <div className="flex items-start gap-4 p-5">
-            {!categoria.imagen_url && (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/20">
-                <VideoIcon className="h-6 w-6 text-success-500" />
-              </div>
-            )}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/20">
+              <VideoIcon className="h-6 w-6 text-success-500" />
+            </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
                 {categoria.nombre}
