@@ -42,6 +42,7 @@ const links: NavLink[] = [
     excludePrefixes: [
       '/estudio/audios',
       '/estudio/videos',
+      '/estudio/video',   // player individual
       '/estudio/examen',
       '/estudio/resultados',
       '/practica',
@@ -110,6 +111,9 @@ export function Sidebar() {
               ? pathname === '/practica' ||
                 pathname.startsWith('/practica/') ||
                 isPracticaPath
+              : link.href === '/estudio/videos'
+              ? pathname.startsWith('/estudio/videos') ||
+                pathname.startsWith('/estudio/video/')
               : !excluded &&
                 (pathname === link.href ||
                   pathname.startsWith(link.href + '/') ||
