@@ -148,40 +148,40 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
             )}
           </div>
 
-          {/* Oficio filter — only on Trabajos tab */}
+          {/* Licencia filter — only on Trabajos tab, shown as dropdown */}
           {!isDuda && (
-            <div data-tour="comunidad-filters" className="flex items-start gap-2">
-              <div className="mt-1.5 flex shrink-0 items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <Filter className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Licencia:</span>
+            <div data-tour="comunidad-filters" className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+              <div className="relative flex-1 sm:max-w-xs">
+                <select
+                  value={oficio ?? ''}
+                  onChange={(e) => setOficio((e.target.value as OficioKey) || null)}
+                  className={`w-full appearance-none rounded-xl border py-2.5 pl-3 pr-8 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer ${
+                    oficio
+                      ? 'border-primary-500 bg-primary-500/10 text-primary-700 dark:text-primary-300 font-medium'
+                      : 'border-neutral-200 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400'
+                  }`}
+                >
+                  <option value="">Todas las licencias</option>
+                  {OFICIOS.map((o) => (
+                    <option key={o.key} value={o.key}>{o.label}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {OFICIOS.map((o) => {
-                  const active = oficio === o.key
-                  return (
-                    <button
-                      key={o.key}
-                      onClick={() => setOficio(active ? null : o.key)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                        active
-                          ? 'border-primary-500 bg-primary-500 text-white'
-                          : 'border-neutral-200 bg-white text-neutral-600 hover:border-primary-400 hover:text-primary-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-primary-500 dark:hover:text-primary-400'
-                      }`}
-                    >
-                      {o.label}
-                    </button>
-                  )
-                })}
-                {oficio && (
-                  <button
-                    onClick={() => setOficio(null)}
-                    className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400"
-                  >
-                    <X className="h-3 w-3" />
-                    Limpiar
-                  </button>
-                )}
-              </div>
+              {oficio && (
+                <button
+                  onClick={() => setOficio(null)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                  aria-label="Limpiar filtro"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           )}
 
