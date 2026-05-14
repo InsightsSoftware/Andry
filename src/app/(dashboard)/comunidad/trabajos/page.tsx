@@ -80,6 +80,25 @@ async function TrabajosContent() {
   const profile = profileResult.data as { rol?: string; nombre_completo?: string; avatar_url?: string } | null
   const isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
 
+  // Fetch which posts/comments the current user already liked so the UI
+  // shows the correct liked state on first render (not just after interaction).
+  const postIds = (posts || []).map((p: { id: string }) => p.id)
+  const commentIds = (posts || []).flatMap((p: { comentarios?: { id: string }[] }) =>
+    (p.comentarios || []).map((c) => c.id)
+  )
+
+  const [likedPostsResult, likedCommentsResult] = userId && postIds.length > 0
+    ? await Promise.all([
+        supabase.from('likes_comunidad').select('post_id').eq('user_id', userId).in('post_id', postIds),
+        commentIds.length > 0
+          ? supabase.from('likes_comentarios').select('comentario_id').eq('user_id', userId).in('comentario_id', commentIds)
+          : Promise.resolve({ data: [] }),
+      ])
+    : [{ data: [] }, { data: [] }]
+
+  const likedPostIds = ((likedPostsResult.data || []) as { post_id: string }[]).map((l) => l.post_id)
+  const likedCommentIds = ((likedCommentsResult.data || []) as { comentario_id: string }[]).map((l) => l.comentario_id)
+
   return (
     <CommunityPage
       tipo="trabajo"
@@ -88,6 +107,8 @@ async function TrabajosContent() {
       currentUserName={profile?.nombre_completo ?? undefined}
       currentUserAvatar={profile?.avatar_url ?? undefined}
       isAdmin={isAdmin}
+      likedPostIds={likedPostIds}
+      likedCommentIds={likedCommentIds}
     />
   )
 }

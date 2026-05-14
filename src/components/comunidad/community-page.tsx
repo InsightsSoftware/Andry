@@ -45,9 +45,11 @@ interface CommunityPageProps {
   currentUserName?: string
   currentUserAvatar?: string
   isAdmin?: boolean
+  likedPostIds?: string[]
+  likedCommentIds?: string[]
 }
 
-export function CommunityPage({ tipo, posts, currentUserId, currentUserName, currentUserAvatar, isAdmin }: CommunityPageProps) {
+export function CommunityPage({ tipo, posts, currentUserId, currentUserName, currentUserAvatar, isAdmin, likedPostIds, likedCommentIds }: CommunityPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
   const router = useRouter()
@@ -143,7 +145,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
       {filteredPosts.length > 0 ? (
         <div data-tour="comunidad-post-list" className="flex flex-col gap-4">
           {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} currentUserId={currentUserId} currentUserName={currentUserName} currentUserAvatar={currentUserAvatar} isAdmin={isAdmin} />
+            <PostCard key={post.id} post={post} currentUserId={currentUserId} currentUserName={currentUserName} currentUserAvatar={currentUserAvatar} isAdmin={isAdmin} likedPostIds={likedPostIds} likedCommentIds={likedCommentIds} />
           ))}
         </div>
       ) : posts.length > 0 && filteredPosts.length === 0 ? (

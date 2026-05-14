@@ -127,13 +127,15 @@ interface PostCardProps {
   currentUserName?: string
   currentUserAvatar?: string
   isAdmin?: boolean
+  likedPostIds?: string[]
+  likedCommentIds?: string[]
 }
 
-export function PostCard({ post, currentUserId, currentUserName, currentUserAvatar, isAdmin }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserName, currentUserAvatar, isAdmin, likedPostIds, likedCommentIds }: PostCardProps) {
   const router = useRouter()
   const [showComments, setShowComments] = useState(false)
   const [likeCount, setLikeCount] = useState(post.likes_count ?? 0)
-  const [isLiked, setIsLiked] = useState(false)
+  const [isLiked, setIsLiked] = useState(() => likedPostIds?.includes(post.id) ?? false)
   const [likingPost, setLikingPost] = useState(false)
   const [likeAnimKey, setLikeAnimKey] = useState(0)
   const [commenting, setCommenting] = useState(false)
@@ -180,8 +182,10 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
   const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>(() => {
     const initial: Record<string, { count: number; liked: boolean }> = {}
     for (const c of post.comentarios ?? []) {
-      if ((c.likes_count ?? 0) > 0) {
-        initial[c.id] = { count: c.likes_count ?? 0, liked: false }
+      const count = c.likes_count ?? 0
+      const liked = likedCommentIds?.includes(c.id) ?? false
+      if (count > 0 || liked) {
+        initial[c.id] = { count, liked }
       }
     }
     return initial
