@@ -132,9 +132,6 @@ function UserRow({
         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 text-sm">
           {user.email}
         </td>
-        <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-sm">
-          {user.oficio || '—'}
-        </td>
         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize text-sm">
           {user.subscription_plan || 'ninguno'}
         </td>
@@ -160,7 +157,7 @@ function UserRow({
       {/* Expanded detail row */}
       {expanded && (
         <tr className="border-b border-black/5 dark:border-white/5 bg-neutral-50/60 dark:bg-neutral-800/30">
-          <td colSpan={8} className="px-8 py-4">
+          <td colSpan={7} className="px-8 py-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
               {/* Contact */}
               <div>
@@ -432,9 +429,6 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
                 Email
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
-                Licencia
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
                 Plan
               </th>
               <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">
@@ -462,7 +456,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-neutral-500">
+                <td colSpan={7} className="px-4 py-12 text-center text-neutral-500">
                   {search ? 'Sin resultados para esa búsqueda' : 'No hay usuarios en esta categoría'}
                 </td>
               </tr>
