@@ -175,14 +175,14 @@ export function ExamQuestionCard({
 
       {/* Practice feedback */}
       {isPractica && feedback && (
-        <div className="mb-5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-4 text-sm leading-relaxed">
-          <p className="font-semibold mb-1 text-neutral-800 dark:text-neutral-200">
+        <div className="mb-5 rounded-xl border border-success-400 dark:border-success-600 bg-success-50 dark:bg-success-900/15 p-4 text-sm leading-relaxed">
+          <p className="font-semibold mb-1 text-success-700 dark:text-success-400">
             Análisis
           </p>
           {feedback.explicacion && (
             <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">{feedback.explicacion}</p>
           )}
-          {feedback.paginaLibro && feedback.paginaLibro > 0 && (
+          {(feedback.paginaLibro ?? 0) > 0 && (
             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500">
               <BookOpen className="h-3 w-3" />
               Página {feedback.paginaLibro}

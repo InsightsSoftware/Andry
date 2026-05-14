@@ -120,13 +120,10 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
               : 'hover:scale-[1.01]'
           }`}
         >
-          <video
-            src="/videos/practica/libre.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            poster="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
+            alt=""
             className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
@@ -167,13 +164,10 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
               : 'hover:scale-[1.01]'
           }`}
         >
-          <video
-            src="/videos/practica/simulacion.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            poster="https://images.unsplash.com/photo-1704265586142-db3e17d0dea0?auto=format&fit=crop&w=800&q=80"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.unsplash.com/photo-1704265586142-db3e17d0dea0?auto=format&fit=crop&w=800&q=80"
+            alt=""
             className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />

@@ -62,9 +62,9 @@ async function DudasContent() {
       .from('posts_comunidad')
       .select(
         `
-        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls, pinned,
+        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls, pinned, likes_count,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol ),
-        comentarios!comentarios_post_id_fkey ( id, contenido, imagen_url, created_at, destacado,
+        comentarios!comentarios_post_id_fkey ( id, contenido, imagen_url, created_at, destacado, likes_count,
           profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol )
         )
       `

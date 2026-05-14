@@ -54,6 +54,7 @@ interface Comment {
   imagen_url?: string | null
   created_at: string
   destacado?: boolean
+  likes_count?: number
   profiles: Profile | null
 }
 
@@ -173,7 +174,15 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(null)
   const [removingMedia, setRemovingMedia] = useState<string | null>(null)
-  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({})
+  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>(() => {
+    const initial: Record<string, { count: number; liked: boolean }> = {}
+    for (const c of post.comentarios ?? []) {
+      if ((c.likes_count ?? 0) > 0) {
+        initial[c.id] = { count: c.likes_count ?? 0, liked: false }
+      }
+    }
+    return initial
+  })
   const [likingCommentId, setLikingCommentId] = useState<string | null>(null)
 
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
