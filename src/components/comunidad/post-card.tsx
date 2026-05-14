@@ -602,7 +602,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
 
         {/* Comments */}
         <button
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => setShowComments(true)}
           className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
         >
           <MessageCircle className="h-4 w-4" />
@@ -610,215 +610,219 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
         </button>
       </div>
 
-      {/* Comments section */}
+      {/* Comments modal */}
       {showComments && (
-        <div className="mt-4 border-t border-neutral-100 dark:border-neutral-800 pt-4">
-          {[...localComments]
-            .sort((a, b) => {
-              // Pin resolving comment first
-              if (a.id === resolucionCommentId) return -1
-              if (b.id === resolucionCommentId) return 1
-              return 0
-            })
-            .map((comment) => {
-            const isResolucion = comment.id === resolucionCommentId
-            const canMarkResolucion = resuelto && (currentUserId === post.user_id || isAdmin)
-            return (
-            <div
-              key={comment.id}
-              className={`mb-3 flex gap-2.5 rounded-lg p-3 ${
-                isResolucion
-                  ? 'bg-success-50 dark:bg-success-900/20 border border-success-300 dark:border-success-700'
-                  : 'bg-neutral-50 dark:bg-neutral-800'
-              }`}
-            >
-              <AvatarInicial
-                nombre={comment.profiles?.nombre_completo}
-                avatarUrl={comment.profiles?.avatar_url}
-                size="sm"
-                ring={!!comment.profiles?.es_mentor}
-                className="mt-0.5"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-400 dark:text-neutral-500">
-                  <span className="font-medium text-neutral-600 dark:text-neutral-400">
-                    {comment.profiles?.nombre_completo || 'Usuario'}
-                  </span>
-                  <MentorBadge profile={comment.profiles} />
-                  <ComunidadBadge profile={comment.profiles} />
-                  {isResolucion && (
-                    <span className="inline-flex items-center gap-0.5 text-success-600 dark:text-success-400 font-semibold">
-                      <BadgeCheck className="h-3 w-3 fill-current" />
-                      Resolvió el problema
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowComments(false)}
+        >
+          <div
+            className="flex w-full max-w-2xl flex-col rounded-t-2xl sm:rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl"
+            style={{ maxHeight: '85vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-100 dark:border-neutral-800 p-4">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                  {pinned && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-400/30 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                      <Pin className="h-2.5 w-2.5 fill-current" />
+                      Fijado
                     </span>
                   )}
-                  <span>·</span>
-                  <span>{timeAgo(comment.created_at)}</span>
-                </div>
-                <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
-                  {comment.contenido}
-                </p>
-                {/* Inline actions: like + reply */}
-                <div className="mt-1.5 flex items-center gap-3">
-                  {currentUserId && !comment.id.startsWith('opt-') && (() => {
-                    const cLike = commentLikes[comment.id] ?? { count: 0, liked: false }
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => handleCommentLike(comment.id)}
-                        disabled={likingCommentId === comment.id}
-                        className={`inline-flex items-center gap-1 text-[11px] transition-colors cursor-pointer disabled:opacity-40 ${
-                          cLike.liked
-                            ? 'text-rose-500 dark:text-rose-400'
-                            : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
-                        }`}
-                      >
-                        <Heart className={`h-3 w-3 ${cLike.liked ? 'fill-current' : ''}`} />
-                        {cLike.count > 0 && <span>{cLike.count}</span>}
-                      </button>
-                    )
-                  })()}
-                  {currentUserId && !comment.id.startsWith('opt-') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const name = comment.profiles?.nombre_completo || 'Usuario'
-                        setCommentText(`@${name} `)
-                        setShowComments(true)
-                      }}
-                      className="inline-flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
-                    >
-                      <Reply className="h-3 w-3" />
-                      Responder
-                    </button>
+                  {resuelto && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success-500/10 px-2 py-0.5 text-xs font-semibold text-success-600 dark:text-success-400">
+                      <CheckCircle className="h-3 w-3" />
+                      Resuelto
+                    </span>
                   )}
                 </div>
-                {/* Comment images: lazy-loaded media_urls + imagen_url fallback (legacy) */}
-                {(() => {
-                  const imgs: string[] = (commentMediaMap[comment.id]?.length)
-                    ? commentMediaMap[comment.id]
-                    : comment.imagen_url
-                    ? [comment.imagen_url]
-                    : []
-                  if (!imgs.length) return null
+                <h3 className="font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+                  {post.titulo}
+                </h3>
+                <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                  {post.profiles?.nombre_completo || 'Usuario'} · {timeAgo(post.created_at)}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowComments(false)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Comments list — scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {localComments.length === 0 && (
+                <p className="py-8 text-center text-sm text-neutral-400 dark:text-neutral-500">
+                  Sin comentarios todavía. ¡Sé el primero!
+                </p>
+              )}
+              {[...localComments]
+                .sort((a, b) => {
+                  if (a.id === resolucionCommentId) return -1
+                  if (b.id === resolucionCommentId) return 1
+                  return 0
+                })
+                .map((comment) => {
+                  const isResolucion = comment.id === resolucionCommentId
+                  const canMarkResolucion = resuelto && (currentUserId === post.user_id || isAdmin)
                   return (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {imgs.map((url, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setLightboxUrl(url)}
-                          className="h-16 w-16 shrink-0 overflow-hidden rounded-lg cursor-zoom-in group"
-                        >
-                          <img
-                            src={url}
-                            alt={`Imagen ${i + 1}`}
-                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                          />
-                        </button>
-                      ))}
+                    <div
+                      key={comment.id}
+                      className={`flex gap-2.5 rounded-xl p-3 ${
+                        isResolucion
+                          ? 'bg-success-50 dark:bg-success-900/20 border border-success-300 dark:border-success-700'
+                          : 'bg-neutral-50 dark:bg-neutral-800'
+                      }`}
+                    >
+                      <AvatarInicial
+                        nombre={comment.profiles?.nombre_completo}
+                        avatarUrl={comment.profiles?.avatar_url}
+                        size="sm"
+                        ring={!!comment.profiles?.es_mentor}
+                        className="mt-0.5 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-400 dark:text-neutral-500">
+                          <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                            {comment.profiles?.nombre_completo || 'Usuario'}
+                          </span>
+                          <MentorBadge profile={comment.profiles} />
+                          <ComunidadBadge profile={comment.profiles} />
+                          {isResolucion && (
+                            <span className="inline-flex items-center gap-0.5 text-success-600 dark:text-success-400 font-semibold">
+                              <BadgeCheck className="h-3 w-3 fill-current" />
+                              Resolvió el problema
+                            </span>
+                          )}
+                          <span>·</span>
+                          <span>{timeAgo(comment.created_at)}</span>
+                        </div>
+                        <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
+                          {comment.contenido}
+                        </p>
+                        {/* Like + reply */}
+                        <div className="mt-1.5 flex items-center gap-3">
+                          {currentUserId && !comment.id.startsWith('opt-') && (() => {
+                            const cLike = commentLikes[comment.id] ?? { count: 0, liked: false }
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => handleCommentLike(comment.id)}
+                                disabled={likingCommentId === comment.id}
+                                className={`inline-flex items-center gap-1 text-[11px] transition-colors cursor-pointer disabled:opacity-40 ${
+                                  cLike.liked ? 'text-rose-500 dark:text-rose-400' : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
+                                }`}
+                              >
+                                <Heart className={`h-3 w-3 ${cLike.liked ? 'fill-current' : ''}`} />
+                                {cLike.count > 0 && <span>{cLike.count}</span>}
+                              </button>
+                            )
+                          })()}
+                          {currentUserId && !comment.id.startsWith('opt-') && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const name = comment.profiles?.nombre_completo || 'Usuario'
+                                setCommentText(`@${name} `)
+                              }}
+                              className="inline-flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
+                            >
+                              <Reply className="h-3 w-3" />
+                              Responder
+                            </button>
+                          )}
+                        </div>
+                        {/* Comment images */}
+                        {(() => {
+                          const imgs: string[] = commentMediaMap[comment.id]?.length
+                            ? commentMediaMap[comment.id]
+                            : comment.imagen_url ? [comment.imagen_url] : []
+                          if (!imgs.length) return null
+                          return (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {imgs.map((url, i) => (
+                                <button key={i} type="button" onClick={() => setLightboxUrl(url)} className="h-16 w-16 shrink-0 overflow-hidden rounded-lg cursor-zoom-in group">
+                                  <img src={url} alt={`Imagen ${i + 1}`} className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+                                </button>
+                              ))}
+                            </div>
+                          )
+                        })()}
+                      </div>
+                      {/* Admin actions */}
+                      <div className="flex flex-col gap-1 shrink-0">
+                        {canMarkResolucion && !comment.id.startsWith('opt-') && (
+                          <button
+                            onClick={() => handleSetResolucion(comment.id)}
+                            disabled={settingResolucion === comment.id}
+                            title={isResolucion ? 'Quitar como resolución' : 'Marcar como respuesta que resolvió'}
+                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                              isResolucion ? 'text-success-500 bg-success-50 dark:bg-success-900/30' : 'text-neutral-400 hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-900/30'
+                            }`}
+                          >
+                            {settingResolucion === comment.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BadgeCheck className={`h-3.5 w-3.5 ${isResolucion ? 'fill-current' : ''}`} />}
+                          </button>
+                        )}
+                        {isAdmin && !comment.id.startsWith('opt-') && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            disabled={deletingCommentId === comment.id}
+                            title="Eliminar comentario"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {deletingCommentId === comment.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )
-                })()}
-              </div>
-              {/* Actions: resolución (owner/admin) + delete (admin) — hidden on optimistic */}
-              <div className="flex flex-col gap-1 shrink-0">
-                {/* Mark as resolución — visible to post owner or admin when post is resuelto */}
-                {canMarkResolucion && !comment.id.startsWith('opt-') && (
-                  <button
-                    onClick={() => handleSetResolucion(comment.id)}
-                    disabled={settingResolucion === comment.id}
-                    title={isResolucion ? 'Quitar como resolución' : 'Marcar como respuesta que resolvió'}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                      isResolucion
-                        ? 'text-success-500 bg-success-50 dark:bg-success-900/30'
-                        : 'text-neutral-400 hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-900/30'
-                    }`}
-                  >
-                    {settingResolucion === comment.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <BadgeCheck className={`h-3.5 w-3.5 ${isResolucion ? 'fill-current' : ''}`} />
-                    }
-                  </button>
-                )}
-                {isAdmin && !comment.id.startsWith('opt-') && (
-                  <button
-                    onClick={() => handleDeleteComment(comment.id)}
-                    disabled={deletingCommentId === comment.id}
-                    title="Eliminar comentario"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {deletingCommentId === comment.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <Trash2 className="h-3.5 w-3.5" />
-                    }
-                  </button>
-                )}
-              </div>
+                })}
             </div>
-            )
-          })}
 
-          <form onSubmit={handleComment} className="mt-3 flex flex-col gap-2">
-            {/* Image previews (up to 5) */}
-            {commentImages.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {commentImages.map((img, i) => (
-                  <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
-                    <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
-                    {img.uploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      </div>
-                    )}
-                    {!img.uploading && (
-                      <button
-                        type="button"
-                        onClick={() => setCommentImages((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              {/* Image picker button */}
-              <button
-                type="button"
-                onClick={() => imgInputRef.current?.click()}
-                disabled={commentImages.length >= 5}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 hover:border-primary-400 dark:hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Adjuntar imagen (máx. 5)"
-              >
-                <ImagePlus className="h-4 w-4" />
-              </button>
-              <input
-                ref={imgInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                className="hidden"
-                onChange={handleCommentImagePick}
-              />
-
-              <input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Escribe un comentario..."
-                className="flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/30"
-                required
-              />
-              <Button size="sm" type="submit" loading={commenting}>
-                Enviar
-              </Button>
+            {/* Comment form — sticky at bottom */}
+            <div className="shrink-0 border-t border-neutral-100 dark:border-neutral-800 p-4">
+              {error && <p className="mb-2 text-xs text-danger-500">{error}</p>}
+              {commentImages.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {commentImages.map((img, i) => (
+                    <div key={i} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
+                      <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+                      {img.uploading
+                        ? <div className="absolute inset-0 flex items-center justify-center bg-black/50"><Loader2 className="h-4 w-4 animate-spin text-white" /></div>
+                        : <button type="button" onClick={() => setCommentImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"><X className="h-2.5 w-2.5" /></button>
+                      }
+                    </div>
+                  ))}
+                </div>
+              )}
+              <form onSubmit={handleComment} className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => imgInputRef.current?.click()}
+                  disabled={commentImages.length >= 5}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-400 hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:opacity-40"
+                  title="Adjuntar imagen"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </button>
+                <input ref={imgInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" className="hidden" onChange={handleCommentImagePick} />
+                <input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Escribe un comentario..."
+                  className="flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  required
+                />
+                <Button size="sm" type="submit" loading={commenting}>
+                  Enviar
+                </Button>
+              </form>
             </div>
-          </form>
-          {error && (
-            <p className="mt-2 text-xs text-danger-500">{error}</p>
-          )}
+          </div>
         </div>
       )}
     </div>
