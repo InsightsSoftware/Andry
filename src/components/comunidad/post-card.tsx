@@ -15,7 +15,7 @@ import {
   Trash2,
   RotateCcw,
   BadgeCheck,
-  Heart,
+  ThumbsUp,
   Users,
   Reply,
   Pin,
@@ -135,6 +135,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
   const [likeCount, setLikeCount] = useState(post.likes_count ?? 0)
   const [isLiked, setIsLiked] = useState(false)
   const [likingPost, setLikingPost] = useState(false)
+  const [likeAnimKey, setLikeAnimKey] = useState(0)
   const [commenting, setCommenting] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [commentImages, setCommentImages] = useState<{ previewUrl: string; remoteUrl: string | null; uploading: boolean }[]>([])
@@ -210,6 +211,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
   async function handleLike() {
     if (!currentUserId || likingPost) return
     setLikingPost(true)
+    setLikeAnimKey((k) => k + 1)
     const optimisticLiked = !isLiked
     setIsLiked(optimisticLiked)
     setLikeCount((c) => optimisticLiked ? c + 1 : Math.max(0, c - 1))
@@ -592,11 +594,14 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
           title={currentUserId ? (isLiked ? 'Quitar me gusta' : 'Me gusta') : 'Inicia sesión para dar me gusta'}
           className={`flex items-center gap-1.5 text-xs transition-colors cursor-pointer disabled:opacity-40 ${
             isLiked
-              ? 'text-rose-500 dark:text-rose-400'
-              : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
+              ? 'text-primary-500 dark:text-primary-400'
+              : 'text-neutral-400 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400'
           }`}
         >
-          <Heart className={`h-4 w-4 transition-transform ${isLiked ? 'fill-current scale-110' : ''}`} />
+          <ThumbsUp
+            key={likeAnimKey}
+            className={`h-4 w-4 ${isLiked ? 'fill-current like-pop' : ''}`}
+          />
           {likeCount > 0 && <span>{likeCount}</span>}
         </button>
 
@@ -717,7 +722,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
                                   cLike.liked ? 'text-rose-500 dark:text-rose-400' : 'text-neutral-400 dark:text-neutral-500 hover:text-rose-500 dark:hover:text-rose-400'
                                 }`}
                               >
-                                <Heart className={`h-3 w-3 ${cLike.liked ? 'fill-current' : ''}`} />
+                                <ThumbsUp className={`h-3 w-3 ${cLike.liked ? 'fill-current like-pop' : ''}`} />
                                 {cLike.count > 0 && <span>{cLike.count}</span>}
                               </button>
                             )
