@@ -190,14 +190,14 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
-  // Lock body scroll when lightbox is open
+  // Lock body scroll when modal or lightbox is open
   useEffect(() => {
-    if (lightboxUrl) {
+    if (showComments || lightboxUrl) {
       const prev = document.body.style.overflow
       document.body.style.overflow = 'hidden'
       return () => { document.body.style.overflow = prev }
     }
-  }, [lightboxUrl])
+  }, [showComments, lightboxUrl])
 
   const VIDEO_EXTS = ['.mp4', '.mov', '.webm']
   const mediaImages = localMedia.filter((u) => !VIDEO_EXTS.some((e) => u.toLowerCase().includes(e)))
