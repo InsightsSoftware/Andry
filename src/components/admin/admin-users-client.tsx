@@ -182,7 +182,7 @@ function UserRow({
               </div>
 
               {/* Address */}
-              <div className="sm:col-span-2">
+              <div>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
                   Dirección de envío
                 </p>
@@ -193,6 +193,18 @@ function UserRow({
                   </p>
                 ) : (
                   <p className="text-neutral-400 italic">Sin dirección registrada</p>
+                )}
+              </div>
+
+              {/* License */}
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  Licencia
+                </p>
+                {user.oficio ? (
+                  <p className="text-neutral-700 dark:text-neutral-300">{user.oficio}</p>
+                ) : (
+                  <p className="text-neutral-400 italic">Sin licencia registrada</p>
                 )}
               </div>
 

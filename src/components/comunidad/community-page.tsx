@@ -3,26 +3,10 @@
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Plus, Sparkles, Search, X, Filter } from 'lucide-react'
+import { Plus, Sparkles, Search, X } from 'lucide-react'
 import { PostForm } from './post-form'
 import { PostCard } from './post-card'
 import { ComunidadTour } from '@/components/tour/section-tours'
-
-// FL contractor license types — matching is case-insensitive substring
-// against the post title + content.
-const OFICIOS = [
-  { key: 'general', label: 'General Contractor', match: /general\s*contractor/i },
-  { key: 'building', label: 'Building Contractor', match: /building\s*contractor/i },
-  { key: 'residential', label: 'Residential Contractor', match: /residential\s*contractor/i },
-  { key: 'electrical', label: 'Electrical Contractor', match: /electric/i },
-  { key: 'specialty-electrical', label: 'Specialty Residential Electrical', match: /specialty.*electric|electric.*specialty/i },
-  { key: 'ac-a', label: 'Class A Air-Conditioning', match: /class\s*a.*air|a\/c.*class\s*a|air.cond/i },
-  { key: 'ac-b', label: 'Class B Air-Conditioning', match: /class\s*b.*air|a\/c.*class\s*b/i },
-  { key: 'plumbing', label: 'Plumbing Contractor', match: /plumb|plomer|pipe/i },
-  { key: 'solar', label: 'Solar Contractor', match: /solar/i },
-] as const
-
-type OficioKey = (typeof OFICIOS)[number]['key']
 
 interface Profile {
   nombre_completo: string
@@ -66,32 +50,19 @@ interface CommunityPageProps {
 export function CommunityPage({ tipo, posts, currentUserId, currentUserName, currentUserAvatar, isAdmin }: CommunityPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
-  const [oficio, setOficio] = useState<OficioKey | null>(null)
   const router = useRouter()
   const isDuda = tipo === 'duda'
 
-  // Client-side filtering: posts are already fetched server-side, we
-  // just narrow the list. Title is primary signal, content is secondary.
   const filteredPosts = useMemo(() => {
     const query = search.trim().toLowerCase()
-    const oficioMatcher = oficio
-      ? OFICIOS.find((o) => o.key === oficio)?.match
-      : null
-
+    if (!query) return posts
     return posts.filter((post) => {
-      if (query) {
-        const haystack = `${post.titulo} ${post.contenido}`.toLowerCase()
-        if (!haystack.includes(query)) return false
-      }
-      if (oficioMatcher) {
-        const haystack = `${post.titulo} ${post.contenido}`
-        if (!oficioMatcher.test(haystack)) return false
-      }
-      return true
+      const haystack = `${post.titulo} ${post.contenido}`.toLowerCase()
+      return haystack.includes(query)
     })
-  }, [posts, search, oficio])
+  }, [posts, search])
 
-  const hasActiveFilter = search.trim().length > 0 || oficio !== null
+  const hasActiveFilter = search.trim().length > 0
 
   return (
     <div data-tour="comunidad-root">
@@ -119,81 +90,40 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
         </button>
       </div>
 
-      {/* Search + filter bar — always visible */}
-      {(
-        <div className="mb-5 flex flex-col gap-3">
-          {/* Search input */}
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={
-                isDuda
-                  ? 'Buscar por título: ej. "cálculo breaker"...'
-                  : 'Buscar por título: ej. "electricidad Miami"...'
-              }
-              className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-9 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
-              aria-label="Buscar por título"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                aria-label="Limpiar búsqueda"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Licencia filter — only on Trabajos tab, shown as dropdown */}
-          {!isDuda && (
-            <div data-tour="comunidad-filters" className="flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-              <div className="relative flex-1 sm:max-w-xs">
-                <select
-                  value={oficio ?? ''}
-                  onChange={(e) => setOficio((e.target.value as OficioKey) || null)}
-                  className={`w-full appearance-none rounded-xl border py-2.5 pl-3 pr-8 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer ${
-                    oficio
-                      ? 'border-primary-500 bg-primary-500/10 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'border-neutral-200 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400'
-                  }`}
-                >
-                  <option value="">Todas las licencias</option>
-                  {OFICIOS.map((o) => (
-                    <option key={o.key} value={o.key}>{o.label}</option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </div>
-              {oficio && (
-                <button
-                  onClick={() => setOficio(null)}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                  aria-label="Limpiar filtro"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Result count line */}
-          {hasActiveFilter && (
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Mostrando <strong>{filteredPosts.length}</strong> de {posts.length}{' '}
-              {isDuda ? 'dudas' : 'trabajos'}
-            </p>
+      {/* Search bar */}
+      <div className="mb-5 flex flex-col gap-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={
+              isDuda
+                ? 'Buscar por título: ej. "cálculo breaker"...'
+                : 'Buscar por título: ej. "electricidad Miami"...'
+            }
+            className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-9 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+            aria-label="Buscar por título"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
-      )}
+
+        {hasActiveFilter && (
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            Mostrando <strong>{filteredPosts.length}</strong> de {posts.length}{' '}
+            {isDuda ? 'dudas' : 'trabajos'}
+          </p>
+        )}
+      </div>
 
       {/* Post form */}
       {showForm && (
@@ -224,17 +154,14 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
             Sin resultados
           </p>
           <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-            No encontramos {isDuda ? 'dudas' : 'trabajos'} con esos filtros.
+            No encontramos {isDuda ? 'dudas' : 'trabajos'} con esa búsqueda.
           </p>
           <button
-            onClick={() => {
-              setSearch('')
-              setOficio(null)
-            }}
+            onClick={() => setSearch('')}
             className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           >
             <X className="h-4 w-4" />
-            Limpiar filtros
+            Limpiar búsqueda
           </button>
         </div>
       ) : (
