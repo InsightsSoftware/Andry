@@ -106,34 +106,9 @@ export default async function VideosCategoriaPage({
           <ArrowLeft className="h-4 w-4" />
           Videos
         </Link>
-
-        {/* Category header card */}
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-          <div className="flex items-start gap-4 p-5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success-50 dark:bg-success-900/20">
-              <VideoIcon className="h-6 w-6 text-success-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                {categoria.nombre}
-              </h1>
-              <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-                {videoList.length} video{videoList.length !== 1 ? 's' : ''}
-                {duracionTotal > 0 && ` · ${formatSeconds(duracionTotal)}`}
-                {completados > 0 &&
-                  ` · ${completados} visto${completados !== 1 ? 's' : ''}`}
-              </p>
-              {categoria.descripcion && (
-                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                  {categoria.descripcion}
-                </p>
-              )}
-            </div>
-            {completados === videoList.length && videoList.length > 0 && (
-              <CheckCircle2 className="h-6 w-6 shrink-0 text-success-500" />
-            )}
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+          {categoria.nombre}
+        </h1>
       </div>
 
       {/* Video list */}
