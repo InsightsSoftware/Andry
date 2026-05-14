@@ -33,6 +33,7 @@ interface AvatarInicialProps {
   avatarUrl?: string | null
   size?: 'xs' | 'sm' | 'md' | 'lg'
   ring?: boolean
+  goldRing?: boolean
   className?: string
 }
 
@@ -48,11 +49,18 @@ export function AvatarInicial({
   avatarUrl,
   size = 'sm',
   ring = false,
+  goldRing = false,
   className = '',
 }: AvatarInicialProps) {
   const name = nombre?.trim() || 'Usuario'
   const initials = getInitials(name)
   const color = COLORS[hashString(name) % COLORS.length]
+
+  const ringClass = goldRing
+    ? 'ring-cc-gold'
+    : ring
+      ? `ring-2 ${color.ring}`
+      : ''
 
   // If user has a real photo, show it
   if (avatarUrl) {
@@ -62,18 +70,14 @@ export function AvatarInicial({
         src={avatarUrl}
         alt={name}
         title={name}
-        className={`inline-block shrink-0 rounded-full object-cover ${sizeMap[size]} ${
-          ring ? `ring-2 ${color.ring}` : ''
-        } ${className}`}
+        className={`inline-block shrink-0 rounded-full object-cover ${sizeMap[size]} ${ringClass} ${className}`}
       />
     )
   }
 
   return (
     <div
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${sizeMap[size]} ${color.bg} ${color.text} ${
-        ring ? `ring-2 ${color.ring}` : ''
-      } ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${sizeMap[size]} ${color.bg} ${color.text} ${ringClass} ${className}`}
       aria-label={name}
       title={name}
     >

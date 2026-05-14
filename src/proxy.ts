@@ -83,15 +83,16 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Users with 'comunidad' role: only allow /comunidad and /perfil, block everything else
+    // Users with 'comunidad' (CC — Contratistas Certificados) role:
+    // only allow /comunidad (includes /trabajos and /dudas) and /perfil.
     if (profile?.rol === 'comunidad') {
-      const allowedForComunidad = ['/comunidad', '/perfil']
-      if (!allowedForComunidad.some((r) => pathname.startsWith(r))) {
+      const allowedForCC = ['/comunidad', '/perfil']
+      if (!allowedForCC.some((r) => pathname.startsWith(r))) {
         const url = request.nextUrl.clone()
-        url.pathname = '/comunidad'
+        url.pathname = '/comunidad/trabajos'
         return NextResponse.redirect(url)
       }
-      // Skip subscription check for comunidad role
+      // Skip subscription check for CC role
       return response
     }
 

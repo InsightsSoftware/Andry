@@ -230,6 +230,17 @@ body {
   color: var(--fg-muted);
 }
 
+/* ─── CC (Contratistas Certificados) gold ring animation ─── */
+
+@keyframes cc-gold-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.75), 0 0 8px rgba(212, 168, 67, 0.25); }
+  50%       { box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.35), 0 0 4px rgba(212, 168, 67, 0.10); }
+}
+
+.ring-cc-gold {
+  animation: cc-gold-pulse 2.8s ease-in-out infinite;
+}
+
 /* ─── Like button animation ─────────────────────────────── */
 
 @keyframes like-pop {

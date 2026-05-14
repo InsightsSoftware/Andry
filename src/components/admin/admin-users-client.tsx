@@ -305,7 +305,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setRol(e.target.value as 'comunidad' | 'estudiante')}
                 className="mt-1 w-full rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none"
               >
-                <option value="comunidad">Comunidad (solo foros)</option>
+                <option value="comunidad">CC — Contratista Certificado (solo comunidad)</option>
                 <option value="estudiante">Estudiante (acceso completo)</option>
               </select>
             </div>

@@ -84,8 +84,8 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
     },
     comunidad: {
       icon: Users2,
-      label: 'Comunidad',
-      cls: 'bg-sky-500/10 text-sky-400 border-sky-500/20 hover:bg-sky-500/[0.15]',
+      label: 'CC',
+      cls: 'bg-accent-500/10 text-accent-500 border-accent-400/30 hover:bg-accent-500/[0.15] dark:text-accent-400',
     },
     estudiante: {
       icon: User,
@@ -115,7 +115,7 @@ export function UserRoleToggle({ userId, currentRole, callerRole, callerId }: Us
             ? 'Root — no se puede modificar'
             : isSelf
               ? 'No puedes cambiar tu propio rol'
-              : `Click para cambiar a ${role === 'admin' ? 'estudiante' : role === 'estudiante' ? 'comunidad' : 'admin'}`
+              : `Click para cambiar a ${role === 'admin' ? 'estudiante' : role === 'estudiante' ? 'CC' : 'admin'}`
         }
       >
         <Icon className="h-3 w-3" />

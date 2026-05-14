@@ -98,12 +98,12 @@ function MentorBadge({ profile }: { profile: Profile | null | undefined }) {
   )
 }
 
-function ComunidadBadge({ profile }: { profile: Profile | null | undefined }) {
+function CCBadge({ profile }: { profile: Profile | null | undefined }) {
   if (profile?.rol !== 'comunidad') return null
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-600 dark:text-violet-400">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent-400/50 bg-accent-400/10 px-2 py-0.5 text-[10px] font-semibold text-accent-500 dark:text-accent-400">
       <Users className="h-2.5 w-2.5" />
-      Comunidad
+      CC
     </span>
   )
 }
@@ -395,7 +395,8 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
           nombre={post.profiles?.nombre_completo}
           avatarUrl={post.profiles?.avatar_url}
           size="md"
-          ring={!!post.profiles?.es_mentor}
+          ring={!!post.profiles?.es_mentor && post.profiles?.rol !== 'comunidad'}
+          goldRing={post.profiles?.rol === 'comunidad'}
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -441,7 +442,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
               {post.profiles?.nombre_completo || 'Usuario'}
             </span>
             <MentorBadge profile={post.profiles} />
-            <ComunidadBadge profile={post.profiles} />
+            <CCBadge profile={post.profiles} />
             {post.profiles?.ubicacion && (
               <span className="flex items-center gap-0.5">
                 <MapPin className="h-3 w-3" />
@@ -691,7 +692,8 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
                         nombre={comment.profiles?.nombre_completo}
                         avatarUrl={comment.profiles?.avatar_url}
                         size="sm"
-                        ring={!!comment.profiles?.es_mentor}
+                        ring={!!comment.profiles?.es_mentor && comment.profiles?.rol !== 'comunidad'}
+                        goldRing={comment.profiles?.rol === 'comunidad'}
                         className="mt-0.5 shrink-0"
                       />
                       <div className="min-w-0 flex-1">
@@ -700,7 +702,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
                             {comment.profiles?.nombre_completo || 'Usuario'}
                           </span>
                           <MentorBadge profile={comment.profiles} />
-                          <ComunidadBadge profile={comment.profiles} />
+                          <CCBadge profile={comment.profiles} />
                           {isResolucion && (
                             <span className="inline-flex items-center gap-0.5 text-success-600 dark:text-success-400 font-semibold">
                               <BadgeCheck className="h-3 w-3 fill-current" />
