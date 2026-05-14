@@ -124,10 +124,12 @@ function timeAgo(date: string) {
 interface PostCardProps {
   post: Post
   currentUserId?: string
+  currentUserName?: string
+  currentUserAvatar?: string
   isAdmin?: boolean
 }
 
-export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserName, currentUserAvatar, isAdmin }: PostCardProps) {
   const router = useRouter()
   const [showComments, setShowComments] = useState(false)
   const [likeCount, setLikeCount] = useState(post.likes_count ?? 0)
@@ -368,7 +370,9 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
         contenido: commentText,
         created_at: new Date().toISOString(),
         destacado: false,
-        profiles: null,
+        profiles: currentUserName
+          ? { nombre_completo: currentUserName, avatar_url: currentUserAvatar ?? null }
+          : null,
       }
       setLocalComments((prev) => [...prev, optimistic])
       setCommentText('')
@@ -656,7 +660,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                 </p>
                 {/* Inline actions: like + reply */}
                 <div className="mt-1.5 flex items-center gap-3">
-                  {currentUserId && (() => {
+                  {currentUserId && !comment.id.startsWith('opt-') && (() => {
                     const cLike = commentLikes[comment.id] ?? { count: 0, liked: false }
                     return (
                       <button
@@ -674,7 +678,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                       </button>
                     )
                   })()}
-                  {currentUserId && (
+                  {currentUserId && !comment.id.startsWith('opt-') && (
                     <button
                       type="button"
                       onClick={() => {
@@ -717,10 +721,10 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                   )
                 })()}
               </div>
-              {/* Actions: resolución (owner/admin) + destacar + delete (admin) */}
+              {/* Actions: resolución (owner/admin) + delete (admin) — hidden on optimistic */}
               <div className="flex flex-col gap-1 shrink-0">
                 {/* Mark as resolución — visible to post owner or admin when post is resuelto */}
-                {canMarkResolucion && (
+                {canMarkResolucion && !comment.id.startsWith('opt-') && (
                   <button
                     onClick={() => handleSetResolucion(comment.id)}
                     disabled={settingResolucion === comment.id}
@@ -737,7 +741,7 @@ export function PostCard({ post, currentUserId, isAdmin }: PostCardProps) {
                     }
                   </button>
                 )}
-                {isAdmin && (
+                {isAdmin && !comment.id.startsWith('opt-') && (
                   <button
                     onClick={() => handleDeleteComment(comment.id)}
                     disabled={deletingCommentId === comment.id}

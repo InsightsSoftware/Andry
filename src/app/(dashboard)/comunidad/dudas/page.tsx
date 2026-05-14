@@ -75,13 +75,13 @@ async function DudasContent() {
       .limit(50),
     supabase.auth.getUser(),
     userId
-      ? supabase.from('profiles').select('rol').eq('id', userId).single()
+      ? supabase.from('profiles').select('rol, nombre_completo, avatar_url').eq('id', userId).single()
       : Promise.resolve({ data: null, error: null }),
   ])
 
   if (postsError) console.error('[DudasPage] posts query error:', JSON.stringify(postsError))
 
-  const profile = profileResult.data as { rol?: string } | null
+  const profile = profileResult.data as { rol?: string; nombre_completo?: string; avatar_url?: string } | null
   const isAdmin = profile?.rol === 'admin' || profile?.rol === 'root'
 
   return (
@@ -89,6 +89,8 @@ async function DudasContent() {
       tipo="duda"
       posts={(posts as never[]) || []}
       currentUserId={user?.id}
+      currentUserName={profile?.nombre_completo ?? undefined}
+      currentUserAvatar={profile?.avatar_url ?? undefined}
       isAdmin={isAdmin}
     />
   )
