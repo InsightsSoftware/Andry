@@ -370,15 +370,15 @@ export default async function ResultadosPage({
                 </div>
               )}
 
-              {/* Explanation — green when correct, red when wrong, neutral when skipped */}
+              {/* Explanation — green when correct, red when wrong, neutral border when skipped */}
               {pregunta.explicacion && (
                 <div
-                  className={`ml-10 rounded-lg p-3 text-xs leading-relaxed ${
+                  className={`ml-10 rounded-lg border p-3 text-xs leading-relaxed ${
                     estado === 'correcta'
-                      ? 'bg-success-50 dark:bg-success-900/20 text-success-800 dark:text-success-300 border border-success-200 dark:border-success-800'
+                      ? 'bg-success-50 dark:bg-success-900/20 text-success-800 dark:text-success-300 border-success-200 dark:border-success-800'
                       : estado === 'incorrecta'
-                        ? 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-800'
-                        : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                        ? 'bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-300 border-danger-200 dark:border-danger-800'
+                        : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700'
                   }`}
                 >
                   <span className="font-bold">Análisis:</span>{' '}{pregunta.explicacion}
@@ -386,7 +386,7 @@ export default async function ResultadosPage({
               )}
 
               {/* Page reference */}
-              {pregunta.pagina_libro && pregunta.pagina_libro > 0 && (
+              {(pregunta.pagina_libro ?? 0) > 0 && (
                 <div className="ml-10 mt-2 flex items-center gap-1 text-[10px] text-neutral-400 dark:text-neutral-500">
                   <BookOpen className="h-3 w-3" />
                   Página {pregunta.pagina_libro}
