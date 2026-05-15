@@ -122,7 +122,7 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.pexels.com/photos/8482865/pexels-photo-8482865.jpeg?auto=compress&cs=tinysrgb&w=800"
+            src="/images/practica-libre.jpg"
             alt=""
             className="absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
           />
