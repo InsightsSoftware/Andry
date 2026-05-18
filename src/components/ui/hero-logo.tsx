@@ -45,8 +45,8 @@ export function HeroLogo() {
               src="/logo.png"
               alt="Y Exam Prep"
               width={600}
-              height={370}
-              className="hero-logo-img relative z-[1] h-auto w-[300px] sm:w-[360px] lg:w-[400px]"
+              height={600}
+              className="hero-logo-img relative z-[1] h-auto w-[280px] sm:w-[340px] lg:w-[380px]"
               priority
             />
 
