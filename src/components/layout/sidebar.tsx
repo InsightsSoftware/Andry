@@ -84,14 +84,14 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:sticky md:top-0 md:h-screen glass-sidebar">
-      <div className="relative flex h-32 items-center justify-center border-b border-black/5 dark:border-white/5 px-3">
-        <Link href="/panel" className="flex items-center justify-center">
+      <div className="relative flex h-28 items-center justify-center border-b border-black/5 dark:border-white/5 px-2">
+        <Link href="/panel" className="flex w-full items-center justify-center">
           <Image
             src="/logo-horizontal.png"
             alt="Y Exam Prep"
             width={400}
             height={400}
-            className="h-28 w-auto"
+            className="w-full h-auto object-contain"
           />
         </Link>
         <div className="absolute top-2 right-2">
