@@ -91,7 +91,7 @@ export function Sidebar() {
             alt="Y Exam Prep"
             width={400}
             height={400}
-            className="w-full h-auto object-contain"
+            className="w-[calc(100%-20px)] h-auto object-contain"
           />
         </Link>
         <div className="absolute top-2 right-2">
