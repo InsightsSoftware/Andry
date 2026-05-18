@@ -7,7 +7,6 @@ import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
 import {
   BookOpen,
   Headphones,
-  Brain,
   Trophy,
   CheckCircle,
   ArrowRight,
@@ -56,9 +55,14 @@ function HeroSection() {
 
         <p className="mx-auto mb-10 max-w-2xl text-lg text-neutral-600 dark:text-neutral-400 sm:text-xl leading-relaxed">
           La plataforma de estudio en español diseñada para contratistas hispanos.
-          Audiolibros, PDF interactivo, banco de preguntas y asistente IA para
+          Audiolibros, PDF interactivo, banco de preguntas y comunidad para
           que pases tu examen de licencia a la primera.
         </p>
+
+        {/* VSL — Video de Ventas Principal */}
+        <div className="mx-auto mb-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-primary-900/30 aspect-video flex items-center justify-center">
+          <p className="text-neutral-400 text-sm">Video de demostración próximamente</p>
+        </div>
 
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
@@ -147,9 +151,11 @@ function ProblemSection() {
     'Estudiá la guía oficial con ejemplos claros y en español',
     'Escuchá los audiolibros mientras manejás o trabajás',
     'Practicá con preguntas reales del examen por capítulo',
-    'Consultá el asistente IA cuando tengas una duda',
+    'Consulta a Contratistas Certificados en nuestro foro de Comunidad 24/7.',
     'Simulá el examen real con cronómetro y condiciones idénticas',
     'Aprendé al ritmo que tu jornada de trabajo te permite',
+    'Chocas con la barrera del idioma y con cursos que solo ofrecen malas traducciones.',
+    'Caes en las trampas del Estado: el examen evalúa tu velocidad para interpretar leyes bajo presión, no tus años de experiencia.',
   ]
 
   return (
@@ -221,9 +227,9 @@ function FeaturesRowSection() {
       color: 'text-sky-400',
     },
     {
-      icon: Brain,
-      title: 'IA a tu Lado',
-      desc: 'El tutor inteligente que te guía y aclara dudas en cada momento del proceso.',
+      icon: FileText,
+      title: 'Buscador Inteligente de PDFs',
+      desc: 'Encontrá cualquier ley, artículo o concepto en segundos dentro de los libros oficiales.',
       color: 'text-primary-400',
     },
     {
@@ -361,11 +367,20 @@ function ServicesSection() {
     {
       icon: Users,
       title: 'Comunidad + Apoyo Completo',
-      desc: 'Comunidad exclusiva de contratistas hispanos. Asistente IA disponible 24/7 para resolver dudas. Videos explicativos para los temas más difíciles.',
+      desc: 'Comunidad exclusiva de contratistas hispanos. Foro 24/7 con Contratistas Certificados para resolver dudas. Videos explicativos para los temas más difíciles.',
       gradient: 'from-success-500/10 to-success-400/3',
       iconBg: 'bg-success-500/10 border-success-500/20',
       iconColor: 'text-success-400',
       badge: null,
+    },
+    {
+      icon: Hammer,
+      title: 'Red de Aliados Comerciales',
+      desc: 'Accedé a proveedores, subcontratistas y socios de confianza dentro de la comunidad. Conectate con quienes hacen crecer tu negocio.',
+      gradient: 'from-accent-500/8 to-primary-500/4',
+      iconBg: 'bg-accent-500/10 border-accent-500/20',
+      iconColor: 'text-accent-400',
+      badge: 'Nuevo',
     },
   ]
 
@@ -384,7 +399,7 @@ function ServicesSection() {
           </p>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((item) => (
             <div
               key={item.title}
@@ -502,6 +517,14 @@ function TestimonialsSection() {
 function FAQSection() {
   const faqs = [
     {
+      q: '¿Necesito tener mi compañía abierta para usar la plataforma?',
+      a: 'No. Podés estudiar y prepararte sin necesidad de tener tu empresa constituida. La plataforma está diseñada para que arranques desde cero y llegues al examen listo.',
+    },
+    {
+      q: '¿El precio incluye los libros oficiales del examen?',
+      a: 'Sí. El contenido de la plataforma está basado en los libros oficiales del DBPR de Florida. Incluye la guía digital interactiva, audiolibros y banco de preguntas — todo en español.',
+    },
+    {
       q: '¿Es compatible con mi celular o solo computadora?',
       a: 'La plataforma es 100% mobile-first. Funciona perfectamente en tu teléfono, tablet o computadora — sin necesidad de instalar nada.',
     },
@@ -583,11 +606,11 @@ function PricingSection() {
             <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Digital Orga</h3>
             <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">Acceso digital completo</p>
             <div className="mb-6">
-              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$299</span>
+              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$447</span>
               <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 6 meses</span>
             </div>
             <ul className="mb-6 flex flex-col gap-2">
-              {['PDF interactivo', 'Audiolibros', 'Banco de preguntas', 'Simulacro de examen', 'Asistente IA 24/7', 'Acceso a la comunidad'].map((f) => (
+              {['PDF interactivo', 'Audiolibros', 'Banco de preguntas', 'Simulacro de examen', 'Acceso a la comunidad de contratistas', 'Red de Aliados Comerciales'].map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                   <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                   {f}
@@ -617,11 +640,11 @@ function PricingSection() {
               <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Todo Incluido</h3>
               <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">Digital + guía física en casa</p>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$599</span>
+                <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$597</span>
                 <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 12 meses</span>
               </div>
               <ul className="mb-6 flex flex-col gap-2">
-                {['Todo del Plan Básico', '12 meses de acceso', 'Guía física enviada a tu casa', 'Comunidad VIP', 'Soporte prioritario'].map((f) => (
+                {['Todo del Plan Básico', '12 meses de acceso', 'Guía física enviada a tu casa', 'Comunidad VIP de contratistas', 'Red de Aliados Comerciales', 'Soporte prioritario'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                     {f}
