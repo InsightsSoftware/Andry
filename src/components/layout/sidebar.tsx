@@ -87,11 +87,11 @@ export function Sidebar() {
       <div className="flex h-32 items-center justify-between border-b border-black/5 dark:border-white/5 px-3">
         <Link href="/panel" className="flex items-center">
           <Image
-            src="/logo.png"
+            src="/logo-horizontal.png"
             alt="Y Exam Prep"
-            width={280}
-            height={84}
-            className="h-24 w-auto"
+            width={400}
+            height={400}
+            className="h-16 w-auto"
           />
         </Link>
         <ThemeToggle />

@@ -8,10 +8,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo / Home */}
         <Link href="/" className="flex items-center gap-2 shrink-0 cursor-pointer">
-          <Image src="/logo.png" alt="Y Exam Prep" width={32} height={32} className="h-8 w-auto" />
-          <span className="hidden sm:block text-sm font-semibold text-neutral-900 dark:text-white">
-            Y Exam Prep
-          </span>
+          <Image src="/logo-horizontal.png" alt="Y Exam Prep" width={400} height={400} className="h-8 w-auto" />
         </Link>
 
         {/* Desktop nav */}
