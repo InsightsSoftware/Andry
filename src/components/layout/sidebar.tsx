@@ -84,8 +84,8 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:sticky md:top-0 md:h-screen glass-sidebar">
-      <div className="flex h-32 items-center justify-between border-b border-black/5 dark:border-white/5 px-3">
-        <Link href="/panel" className="flex items-center">
+      <div className="relative flex h-32 items-center justify-center border-b border-black/5 dark:border-white/5 px-3">
+        <Link href="/panel" className="flex items-center justify-center">
           <Image
             src="/logo-horizontal.png"
             alt="Y Exam Prep"
@@ -94,7 +94,9 @@ export function Sidebar() {
             className="h-28 w-auto"
           />
         </Link>
-        <ThemeToggle />
+        <div className="absolute top-2 right-2">
+          <ThemeToggle />
+        </div>
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
         {links.map((link) => {
