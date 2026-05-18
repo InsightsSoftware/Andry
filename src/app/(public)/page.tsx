@@ -604,11 +604,14 @@ function PricingSection() {
           </div>
 
           {/* Premium */}
-          <div className="relative rounded-2xl p-6 sm:p-8 glass-card overflow-hidden border-primary-500/40 glow-purple">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent pointer-events-none" />
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-              <span className="inline-flex items-center gap-1 rounded-full btn-purple px-4 py-1 text-xs font-bold text-white">
-                <Star className="h-3 w-3" />
+          <div className="relative rounded-2xl p-6 sm:p-8 glass-card border-primary-500/40 glow-purple">
+            {/* Gradient clipped separately so overflow-hidden doesn't cut the badge */}
+            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-transparent" />
+            </div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              <span className="inline-flex items-center gap-1.5 rounded-full btn-purple px-4 py-1.5 text-xs font-bold text-white shadow-lg shadow-primary-600/30">
+                <Star className="h-3 w-3 fill-current" />
                 Más Popular
               </span>
             </div>
