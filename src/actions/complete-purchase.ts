@@ -70,19 +70,23 @@ export async function completePurchase(
   })
 
   if (createError) {
-    // Supabase returns this when email is already taken
+    const msg = createError.message.toLowerCase()
+    // Supabase returns several variants when email is already taken
     if (
-      createError.message.toLowerCase().includes('already registered') ||
-      createError.message.toLowerCase().includes('user already registered') ||
-      createError.message.toLowerCase().includes('email already exists')
+      msg.includes('already registered') ||
+      msg.includes('already exists') ||
+      msg.includes('email address already') ||
+      msg.includes('duplicate') ||
+      msg.includes('unique') ||
+      createError.status === 422
     ) {
       return {
         error:
           'Este correo ya tiene una cuenta activa. Iniciá sesión en su lugar.',
       }
     }
-    console.error('[completePurchase] createUser error:', createError)
-    return { error: 'Error al crear la cuenta. Intentá de nuevo.' }
+    console.error('[completePurchase] createUser error:', createError.message, createError.status)
+    return { error: `Error al crear la cuenta: ${createError.message}` }
   }
 
   const userId = created.user.id
