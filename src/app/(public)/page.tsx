@@ -282,29 +282,6 @@ function FeaturesRowSection() {
   )
 }
 
-function StatsSection() {
-  const stats = [
-    { value: '8+', label: 'Años de Excelencia' },
-    { value: '100%', label: 'Contenido en Español' },
-    { value: '24/7', label: 'Asistencia Humana' },
-    { value: '1', label: 'Comunidad Activa' },
-  ]
-
-  return (
-    <section className="px-4 py-14">
-      <div className="mx-auto max-w-5xl grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="text-center glass-card rounded-2xl py-6 px-4">
-            <p className="text-3xl font-extrabold text-gold">{s.value}</p>
-            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              {s.label}
-            </p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
 
 function ForWhoSection() {
   const bullets = [
@@ -704,7 +681,7 @@ export default function LandingPage() {
       <ForYouSection />
       <ProblemSection />
       <FeaturesRowSection />
-      <StatsSection />
+
       <ForWhoSection />
       <ServicesSection />
       <CTABannerSection />
