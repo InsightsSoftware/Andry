@@ -86,12 +86,21 @@ export function Sidebar() {
     <aside className="hidden md:flex md:w-64 md:flex-col md:sticky md:top-0 md:h-screen glass-sidebar">
       <div className="relative flex h-28 items-center justify-center border-b border-black/5 dark:border-white/5 px-2">
         <Link href="/panel" className="flex w-full items-center justify-center">
+          {/* Dark mode logo (gold) */}
           <Image
             src="/logo-horizontal.png"
             alt="Y Exam Prep"
             width={400}
             height={400}
-            className="w-[calc(100%-70px)] h-auto object-contain"
+            className="hidden dark:block w-[calc(100%-70px)] h-auto object-contain"
+          />
+          {/* Light mode logo (purple) */}
+          <Image
+            src="/logo-horizontal-light.png"
+            alt="Y Exam Prep"
+            width={400}
+            height={400}
+            className="block dark:hidden w-[calc(100%-70px)] h-auto object-contain"
           />
         </Link>
         <div className="absolute top-2 right-2">
