@@ -103,10 +103,10 @@ function LoginForm() {
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
           ¿No tienes cuenta?{' '}
           <Link
-            href="/registro"
+            href="/precios"
             className="font-semibold text-primary-600 hover:underline"
           >
-            Regístrate
+            Ver planes
           </Link>
         </p>
       </div>
