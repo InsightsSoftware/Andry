@@ -78,18 +78,18 @@ export function Footer() {
           <div className="flex flex-col gap-3">
             <p className="font-bold text-white text-base">Contáctanos</p>
             <a
-              href="tel:7862860546"
+              href="tel:3862862486"
               className="flex items-center gap-2.5 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
             >
               <Phone className="h-4 w-4 shrink-0" />
-              (786) 286-0546
+              (386) 286-2486
             </a>
             <a
-              href="mailto:andrymelgares@gmail.com"
+              href="mailto:info@yexamprep.com"
               className="flex items-center gap-2.5 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
             >
               <Mail className="h-4 w-4 shrink-0" />
-              andrymelgares@gmail.com
+              info@yexamprep.com
             </a>
           </div>
         </div>
