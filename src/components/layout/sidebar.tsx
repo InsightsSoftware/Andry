@@ -91,7 +91,7 @@ export function Sidebar() {
             alt="Y Exam Prep"
             width={400}
             height={400}
-            className="h-20 w-auto"
+            className="h-28 w-auto"
           />
         </Link>
         <ThemeToggle />
