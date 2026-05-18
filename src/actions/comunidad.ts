@@ -174,13 +174,17 @@ export async function createComment(formData: FormData) {
   const legacyUrl = (formData.get('imagen_url') as string)?.trim()
   if (legacyUrl && !mediaUrls.includes(legacyUrl)) mediaUrls.push(legacyUrl)
 
-  const { error } = await supabase.from('comentarios').insert({
-    post_id: postId,
-    user_id: user.id,
-    contenido,
-    ...(result.data.parent_id ? { parent_id: result.data.parent_id } : {}),
-    ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
-  })
+  const { data: inserted, error } = await supabase
+    .from('comentarios')
+    .insert({
+      post_id: postId,
+      user_id: user.id,
+      contenido,
+      ...(result.data.parent_id ? { parent_id: result.data.parent_id } : {}),
+      ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
+    })
+    .select('id, parent_id, created_at')
+    .single()
 
   if (error) {
     console.error('Error creating comment:', error)
@@ -189,7 +193,7 @@ export async function createComment(formData: FormData) {
 
   revalidatePath('/comunidad/dudas')
   revalidatePath('/comunidad/trabajos')
-  return { success: true }
+  return { success: true, comment: { id: inserted.id, parent_id: inserted.parent_id ?? null, created_at: inserted.created_at } }
 }
 
 // ── Admin-only actions ────────────────────────────────────────────────────────

@@ -403,11 +403,37 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
 
     setCommenting(true)
 
+    // Snapshot values before clearing inputs
+    const textToSend = commentText
+    const imagesToSend = [...commentImages]
+    const parentId = replyingTo?.id ?? null
+
+    // 1. Add optimistic comment IMMEDIATELY (before server call)
+    const optimisticId = `opt-${Date.now()}`
+    const optimistic: Comment = {
+      id: optimisticId,
+      user_id: currentUserId,
+      parent_id: parentId,
+      contenido: textToSend,
+      created_at: new Date().toISOString(),
+      destacado: false,
+      profiles: currentUserName
+        ? { nombre_completo: currentUserName, avatar_url: currentUserAvatar ?? null }
+        : null,
+    }
+    setLocalComments((prev) => [...prev, optimistic])
+
+    // 2. Clear inputs right away (UX: feels instant)
+    setCommentText('')
+    setCommentImages([])
+    setReplyingTo(null)
+
+    // 3. Call server action
     const formData = new FormData()
     formData.set('post_id', post.id)
-    formData.set('contenido', commentText)
-    if (replyingTo) formData.set('parent_id', replyingTo.id)
-    commentImages.forEach((img, i) => {
+    formData.set('contenido', textToSend)
+    if (parentId) formData.set('parent_id', parentId)
+    imagesToSend.forEach((img, i) => {
       if (img.remoteUrl) formData.set(`media_url_${i}`, img.remoteUrl)
     })
 
@@ -415,23 +441,19 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
 
     if (result.error) {
       setError(result.error)
-    } else {
-      // Optimistic: show comment immediately without waiting for page refresh
-      const optimistic: Comment = {
-        id: `opt-${Date.now()}`,
-        parent_id: replyingTo?.id ?? null,
-        contenido: commentText,
-        created_at: new Date().toISOString(),
-        destacado: false,
-        profiles: currentUserName
-          ? { nombre_completo: currentUserName, avatar_url: currentUserAvatar ?? null }
-          : null,
-      }
-      setLocalComments((prev) => [...prev, optimistic])
-      setCommentText('')
-      setCommentImages([])
-      setReplyingTo(null)
+      // Remove the failed optimistic comment
+      setLocalComments((prev) => prev.filter((c) => c.id !== optimisticId))
+    } else if (result.comment) {
+      // 4. Upgrade optimistic → real comment (gets real ID, buttons become interactive)
+      setLocalComments((prev) =>
+        prev.map((c) =>
+          c.id === optimisticId
+            ? { ...c, id: result.comment!.id, parent_id: result.comment!.parent_id, created_at: result.comment!.created_at }
+            : c
+        )
+      )
     }
+
     setCommenting(false)
   }
 
