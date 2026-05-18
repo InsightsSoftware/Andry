@@ -178,6 +178,7 @@ export async function createComment(formData: FormData) {
     post_id: postId,
     user_id: user.id,
     contenido,
+    ...(result.data.parent_id ? { parent_id: result.data.parent_id } : {}),
     ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
   })
 

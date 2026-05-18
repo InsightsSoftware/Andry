@@ -192,11 +192,6 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
         { event: 'INSERT', schema: 'public', table: 'comentarios', filter: `post_id=eq.${post.id}` },
         async (payload) => {
           const raw = payload.new as { id: string; user_id: string; parent_id: string | null; contenido: string; imagen_url: string | null; created_at: string; destacado: boolean; likes_count: number }
-          // Skip optimistic duplicates — first pass: check by id
-          setLocalComments((prev) => {
-            if (prev.some((c) => c.id === raw.id)) return prev
-            return prev // placeholder — will add after profile fetch
-          })
           // Fetch profile for the new comment author
           const { data: profile } = await supabase
             .from('profiles')
@@ -204,7 +199,20 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
             .eq('id', raw.user_id)
             .single()
           setLocalComments((prev) => {
+            // Already added with real id → skip
             if (prev.some((c) => c.id === raw.id)) return prev
+            // Replace matching optimistic comment (same contenido + parent_id + opt- prefix)
+            const optIdx = prev.findIndex(
+              (c) =>
+                c.id.startsWith('opt-') &&
+                c.contenido === raw.contenido &&
+                (c.parent_id ?? null) === (raw.parent_id ?? null)
+            )
+            if (optIdx !== -1) {
+              const next = [...prev]
+              next[optIdx] = { ...raw, profiles: profile ?? null }
+              return next
+            }
             return [...prev, { ...raw, profiles: profile ?? null }]
           })
         }
