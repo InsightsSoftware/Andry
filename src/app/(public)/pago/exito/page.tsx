@@ -322,6 +322,7 @@ function RegistrationForm({
     direccion: '',
     oficio: '',
   })
+  const [oficioCustom, setOficioCustom] = useState('')
   const [error, setError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
@@ -338,14 +339,23 @@ function RegistrationForm({
       setError('Debés aceptar los Términos y Condiciones para continuar.')
       return
     }
+    if (formData.oficio === 'Otro' && !oficioCustom.trim()) {
+      setError('Por favor especificá tu tipo de licencia.')
+      return
+    }
     setError('')
     setStep('signing-in')
+
+    const dataToSubmit = {
+      ...formData,
+      oficio: formData.oficio === 'Otro' ? oficioCustom.trim() : formData.oficio,
+    }
 
     const proof = isSimulated
       ? ({ type: 'simulated' } as const)
       : ({ type: 'stripe', sessionId } as const)
 
-    const result = await completePurchase(formData, planKey, proof)
+    const result = await completePurchase(dataToSubmit, planKey, proof)
 
     if ('error' in result) {
       setError(result.error)
@@ -453,6 +463,18 @@ function RegistrationForm({
                 <option key={o} value={o}>{o}</option>
               ))}
             </select>
+
+            {formData.oficio === 'Otro' && (
+              <input
+                type="text"
+                placeholder="Especificá tu tipo de licencia *"
+                value={oficioCustom}
+                onChange={(e) => setOficioCustom(e.target.value)}
+                required
+                autoFocus
+                className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
+              />
+            )}
             <input
               name="password"
               type="password"

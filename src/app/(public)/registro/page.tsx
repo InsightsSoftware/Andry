@@ -23,6 +23,7 @@ function RegisterForm() {
     direccion: '',
     oficio: '',
   })
+  const [oficioCustom, setOficioCustom] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -34,8 +35,19 @@ function RegisterForm() {
     e.preventDefault()
     setError('')
 
+    // If "Otro" selected, use the custom text as oficio
+    const dataToValidate = {
+      ...formData,
+      oficio: formData.oficio === 'Otro' ? oficioCustom.trim() : formData.oficio,
+    }
+
+    if (formData.oficio === 'Otro' && !oficioCustom.trim()) {
+      setError('Por favor especificá tu tipo de licencia.')
+      return
+    }
+
     // Client-side validation first
-    const result = registerSchema.safeParse(formData)
+    const result = registerSchema.safeParse(dataToValidate)
     if (!result.success) {
       setError(result.error.issues[0].message)
       return
@@ -43,7 +55,7 @@ function RegisterForm() {
 
     setLoading(true)
     const fd = new FormData()
-    Object.entries(formData).forEach(([k, v]) => fd.set(k, v))
+    Object.entries(dataToValidate).forEach(([k, v]) => fd.set(k, v))
 
     const res = await registerAction(fd)
 
@@ -132,6 +144,18 @@ function RegisterForm() {
               </option>
             ))}
           </select>
+
+          {formData.oficio === 'Otro' && (
+            <input
+              type="text"
+              placeholder="Especificá tu tipo de licencia *"
+              value={oficioCustom}
+              onChange={(e) => setOficioCustom(e.target.value)}
+              required
+              autoFocus
+              className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            />
+          )}
         </div>
         <Input
           label="Contraseña"
