@@ -9,9 +9,9 @@ export function Navbar() {
         {/* Logo / Home */}
         <Link href="/" className="flex items-center gap-2 shrink-0 cursor-pointer">
           {/* Dark mode logo (gold) */}
-          <Image src="/logo-horizontal.png" alt="Y Exam Prep" width={400} height={400} className="hidden dark:block h-14 w-auto" />
+          <Image src="/logo-horizontal.png" alt="Y Exam Prep" width={400} height={400} className="hidden dark:block h-20 w-auto" />
           {/* Light mode logo (purple) */}
-          <Image src="/logo-horizontal-light.png" alt="Y Exam Prep" width={400} height={400} className="block dark:hidden h-14 w-auto" />
+          <Image src="/logo-horizontal-light.png" alt="Y Exam Prep" width={400} height={400} className="block dark:hidden h-20 w-auto" />
         </Link>
 
         {/* Desktop nav */}
