@@ -41,12 +41,22 @@ export function HeroLogo() {
           scale={1.05}
         >
           <div className="hero-logo-container">
+            {/* Dark mode — gold logo */}
             <Image
               src="/logo.png"
               alt="Y Exam Prep"
               width={600}
               height={600}
-              className="hero-logo-img relative z-[1] h-auto w-[280px] sm:w-[340px] lg:w-[380px]"
+              className="hero-logo-img relative z-[1] h-auto w-[280px] sm:w-[340px] lg:w-[380px] hidden dark:block"
+              priority
+            />
+            {/* Light mode — morado logo */}
+            <Image
+              src="/logo-light.png"
+              alt="Y Exam Prep"
+              width={600}
+              height={600}
+              className="hero-logo-img relative z-[1] h-auto w-[280px] sm:w-[340px] lg:w-[380px] block dark:hidden"
               priority
             />
 
