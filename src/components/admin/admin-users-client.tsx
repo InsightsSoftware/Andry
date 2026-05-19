@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { updateEnvioEstado, inviteUser } from '@/actions/admin'
+import { updateEnvioEstado, inviteUser, updateUserLicencia } from '@/actions/admin'
 import { UserRoleToggle } from './user-role-toggle'
 import {
   ChevronDown,
@@ -15,6 +15,9 @@ import {
   UserPlus,
   X,
   Loader2,
+  BadgeCheck,
+  Pencil,
+  Check,
 } from 'lucide-react'
 
 type User = {
@@ -30,6 +33,7 @@ type User = {
   direccion?: string | null
   envio_estado?: string | null
   oficio?: string | null
+  numero_licencia?: string | null
 }
 
 type EnvioTab = 'todos' | 'pendiente' | 'enviado'
@@ -193,17 +197,8 @@ function UserRow({
                 )}
               </div>
 
-              {/* License */}
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                  Licencia
-                </p>
-                {user.oficio ? (
-                  <p className="text-neutral-700 dark:text-neutral-300">{user.oficio}</p>
-                ) : (
-                  <p className="text-neutral-400 italic">Sin licencia registrada</p>
-                )}
-              </div>
+              {/* License number — inline editable */}
+              <LicenciaEditor user={user} />
 
               {/* Subscription details */}
               <div>
@@ -332,6 +327,73 @@ function InviteModal({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </form>
+    </div>
+  )
+}
+
+function LicenciaEditor({ user }: { user: User }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(user.numero_licencia ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    await updateUserLicencia(user.id, value)
+    setSaving(false)
+    setEditing(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        Licencia
+      </p>
+      {editing ? (
+        <div className="flex items-center gap-2">
+          <input
+            autoFocus
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+            placeholder="Ej: CGC1234567"
+            className="flex-1 rounded-lg border border-primary-500 bg-neutral-50 dark:bg-neutral-800 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 outline-none"
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-600 text-white hover:bg-primary-500 cursor-pointer disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-600 cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 group/lic">
+          {user.numero_licencia || saved ? (
+            <span className="flex items-center gap-1.5 text-sm text-neutral-700 dark:text-neutral-300">
+              <BadgeCheck className="h-4 w-4 text-success-500 shrink-0" />
+              {value || user.numero_licencia}
+            </span>
+          ) : (
+            <span className="text-sm text-neutral-400 italic">Sin licencia registrada</span>
+          )}
+          <button
+            onClick={() => setEditing(true)}
+            title="Editar número de licencia"
+            className="opacity-0 group-hover/lic:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all cursor-pointer"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

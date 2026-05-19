@@ -102,7 +102,7 @@ export async function getUsers() {
   const { data, error } = await admin
     .from('profiles')
     .select(
-      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado, oficio'
+      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado, oficio, numero_licencia'
     )
     .order('created_at', { ascending: false })
     .limit(200)
@@ -113,6 +113,17 @@ export async function getUsers() {
   }
 
   return { users: data || [] }
+}
+
+export async function updateUserLicencia(userId: string, numero_licencia: string) {
+  await requireAdmin()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('profiles')
+    .update({ numero_licencia: numero_licencia.trim() || null })
+    .eq('id', userId)
+  if (error) return { error: error.message }
+  return { success: true }
 }
 
 export async function getCurrentUserRole() {
