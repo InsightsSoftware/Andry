@@ -17,12 +17,6 @@ export function Navbar() {
         {/* Desktop nav */}
         <div className="hidden items-center gap-6 sm:flex">
           <Link
-            href="/precios"
-            className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-          >
-            Precios
-          </Link>
-          <Link
             href="/login"
             className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
           >
