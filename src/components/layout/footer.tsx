@@ -34,12 +34,21 @@ export function Footer() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           {/* Left — logo + socials */}
           <div className="flex flex-col gap-5">
+            {/* Dark mode logo (gold) */}
             <Image
               src="/logo.png"
               alt="Y Exam Prep"
               width={600}
               height={600}
-              className="h-24 w-auto"
+              className="hidden dark:block h-24 w-auto"
+            />
+            {/* Light mode logo (purple) */}
+            <Image
+              src="/logo-light.png"
+              alt="Y Exam Prep"
+              width={600}
+              height={600}
+              className="block dark:hidden h-24 w-auto"
             />
 
             {/* Social icons */}
