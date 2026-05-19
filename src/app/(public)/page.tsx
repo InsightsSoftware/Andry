@@ -87,6 +87,10 @@ function HeroSection() {
             Pago único seguro
           </span>
           <span className="flex items-center gap-1.5">
+            <CheckCircle className="h-4 w-4 text-success-500" />
+            Soporte 24/7
+          </span>
+          <span className="flex items-center gap-1.5">
             <Star className="h-4 w-4 text-accent-500 dark:text-accent-400" />
             100% en español
           </span>
