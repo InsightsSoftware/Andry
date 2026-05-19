@@ -87,10 +87,6 @@ function HeroSection() {
             Pago único seguro
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle className="h-4 w-4 text-success-500" />
-            30 días de garantía
-          </span>
-          <span className="flex items-center gap-1.5">
             <Star className="h-4 w-4 text-accent-500 dark:text-accent-400" />
             100% en español
           </span>
@@ -417,7 +413,7 @@ function CTABannerSection() {
             </h2>
             <p className="mb-8 text-neutral-600 dark:text-neutral-400">
               Únete a la plataforma que realmente te prepara.
-              Un solo pago, sin suscripciones, con garantía de 30 días.
+              Un solo pago, sin suscripciones.
             </p>
             <Link
               href="/precios"
