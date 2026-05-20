@@ -148,14 +148,12 @@ function FeatureBadgesSection() {
 
 function ProblemSection() {
   const bullets = [
-    'Estudiá la guía oficial con ejemplos claros y en español',
-    'Escuchá los audiolibros mientras manejás o trabajás',
-    'Practicá con preguntas reales del examen por capítulo',
-    'Consulta a Contratistas Certificados en nuestro foro de Comunidad 24/7.',
-    'Simulá el examen real con cronómetro y condiciones idénticas',
-    'Aprendé al ritmo que tu jornada de trabajo te permite',
+    'Te enfrentás a miles de páginas técnicas y manuales extensos imposibles de memorizar.',
     'Chocas con la barrera del idioma y con cursos que solo ofrecen malas traducciones.',
-    'Caes en las trampas del Estado: el examen evalúa tu velocidad para interpretar leyes bajo presión, no tus años de experiencia.',
+    'Llegás agotado después del trabajo, sin tiempo ni energía para sentarte a leer.',
+    "Caés en las 'trampas' del Estado: el examen evalúa tu velocidad para interpretar leyes y códigos bajo presión, no tus años de experiencia en la obra.",
+    'Tenés miedo de reprobar y perder miles de dólares en escuelas tradicionales.',
+    'Consultá a Contratistas Certificados en nuestro foro de Comunidad 24/7.',
   ]
 
   return (
@@ -165,27 +163,31 @@ function ProblemSection() {
           {/* Text side */}
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary-500 dark:text-primary-400">
-              El problema real
+              El problema
             </p>
             <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-900 dark:text-white sm:text-4xl">
               Sabés construir...{' '}
-              <span className="text-gold">pero el examen es otro juego.</span>
+              <br />
+              <span className="text-neutral-900 dark:text-white">pero el examen es otro juego.</span>
             </h2>
             <p className="mb-6 text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Tenés años de oficio en las manos. Instalás, cablear, inspeccionás mejor que nadie.
-              Lo que te tiene frenado no es el trabajo — es el papel. El examen de contratista
-              tiene sus propias reglas, y sin la preparación correcta, podés darlo varias veces
-              sin pasar.
+              Muchos profesionales de la construcción en Florida tienen años de experiencia en el campo,
+              pero cuando llega el momento de presentar el examen de licencia:
             </p>
 
-            <ul className="mb-8 flex flex-col gap-3">
+            <ul className="mb-6 flex flex-col gap-3">
               {bullets.map((b) => (
                 <li key={b} className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-300">
-                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success-500" />
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" />
                   {b}
                 </li>
               ))}
             </ul>
+
+            <p className="mb-8 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+              El problema no es tu capacidad.<br />
+              El problema es no tener una preparación estratégica.
+            </p>
 
             <Link
               href="/precios"
