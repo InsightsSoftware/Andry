@@ -494,11 +494,11 @@ function TestimonialsSection() {
 function FAQSection() {
   const faqs = [
     {
-      q: '¿Necesito tener mi compañía abierta para usar la plataforma?',
+      q: '¿Necesito tener mi compañía abierta para empezar a estudiar?',
       a: 'No. Podés estudiar y prepararte sin necesidad de tener tu empresa constituida. La plataforma está diseñada para que arranques desde cero y llegues al examen listo.',
     },
     {
-      q: '¿El precio incluye los libros oficiales del examen?',
+      q: '¿El precio incluye los libros oficiales del Estado?',
       a: 'Sí. El contenido de la plataforma está basado en los libros oficiales del DBPR de Florida. Incluye la guía digital interactiva, audiolibros y banco de preguntas — todo en español.',
     },
     {
