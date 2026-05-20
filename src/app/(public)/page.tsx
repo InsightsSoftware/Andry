@@ -105,7 +105,7 @@ function FeatureBadgesSection() {
     {
       icon: BadgeCheck,
       label: 'Licencia Oficial',
-      desc: 'Preparación validada para el examen de contratista del estado de Florida.',
+      desc: 'Ya tienes años trabajando en construcción. Ahora es momento de respaldar tu conocimiento con una licencia estatal que te abra más puertas y te dé reconocimiento profesional en Florida.',
       color: 'text-primary-400',
       border: 'border-primary-500/30',
       bg: 'from-primary-500/10',
@@ -113,15 +113,15 @@ function FeatureBadgesSection() {
     {
       icon: TrendingUp,
       label: 'Más Ingresos',
-      desc: 'Con tu licencia podés cobrar más, aceptar contratos grandes y crecer.',
+      desc: 'Los contratistas licenciados acceden a proyectos más grandes, mejores contratos y mayores oportunidades. Obtener tu licencia no es un gasto, es una inversión directa en tu crecimiento económico.',
       color: 'text-accent-400',
       border: 'border-accent-500/30',
       bg: 'from-accent-500/10',
     },
     {
       icon: Landmark,
-      label: 'Pagos en Legal',
-      desc: 'Trabajá con contratos formales, protegé tus pagos y operá con seguridad.',
+      label: 'Negocio Legal',
+      desc: 'Trabaja con seguridad, formalidad y confianza. Una licencia oficial te permite operar legalmente, ganar credibilidad y escalar tu empresa sin límites.',
       color: 'text-success-400',
       border: 'border-success-500/30',
       bg: 'from-success-500/10',
@@ -225,19 +225,19 @@ function FeaturesRowSection() {
     {
       icon: Headphones,
       title: 'Estudia en Movimiento',
-      desc: 'Escuchá audiolibros y aprendé sin detener tu vida ni tu jornada de trabajo.',
+      desc: 'Escucha audiolibros y memoriza los conceptos importantes sin detener tu vida ni tu jornada de trabajo.',
       color: 'text-sky-400',
     },
     {
       icon: FileText,
       title: 'Buscador Inteligente de PDFs',
-      desc: 'Encuentra respuestas exactas en segundos. Nuestra tecnología te lleva directo al párrafo que necesitas sin hojear páginas inútiles.',
+      desc: 'Encuentra cualquier ley, artículo o concepto clave en segundos.',
       color: 'text-primary-400',
     },
     {
       icon: Users,
       title: 'Comunidad Exclusiva',
-      desc: 'Un espacio donde otros contratistas te apoyan, comparten trabajo y te acompañan.',
+      desc: 'Un espacio donde otros contratistas te apoyan, comparten experiencias y te acompañan en el proceso.',
       color: 'text-success-400',
     },
   ]
@@ -251,7 +251,7 @@ function FeaturesRowSection() {
           </p>
           <h2 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
             En Y Exam Prep no solo estudias.{' '}
-            <span className="text-gold">Te entrenas para el juego.</span>
+            <span className="text-gold">Te entrenas para ganar.</span>
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
             Cuatro razones que nos hacen distintos.
@@ -287,12 +287,12 @@ function FeaturesRowSection() {
 
 function ForWhoSection() {
   const bullets = [
-    'Preparás para tu primera licencia de contratista en Florida',
-    'Tenés el oficio pero no el tiempo para estudiar con métodos tradicionales',
-    'Has intentado pasar el examen y necesitás apoyo real en español',
-    'Querés dejar de depender de otros y trabajar con contratos propios',
-    'Buscás crecer, cobrar mejor y operar de forma completamente legal',
-    'Necesitás una herramienta que se adapte a tu ritmo de trabajo diario',
+    'Te preparas para obtener tu primera licencia de contratista en Florida y quieres formalizar tu carrera.',
+    'Tienes la experiencia en la obra, pero los métodos de estudio tradicionales no se adaptan a tu ritmo de trabajo diario.',
+    'Has intentado aprobar el examen antes y buscas una preparación estratégica con apoyo real, 100% en español.',
+    'Eres subcontratista y estás listo para dar el salto, trabajar con tus propios contratos y dejar de depender de otros.',
+    'Buscas aumentar tus ingresos, cobrar lo justo por tu experiencia y acceder a proyectos de mayor nivel.',
+    'Tienes tu propio negocio y deseas operar de forma completamente legal para ganar mayor credibilidad en el mercado.',
   ]
 
   return (
@@ -327,8 +327,8 @@ function ServicesSection() {
   const services = [
     {
       icon: BookOpen,
-      title: 'Guía de Estudio y PDF Interactivo',
-      desc: 'Guía oficial de 350+ páginas con búsqueda, navegación por capítulos y audiolibros narrados en español. Estudia desde tu teléfono, donde sea.',
+      title: 'Guía, audios y PDF Interactivo',
+      desc: 'Guía visual de más de 350 páginas con motor de búsqueda, navegación por capítulos y audiolibros narrados en español. Repasa desde tu teléfono en cualquier lugar.',
       gradient: 'from-primary-600/12 to-primary-500/4',
       iconBg: 'bg-primary-500/10 border-primary-500/20',
       iconColor: 'text-primary-400',
@@ -336,8 +336,8 @@ function ServicesSection() {
     },
     {
       icon: Trophy,
-      title: 'Entrenamiento con Preguntas Reales',
-      desc: 'Banco de preguntas ilimitadas organizadas por capítulo con explicaciones. Simulacro de examen cronometrado idéntico al real. La herramienta más efectiva para pasar.',
+      title: 'Entrenamiento en el Simulador',
+      desc: 'Extenso banco de preguntas prácticas, organizadas por capítulo y con sus explicaciones. Simulador de examen cronometrado para recrear las condiciones de la prueba real. Una herramienta clave para tu preparación.',
       gradient: 'from-accent-500/10 to-accent-400/3',
       iconBg: 'bg-accent-500/10 border-accent-500/20',
       iconColor: 'text-accent-400',
@@ -345,8 +345,8 @@ function ServicesSection() {
     },
     {
       icon: Users,
-      title: 'Comunidad + Apoyo Completo',
-      desc: 'Comunidad exclusiva de contratistas hispanos. Foro 24/7 con Contratistas Certificados para resolver dudas. Videos explicativos para los temas más difíciles.',
+      title: 'Comunidad + Apoyo',
+      desc: 'Un espacio de colaboración entre contratistas. Intercambia dudas de estudio, soluciones para el trabajo diario y accede a un foro activo donde puedes publicar proyectos, subcontratar o encontrar nuevas oportunidades laborales.',
       gradient: 'from-success-500/10 to-success-400/3',
       iconBg: 'bg-success-500/10 border-success-500/20',
       iconColor: 'text-success-400',
@@ -355,7 +355,7 @@ function ServicesSection() {
     {
       icon: Hammer,
       title: 'Red de Aliados Comerciales',
-      desc: 'Acceso exclusivo a nuestro directorio de seguros, créditos comerciales y software para escalar tu negocio de construcción desde el día uno.',
+      desc: 'Accede a empresas proveedoras de servicios y socios de confianza dentro de nuestra red para que escales tu negocio.',
       gradient: 'from-accent-500/8 to-primary-500/4',
       iconBg: 'bg-accent-500/10 border-accent-500/20',
       iconColor: 'text-accent-400',
@@ -415,17 +415,16 @@ function CTABannerSection() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary-600/15 to-accent-500/5 pointer-events-none" />
           <div className="relative">
             <h2 className="mb-3 text-2xl font-extrabold text-neutral-900 dark:text-white sm:text-3xl">
-              Obtén Tu Licencia Ahora
+              Prepárate para tu licencia de contratista
             </h2>
             <p className="mb-8 text-neutral-600 dark:text-neutral-400">
               Únete a la plataforma que realmente te prepara.
-              Un solo pago, sin suscripciones.
             </p>
             <Link
               href="/precios"
               className="inline-flex min-h-[56px] items-center gap-2 rounded-xl btn-purple px-10 text-lg font-bold text-white transition-all duration-200 glow-purple"
             >
-              Comenzar Ahora
+              Comenzar mi preparación
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
@@ -438,34 +437,59 @@ function CTABannerSection() {
 function TestimonialsSection() {
   const testimonials = [
     {
-      quote: 'Estudié con los audiolibros mientras manejaba a la obra. Pasé el examen al primer intento.',
+      quote: 'El paquete con la guía física me llegó súper rápido. La calidad de impresión es excelente y el contenido va directo al grano, sin rodeos.',
       name: 'Carlos M.',
       title: 'Electricista — Miami, FL',
     },
     {
-      quote: 'Todo en español, sin traducciones raras. Por fin un material que habla como nosotros.',
+      quote: 'Los audiolibros son mi salvación. Ahora aprovecho para repasar los capítulos mientras manejo la van de una obra a otra. Cero tiempo perdido.',
       name: 'Roberto G.',
       title: 'Plomero — Orlando, FL',
     },
     {
-      quote: 'El foro de la comunidad me resolvió todas las dudas sobre gravámenes y contratos. Contratistas reales respondiendo de verdad.',
-      name: 'Miguel A.',
+      quote: 'Llevo un par de semanas con el simulador y me está ayudando muchísimo a controlar la presión del reloj. Siento que por fin entiendo cómo es la dinámica de la prueba.',
+      name: 'Luis H.',
       title: 'Contratista General — Tampa, FL',
     },
     {
-      quote: 'Pagué $3,000 en otro curso y no aprendí nada. Con Y Exam Prep lo logré en 2 meses.',
-      name: 'José R.',
-      title: 'HVAC — Fort Lauderdale, FL',
+      quote: 'Por fin un material que está en un español claro y profesional. Nada de esas traducciones de internet que al final te confunden más con los términos técnicos.',
+      name: 'Miguel A.',
+      title: 'HVAC — Jacksonville, FL',
     },
     {
-      quote: 'El PDF interactivo con búsqueda me salvó la vida. Nada de andar hojeando páginas.',
-      name: 'Luis H.',
-      title: 'Albañil — Jacksonville, FL',
+      quote: 'Se nota desde el día uno que esta plataforma la diseñó alguien que sabe lo que es estar en el campo de trabajo. Todo es muy práctico y enfocado a nuestra realidad.',
+      name: 'Javier R.',
+      title: 'Albañil — Fort Lauderdale, FL',
     },
     {
-      quote: 'Los simulacros de examen son exactamente como el real. Me fue mucho mejor de lo que esperaba.',
+      quote: 'Me gusta mucho cómo te enseñan a buscar rápido en los libros oficiales en lugar de obligarte a leer 500 páginas. Te ayudan a memorizar solo lo verdaderamente importante.',
       name: 'Andrés P.',
       title: 'Carpintero — Hialeah, FL',
+    },
+    {
+      quote: 'La parte de Negocios y Finanzas siempre me dio dolores de cabeza, pero aquí lo explican paso a paso. Hace que los números y las leyes sean mucho menos intimidantes.',
+      name: 'Oscar T.',
+      title: 'Roofing — Sarasota, FL',
+    },
+    {
+      quote: 'Entrar al foro y ver a otros contratistas compartiendo cómo estudian te motiva a no aflojarle después de una jornada dura de trabajo. Muy buen ambiente.',
+      name: 'Fernando S.',
+      title: 'Pintor — Naples, FL',
+    },
+    {
+      quote: 'Aprovecho mi break del almuerzo en la obra para hacer pruebas cortas en el celular. La plataforma carga rapidísimo y es súper fácil de usar desde el teléfono.',
+      name: 'Rubén C.',
+      title: 'Contratista General — Tallahassee, FL',
+    },
+    {
+      quote: 'Soy una persona muy visual, así que la manera en que está organizada la guía con gráficos y ejemplos hace que el manual sea mucho más fácil de digerir.',
+      name: 'Héctor L.',
+      title: 'Plomero — Cape Coral, FL',
+    },
+    {
+      quote: 'Había gastado dinero en otros métodos antes y me frustré rápido. Este ecosistema es completamente diferente, se siente premium y de verdad te acompaña en el proceso.',
+      name: 'Diego F.',
+      title: 'Electricista — West Palm Beach, FL',
     },
   ]
 
@@ -476,11 +500,11 @@ function TestimonialsSection() {
           Testimonios
         </p>
         <h2 className="mb-3 text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
-          Que Dicen Nuestros{' '}
-          <span className="text-primary-600 dark:text-primary-400">Clientes</span>
+          Lo Que Dicen Nuestros{' '}
+          <span className="text-primary-600 dark:text-primary-400">Contratistas</span>
         </h2>
         <p className="text-neutral-600 dark:text-neutral-400">
-          Historias reales de contratistas hispanos que ya pasaron su examen
+          Historias reales de profesionales que ya comenzaron su entrenamiento con nosotros
         </p>
       </div>
       <InfiniteMovingCards
@@ -497,31 +521,31 @@ function FAQSection() {
   const faqs = [
     {
       q: '¿Necesito tener mi compañía abierta para empezar a estudiar?',
-      a: 'No. Podés estudiar y prepararte sin necesidad de tener tu empresa constituida. La plataforma está diseñada para que arranques desde cero y llegues al examen listo.',
+      a: 'No. Puedes empezar a prepararte y aprobar tu examen de Negocios y Finanzas mientras organizas los trámites de tu corporación. ¡Adelantar tu estudio ahora te ahorrará meses de espera después!',
     },
     {
       q: '¿El precio incluye los libros oficiales del Estado?',
-      a: 'Sí. El contenido de la plataforma está basado en los libros oficiales del DBPR de Florida. Incluye la guía digital interactiva, audiolibros y banco de preguntas — todo en español.',
+      a: 'No. El Estado de Florida exige que utilices sus libros originales de referencia. Lo que nosotros te entregamos es un Sistema de Estudio Inteligente (Guía visual, audiolibros y simuladores) creado específicamente para que entiendas, domines y sepas navegar esos libros oficiales.',
     },
     {
-      q: '¿Es compatible con mi celular o solo computadora?',
-      a: 'La plataforma es 100% mobile-first. Funciona perfectamente en tu teléfono, tablet o computadora — sin necesidad de instalar nada.',
-    },
-    {
-      q: '¿En qué idioma está el material?',
-      a: 'Todo el contenido está 100% en español — la guía de estudio, los audiolibros, los videos y el banco de preguntas.',
+      q: '¿Puedo llevar la Guía de Estudio de Y Exam Prep el día de mi examen oficial?',
+      a: 'No. Nuestra Guía de Estudio y nuestros materiales son herramientas de preparación diseñadas para que entrenes en casa o en el trabajo. El día de tu examen oficial, debes presentarte únicamente con los libros de referencia aprobados por el Estado.',
     },
     {
       q: '¿Cuánto tiempo tengo acceso a la plataforma?',
-      a: 'El Plan Básico incluye 6 meses de acceso. El Plan Premium incluye 12 meses. Sin renovaciones automáticas.',
+      a: 'Tienes acceso completo a los audiolibros, simuladores y actualizaciones mientras esté activa tu membresía, según el plan que hayas escogido. Si al vencerse tu plan necesitas más tiempo para presentar tu examen, podrás mantener tu cuenta activa mediante una mensualidad.',
     },
     {
-      q: '¿Puedo llevar más de un libro de texto?',
-      a: 'Actualmente cubrimos el examen de Negocios y Finanzas para la licencia de contratista en Florida. Más módulos próximamente.',
+      q: '¿Cuándo recibo mis guías físicas?',
+      a: 'Tu acceso a la plataforma digital y a los audiolibros es inmediato al momento del pago. Tus manuales físicos impresos se envían por correo y los recibirás directamente en la puerta de tu casa en pocos días.',
     },
     {
-      q: '¿Puedo llevar más de un examen del estado?',
-      a: 'La preparación actual está enfocada en el examen de Negocios y Finanzas del DBPR de Florida.',
+      q: '¿Es compatible con mi celular o necesito una computadora?',
+      a: 'La plataforma está diseñada pensando en el profesional que está en movimiento. Funciona perfectamente en tu teléfono, tableta o computadora sin necesidad de instalar nada extra.',
+    },
+    {
+      q: '¿Para qué examen me prepara este programa exactamente?',
+      a: 'Nuestro programa actual está enfocado en prepararte estratégicamente para el examen de Negocios y Finanzas (Business and Finance) del DBPR de Florida, el cual es un requisito indispensable para los contratistas.',
     },
   ]
 
@@ -574,7 +598,7 @@ function PricingSection() {
             <span className="text-gold">transparentes</span>
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Un solo pago. Sin sorpresas ni suscripciones mensuales.
+            Acceso claro y sin sorpresas.
           </p>
         </div>
 
@@ -582,14 +606,14 @@ function PricingSection() {
           {/* Basic */}
           <div className="rounded-2xl p-6 sm:p-8 glass-card">
             <p className="mb-1 text-xs font-bold uppercase tracking-widest text-neutral-500">Plan Básico</p>
-            <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Digital Orga</h3>
+            <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Digital</h3>
             <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">Acceso digital completo</p>
             <div className="mb-6">
               <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$447</span>
               <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 6 meses</span>
             </div>
             <ul className="mb-6 flex flex-col gap-2">
-              {['PDF interactivo', 'Audiolibros', 'Banco de preguntas', 'Simulacro de examen', 'Acceso a la Comunidad (Networking y Trabajos)', 'Acceso al directorio de Aliados Comerciales'].map((f) => (
+              {['Guía visual digital', 'Audiolibros', 'Simulador de examen', 'Acceso a la comunidad de contratistas', 'Red de aliados comerciales', '6 meses de acceso'].map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                   <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                   {f}
@@ -626,7 +650,7 @@ function PricingSection() {
                 <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 12 meses</span>
               </div>
               <ul className="mb-6 flex flex-col gap-2">
-                {['Todo del Plan Básico', '12 meses de acceso', 'Guía física enviada a tu casa', 'Acceso a la Comunidad VIP (Networking y Trabajos)', 'Acceso al directorio de Aliados Comerciales', 'Soporte prioritario'].map((f) => (
+                {['Guía visual digital', 'Audiolibros', 'Simulador de examen', 'Acceso a la comunidad de contratistas', 'Red de aliados comerciales', '12 meses de acceso', 'Guía física enviada a tu casa'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                     {f}
@@ -656,7 +680,7 @@ function FinalCTASection() {
         <div className="relative">
           <Zap className="mx-auto mb-4 h-10 w-10 text-accent-500 dark:text-accent-400" />
           <h2 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
-            Empieza a estudiar hoy
+            Empieza tu entrenamiento hoy
           </h2>
           <p className="mb-8 text-neutral-600 dark:text-neutral-400">
             No pierdas más tiempo con métodos obsoletos. Únete a la plataforma
@@ -670,7 +694,7 @@ function FinalCTASection() {
             <ArrowRight className="h-5 w-5" />
           </Link>
           <p className="mt-4 text-sm text-neutral-500">
-            Un solo pago — sin suscripciones
+            Un solo pago. Acceso inmediato.
           </p>
         </div>
       </div>
