@@ -229,7 +229,7 @@ function FeaturesRowSection() {
     {
       icon: FileText,
       title: 'Buscador Inteligente de PDFs',
-      desc: 'Encontrá cualquier ley, artículo o concepto en segundos dentro de los libros oficiales.',
+      desc: 'Encuentra respuestas exactas en segundos. Nuestra tecnología te lleva directo al párrafo que necesitas sin hojear páginas inútiles.',
       color: 'text-primary-400',
     },
     {
@@ -353,7 +353,7 @@ function ServicesSection() {
     {
       icon: Hammer,
       title: 'Red de Aliados Comerciales',
-      desc: 'Accedé a proveedores, subcontratistas y socios de confianza dentro de la comunidad. Conectate con quienes hacen crecer tu negocio.',
+      desc: 'Acceso exclusivo a nuestro directorio de seguros, créditos comerciales y software para escalar tu negocio de construcción desde el día uno.',
       gradient: 'from-accent-500/8 to-primary-500/4',
       iconBg: 'bg-accent-500/10 border-accent-500/20',
       iconColor: 'text-accent-400',
@@ -446,7 +446,7 @@ function TestimonialsSection() {
       title: 'Plomero — Orlando, FL',
     },
     {
-      quote: 'El asistente IA me explicó lo de los gravámenes 10 veces sin cansarse. Increíble.',
+      quote: 'El foro de la comunidad me resolvió todas las dudas sobre gravámenes y contratos. Contratistas reales respondiendo de verdad.',
       name: 'Miguel A.',
       title: 'Contratista General — Tampa, FL',
     },
@@ -507,7 +507,7 @@ function FAQSection() {
     },
     {
       q: '¿En qué idioma está el material?',
-      a: 'Todo el contenido está 100% en español — la guía de estudio, los audiolibros, los videos y el asistente IA.',
+      a: 'Todo el contenido está 100% en español — la guía de estudio, los audiolibros, los videos y el banco de preguntas.',
     },
     {
       q: '¿Cuánto tiempo tengo acceso a la plataforma?',
@@ -587,7 +587,7 @@ function PricingSection() {
               <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 6 meses</span>
             </div>
             <ul className="mb-6 flex flex-col gap-2">
-              {['PDF interactivo', 'Audiolibros', 'Banco de preguntas', 'Simulacro de examen', 'Acceso a la comunidad de contratistas', 'Red de Aliados Comerciales'].map((f) => (
+              {['PDF interactivo', 'Audiolibros', 'Banco de preguntas', 'Simulacro de examen', 'Acceso a la Comunidad (Networking y Trabajos)', 'Acceso al directorio de Aliados Comerciales'].map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                   <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                   {f}
@@ -624,7 +624,7 @@ function PricingSection() {
                 <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 12 meses</span>
               </div>
               <ul className="mb-6 flex flex-col gap-2">
-                {['Todo del Plan Básico', '12 meses de acceso', 'Guía física enviada a tu casa', 'Comunidad VIP de contratistas', 'Red de Aliados Comerciales', 'Soporte prioritario'].map((f) => (
+                {['Todo del Plan Básico', '12 meses de acceso', 'Guía física enviada a tu casa', 'Acceso a la Comunidad VIP (Networking y Trabajos)', 'Acceso al directorio de Aliados Comerciales', 'Soporte prioritario'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
                     {f}
