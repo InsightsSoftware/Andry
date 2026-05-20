@@ -9,16 +9,16 @@ const CARDS = [
     src: '/landing/contractor-working.jpg',
     alt: 'Contratista eléctrico hispano trabajando en una obra en Florida',
     tag: 'En la obra',
-    title: 'El que mejor sabe construir',
-    desc: 'Sabés instalar, cablear, inspeccionar. Tenés años de oficio en las manos — lo que te falta es pasar el papel del examen.',
+    title: 'Dominas la práctica',
+    desc: 'Sabes construir, instalar, cablear e inspeccionar. Tienes años de oficio en tus manos; tu siguiente paso es dominar los conceptos clave para aprobar tu licencia.',
     kenBurnsVariant: 'ken-burns-a' as const,
   },
   {
     src: '/landing/contractor-studying.jpg',
     alt: 'Contratista hispano estudiando desde su celular después del trabajo',
     tag: 'En tu tiempo',
-    title: 'Estudiá donde y cuando puedas',
-    desc: 'Mobile-first pensado para el obrero que labura todo el día. Manejando, en el break de la obra, o en casa después de la jornada.',
+    title: 'Estudia dónde y cuándo puedas',
+    desc: 'Diseñado para el profesional que trabaja todo el día. Repasa con audiolibros o simuladores mientras manejas, en el break de la obra o en casa después de la jornada.',
     kenBurnsVariant: 'ken-burns-b' as const,
   },
 ]
@@ -60,8 +60,8 @@ export function ForYouSection() {
             <span className="text-gold">contratista hispano</span>
           </h2>
           <p className="mx-auto max-w-2xl text-neutral-600 dark:text-neutral-400">
-            Construís de verdad. Ahora necesitás una plataforma que respete tu tiempo
-            y tu forma de aprender — en español, en tu celular, a tu ritmo.
+            Tú sabes construir. Ahora necesitas una plataforma que respete tu tiempo
+            y tu forma de aprender: 100% en español, desde tu celular y a tu propio ritmo.
           </p>
         </div>
 
