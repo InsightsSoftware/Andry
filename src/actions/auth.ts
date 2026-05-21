@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
@@ -77,7 +78,7 @@ export async function registerAction(formData: FormData) {
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email:    data.email,
     password: data.password,
     options: {
@@ -95,6 +96,16 @@ export async function registerAction(formData: FormData) {
       return { error: 'Este correo ya está registrado. Iniciá sesión.' }
     }
     return { error: 'Error al crear la cuenta. Intentalo de nuevo.' }
+  }
+
+  // Explicitly upsert oficio into profiles table.
+  // The Supabase trigger may not map this field — write it directly to be safe.
+  if (signUpData.user?.id) {
+    const adminClient = createAdminClient()
+    await adminClient
+      .from('profiles')
+      .update({ oficio: data.oficio })
+      .eq('id', signUpData.user.id)
   }
 
   // Send welcome email (fire-and-forget)
