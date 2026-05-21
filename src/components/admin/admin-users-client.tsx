@@ -162,7 +162,7 @@ function UserRow({
       {expanded && (
         <tr className="border-b border-black/5 dark:border-white/5 bg-neutral-50/60 dark:bg-neutral-800/30">
           <td colSpan={7} className="px-8 py-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 text-sm">
               {/* Contact */}
               <div>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
@@ -194,6 +194,20 @@ function UserRow({
                   </p>
                 ) : (
                   <p className="text-neutral-400 italic">Sin dirección registrada</p>
+                )}
+              </div>
+
+              {/* Oficio */}
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  Oficio
+                </p>
+                {user.oficio ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 px-2.5 py-0.5 text-xs font-medium text-primary-600 dark:text-primary-400 capitalize">
+                    {user.oficio}
+                  </span>
+                ) : (
+                  <p className="text-neutral-400 italic">Sin oficio registrado</p>
                 )}
               </div>
 
