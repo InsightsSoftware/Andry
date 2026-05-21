@@ -40,17 +40,27 @@ export default async function PracticaSesionPage({
   // ── Collect question IDs based on fuente ─────────────────────────────────
   let preguntaIds: string[] = []
 
+  // Helper: Fisher-Yates shuffle
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }
+
   if (fuente === 'especifico' && capituloId) {
-    // Questions from a specific chapter
+    // Fetch ALL IDs for this chapter, shuffle, then slice
     const { data } = await supabase
       .from('preguntas')
       .select('id')
       .eq('capitulo_id', capituloId)
-      .limit(cantidad)
-    preguntaIds = (data ?? []).map((p) => p.id)
+    const allIds = (data ?? []).map((p) => p.id)
+    preguntaIds = shuffle(allIds).slice(0, cantidad)
 
   } else if (fuente === 'random') {
-    // Random from ALL active courses
+    // Random from ALL active courses — fetch all, shuffle, slice
     const { data: cursos } = await supabase
       .from('cursos')
       .select('id')
@@ -69,13 +79,13 @@ export default async function PracticaSesionPage({
           .from('preguntas')
           .select('id')
           .in('capitulo_id', capIds)
-          .limit(cantidad)
-        preguntaIds = (data ?? []).map((p) => p.id)
+        const allIds = (data ?? []).map((p) => p.id)
+        preguntaIds = shuffle(allIds).slice(0, cantidad)
       }
     }
 
   } else if (fuente === 'balanceado') {
-    // Equal distribution across chapters
+    // Equal distribution across chapters — shuffle per chapter then global shuffle
     const { data: cursos } = await supabase
       .from('cursos')
       .select('id')
@@ -97,14 +107,14 @@ export default async function PracticaSesionPage({
               .from('preguntas')
               .select('id')
               .eq('capitulo_id', id)
-              .limit(perCap)
           )
         )
         for (const r of results) {
-          preguntaIds.push(...(r.data ?? []).map((p) => p.id))
+          const ids = shuffle((r.data ?? []).map((p) => p.id))
+          preguntaIds.push(...ids.slice(0, perCap))
         }
-        // Trim to requested amount
-        preguntaIds = preguntaIds.slice(0, cantidad)
+        // Shuffle globally and trim to requested amount
+        preguntaIds = shuffle(preguntaIds).slice(0, cantidad)
       }
     }
   }

@@ -69,11 +69,8 @@ export default async function ExamenPage({
     (respuestas || []).map((r) => [r.pregunta_id, r.respuesta_seleccionada])
   )
 
-  // Shuffle for exam mode; keep original order for practice (so results match answering order)
-  const shuffled =
-    sesion.tipo === 'practica'
-      ? preguntas
-      : [...preguntas].sort(() => Math.random() - 0.5)
+  // Always shuffle — both practice and exam modes should randomize question order
+  const shuffled = [...preguntas].sort(() => Math.random() - 0.5)
 
   const cursoSlug = (sesion as any).cursos?.slug || ''
 
