@@ -201,7 +201,7 @@ function ProblemSection() {
           <div className="relative h-80 overflow-hidden rounded-2xl shadow-2xl shadow-primary-900/20 lg:h-[460px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.unsplash.com/photo-1503387837-b154d5074bd2?auto=format&fit=crop&w=800&q=80"
+              src="/landing/contractor-problem.jpg"
               alt="Contratista estudiando el material del examen"
               className="h-full w-full object-cover"
             />
