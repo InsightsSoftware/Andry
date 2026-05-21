@@ -122,16 +122,15 @@ export default async function ResultadosPage({
     }
   }
 
-  // Sort: correctas first → incorrectas → omitidas
-  const sortOrder = { correcta: 0, incorrecta: 1, omitida: 2 } as const
+  // Keep questions in the order they were answered (created_at from respuestas).
+  // Answered questions come first (sorted by answer time), unanswered at the end.
   preguntasEnExamen.sort((a, b) => {
-    const estadoA = respuestasMap.get(a.id)
-      ? respuestasMap.get(a.id)!.es_correcta ? 'correcta' : 'incorrecta'
-      : 'omitida'
-    const estadoB = respuestasMap.get(b.id)
-      ? respuestasMap.get(b.id)!.es_correcta ? 'correcta' : 'incorrecta'
-      : 'omitida'
-    return sortOrder[estadoA] - sortOrder[estadoB]
+    const ra = respuestasMap.get(a.id)
+    const rb = respuestasMap.get(b.id)
+    if (ra && rb) return new Date(ra.created_at).getTime() - new Date(rb.created_at).getTime()
+    if (ra) return -1  // answered before unanswered
+    if (rb) return 1
+    return 0
   })
 
   const cursoNombre =
