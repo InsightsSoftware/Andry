@@ -757,7 +757,6 @@ export default async function LandingPage() {
     const { count } = await admin
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .eq('subscription_status', 'activa')
     cuposAgotados = (count ?? 0) >= CUPOS_LIMITE
   } catch {
     // If the query fails, leave the buttons visible (fail open)
