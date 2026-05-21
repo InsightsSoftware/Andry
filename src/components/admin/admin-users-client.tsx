@@ -401,6 +401,7 @@ function LicenciaEditor({ user }: { user: User }) {
 export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) {
   const [tab, setTab] = useState<EnvioTab>('todos')
   const [search, setSearch] = useState('')
+  const [oficioFilter, setOficioFilter] = useState('')
   const [showInvite, setShowInvite] = useState(false)
 
   const pending = useMemo(
@@ -412,10 +413,20 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
     [initialUsers]
   )
 
+  // Unique oficio values for the filter dropdown
+  const oficios = useMemo(() => {
+    const set = new Set<string>()
+    initialUsers.forEach((u) => { if (u.oficio?.trim()) set.add(u.oficio.trim()) })
+    return Array.from(set).sort()
+  }, [initialUsers])
+
   const filtered = useMemo(() => {
     let list = initialUsers
     if (tab === 'pendiente') list = pending
     if (tab === 'enviado')   list = sent
+    if (oficioFilter) {
+      list = list.filter((u) => u.oficio?.trim() === oficioFilter)
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(
@@ -427,7 +438,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
       )
     }
     return list
-  }, [initialUsers, tab, pending, sent, search])
+  }, [initialUsers, tab, pending, sent, search, oficioFilter])
 
   return (
     <div>
@@ -461,13 +472,26 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
           ))}
         </div>
 
-        {/* Search + Invite */}
+        {/* Search + Oficio filter + Invite */}
         <div className="ml-auto flex items-center gap-2">
+          {/* Oficio filter */}
+          {oficios.length > 0 && (
+            <select
+              value={oficioFilter}
+              onChange={(e) => setOficioFilter(e.target.value)}
+              className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer"
+            >
+              <option value="">Todos los oficios</option>
+              {oficios.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          )}
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, email, dirección o licencia..."
-            className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 w-64"
+            placeholder="Buscar por nombre, email, dirección..."
+            className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 w-56"
           />
           <button
             onClick={() => setShowInvite(true)}
