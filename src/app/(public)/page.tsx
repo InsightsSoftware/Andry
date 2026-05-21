@@ -4,6 +4,7 @@ import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import { ForYouSection } from '@/components/landing/for-you-section'
 import { Spotlight } from '@/components/ui/spotlight'
 import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   BookOpen,
   Headphones,
@@ -21,9 +22,28 @@ import {
   BadgeCheck,
   TrendingUp,
   Landmark,
+  Lock,
 } from 'lucide-react'
 
-function HeroSection() {
+const CUPOS_LIMITE = 110
+
+// ── Cupos agotados CTA ────────────────────────────────────────────────────────
+
+function CuposAgotadosBtn({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex flex-col items-center gap-2 ${className}`}>
+      <div className="inline-flex items-center gap-2 rounded-xl bg-neutral-200 dark:bg-neutral-700 px-6 py-3.5 text-sm font-semibold text-neutral-500 dark:text-neutral-400 cursor-not-allowed select-none">
+        <Lock className="h-4 w-4 shrink-0" />
+        Límite de cupos alcanzado
+      </div>
+      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        Próximamente se amplían las vacantes
+      </p>
+    </div>
+  )
+}
+
+function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
     <section className="relative overflow-hidden px-4 pt-16 pb-20 sm:pt-20 sm:pb-28">
       <HeroParallaxBg />
@@ -65,19 +85,25 @@ function HeroSection() {
         </div>
 
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Link
-            href="/precios"
-            className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple sm:w-auto"
-          >
-            Comenzar Ahora
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-          <Link
-            href="/precios"
-            className="flex min-h-[56px] w-full items-center justify-center rounded-xl px-8 text-lg font-semibold text-neutral-700 dark:text-neutral-300 glass glass-hover transition-all duration-200 sm:w-auto"
-          >
-            Ver Precios
-          </Link>
+          {cuposAgotados ? (
+            <CuposAgotadosBtn />
+          ) : (
+            <>
+              <Link
+                href="/precios"
+                className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple sm:w-auto"
+              >
+                Comenzar Ahora
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/precios"
+                className="flex min-h-[56px] w-full items-center justify-center rounded-xl px-8 text-lg font-semibold text-neutral-700 dark:text-neutral-300 glass glass-hover transition-all duration-200 sm:w-auto"
+              >
+                Ver Precios
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Trust indicators */}
@@ -146,7 +172,7 @@ function FeatureBadgesSection() {
   )
 }
 
-function ProblemSection() {
+function ProblemSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   const bullets = [
     'Te enfrentas a miles de páginas técnicas y manuales extensos imposibles de memorizar.',
     'Chocas con la barrera del idioma y con cursos que solo ofrecen malas traducciones.',
@@ -188,13 +214,17 @@ function ProblemSection() {
               El problema es no tener una preparación estratégica.
             </p>
 
-            <Link
-              href="/precios"
-              className="inline-flex min-h-[52px] items-center gap-2 rounded-xl btn-purple px-8 text-base font-bold text-white transition-all duration-200 glow-purple"
-            >
-              Comenzar Ahora
-              <ArrowRight className="h-5 w-5" />
-            </Link>
+            {cuposAgotados ? (
+              <CuposAgotadosBtn />
+            ) : (
+              <Link
+                href="/precios"
+                className="inline-flex min-h-[52px] items-center gap-2 rounded-xl btn-purple px-8 text-base font-bold text-white transition-all duration-200 glow-purple"
+              >
+                Comenzar Ahora
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            )}
           </div>
 
           {/* Image side */}
@@ -406,7 +436,7 @@ function ServicesSection() {
   )
 }
 
-function CTABannerSection() {
+function CTABannerSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
     <section className="px-4 py-14">
       <div className="mx-auto max-w-3xl rounded-2xl glass-card glow-purple-strong overflow-hidden">
@@ -419,13 +449,17 @@ function CTABannerSection() {
             <p className="mb-8 text-neutral-600 dark:text-neutral-400">
               Únete a la plataforma que realmente te prepara.
             </p>
-            <Link
-              href="/precios"
-              className="inline-flex min-h-[56px] items-center gap-2 rounded-xl btn-purple px-10 text-lg font-bold text-white transition-all duration-200 glow-purple"
-            >
-              Comenzar mi preparación
-              <ArrowRight className="h-5 w-5" />
-            </Link>
+            {cuposAgotados ? (
+              <CuposAgotadosBtn />
+            ) : (
+              <Link
+                href="/precios"
+                className="inline-flex min-h-[56px] items-center gap-2 rounded-xl btn-purple px-10 text-lg font-bold text-white transition-all duration-200 glow-purple"
+              >
+                Comenzar mi preparación
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -584,7 +618,7 @@ function FAQSection() {
   )
 }
 
-function PricingSection() {
+function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
     <section className="px-4 py-20">
       <div className="mx-auto max-w-4xl">
@@ -619,13 +653,17 @@ function PricingSection() {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/precios"
-              className="flex items-center justify-center gap-2 rounded-xl glass glass-hover px-6 py-3 text-sm font-semibold text-neutral-700 dark:text-white transition-all"
-            >
-              Elegir Plan Básico
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {cuposAgotados ? (
+              <CuposAgotadosBtn />
+            ) : (
+              <Link
+                href="/precios"
+                className="flex items-center justify-center gap-2 rounded-xl glass glass-hover px-6 py-3 text-sm font-semibold text-neutral-700 dark:text-white transition-all"
+              >
+                Elegir Plan Básico
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </div>
 
           {/* Premium */}
@@ -656,13 +694,17 @@ function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/precios"
-                className="flex items-center justify-center gap-2 rounded-xl btn-purple px-6 py-3 text-sm font-bold text-white transition-all glow-purple"
-              >
-                Elegir Plan Premium
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              {cuposAgotados ? (
+                <CuposAgotadosBtn />
+              ) : (
+                <Link
+                  href="/precios"
+                  className="flex items-center justify-center gap-2 rounded-xl btn-purple px-6 py-3 text-sm font-bold text-white transition-all glow-purple"
+                >
+                  Elegir Plan Premium
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -671,7 +713,7 @@ function PricingSection() {
   )
 }
 
-function FinalCTASection() {
+function FinalCTASection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
     <section className="px-4 py-20">
       <div className="relative mx-auto max-w-2xl rounded-2xl p-8 sm:p-12 text-center overflow-hidden glass-card glow-purple-strong">
@@ -685,38 +727,57 @@ function FinalCTASection() {
             No pierdas más tiempo con métodos obsoletos. Únete a la plataforma
             que realmente te prepara para pasar el examen.
           </p>
-          <Link
-            href="/precios"
-            className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple"
-          >
-            Comenzar Ahora
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-          <p className="mt-4 text-sm text-neutral-500">
-            Un solo pago. Acceso inmediato.
-          </p>
+          {cuposAgotados ? (
+            <CuposAgotadosBtn className="mt-2" />
+          ) : (
+            <>
+              <Link
+                href="/precios"
+                className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple"
+              >
+                Comenzar Ahora
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <p className="mt-4 text-sm text-neutral-500">
+                Un solo pago. Acceso inmediato.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </section>
   )
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Count paid users to enforce the launch cap
+  let cuposAgotados = false
+  try {
+    const admin = createAdminClient()
+    const { count } = await admin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('subscription_status', 'activa')
+    cuposAgotados = (count ?? 0) >= CUPOS_LIMITE
+  } catch {
+    // If the query fails, leave the buttons visible (fail open)
+  }
+
   return (
     <>
-      <HeroSection />
+      <HeroSection cuposAgotados={cuposAgotados} />
       <FeatureBadgesSection />
       <ForYouSection />
-      <ProblemSection />
+      <ProblemSection cuposAgotados={cuposAgotados} />
       <FeaturesRowSection />
 
       <ForWhoSection />
       <ServicesSection />
-      <CTABannerSection />
+      <CTABannerSection cuposAgotados={cuposAgotados} />
       <TestimonialsSection />
       <FAQSection />
-      <PricingSection />
-      <FinalCTASection />
+      <PricingSection cuposAgotados={cuposAgotados} />
+      <FinalCTASection cuposAgotados={cuposAgotados} />
     </>
   )
 }
