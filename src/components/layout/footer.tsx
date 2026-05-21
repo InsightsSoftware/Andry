@@ -28,18 +28,18 @@ function TikTokIcon() {
 
 export function Footer() {
   return (
-    <footer className="border-t border-black/5 dark:border-white/5 bg-primary-700 dark:bg-primary-900 py-7">
+    <footer className="border-t border-black/5 dark:border-white/5 bg-primary-700 dark:bg-primary-900 py-10">
       <div className="mx-auto max-w-6xl px-6">
         {/* Main row */}
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           {/* Left — logo + socials */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-5">
             <Image
               src="/logo-white.png"
               alt="Y Exam Prep"
               width={600}
               height={600}
-              className="h-16 w-auto"
+              className="h-24 w-auto"
             />
 
             {/* Social icons */}
@@ -95,7 +95,7 @@ export function Footer() {
         </div>
 
         {/* Divider + copyright */}
-        <div className="mt-6 border-t border-white/10 pt-4 text-center">
+        <div className="mt-8 border-t border-white/10 pt-5 text-center">
           <p className="text-xs text-white/50">
             &copy; Copyright {new Date().getFullYear()} Y Exam Prep. All rights reserved.
           </p>
