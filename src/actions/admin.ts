@@ -102,7 +102,7 @@ export async function getUsers() {
   const { data, error } = await admin
     .from('profiles')
     .select(
-      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado, oficio, numero_licencia'
+      'id, email, nombre_completo, rol, subscription_status, subscription_plan, subscription_expires_at, created_at, telefono, direccion, envio_estado, oficio'
     )
     .order('created_at', { ascending: false })
     .limit(200)
