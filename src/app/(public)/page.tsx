@@ -148,12 +148,11 @@ function FeatureBadgesSection() {
 
 function ProblemSection() {
   const bullets = [
-    'Te enfrentás a miles de páginas técnicas y manuales extensos imposibles de memorizar.',
+    'Te enfrentas a miles de páginas técnicas y manuales extensos imposibles de memorizar.',
     'Chocas con la barrera del idioma y con cursos que solo ofrecen malas traducciones.',
-    'Llegás agotado después del trabajo, sin tiempo ni energía para sentarte a leer.',
-    "Caés en las 'trampas' del Estado: el examen evalúa tu velocidad para interpretar leyes y códigos bajo presión, no tus años de experiencia en la obra.",
-    'Tenés miedo de reprobar y perder miles de dólares en escuelas tradicionales.',
-    'Consultá a Contratistas Certificados en nuestro foro de Comunidad 24/7.',
+    'Llegas agotado después del trabajo, sin tiempo ni energía para sentarte a leer.',
+    'Caes en las "trampas" del Estado: el examen evalúa tu velocidad para interpretar leyes y códigos bajo presión, no tus años de experiencia en la obra.',
+    'Tienen miedo de reprobar y perder miles de dólares en escuelas tradicionales.',
   ]
 
   return (
@@ -165,8 +164,8 @@ function ProblemSection() {
             <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary-500 dark:text-primary-400">
               El problema
             </p>
-            <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-900 dark:text-white sm:text-4xl">
-              Sabés construir...{' '}
+            <h2 className="mb-6 text-3xl font-extrabold leading-tight sm:text-4xl">
+              <span className="text-primary-600 dark:text-primary-400">Sabes construir...</span>
               <br />
               <span className="text-neutral-900 dark:text-white">pero el examen es otro juego.</span>
             </h2>
