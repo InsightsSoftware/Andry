@@ -202,7 +202,7 @@ export async function updateEnvioEstado(
 }
 
 export async function deleteUser(userId: string) {
-  const currentUser = await requireRoot()
+  const currentUser = await requireAdmin()
   const admin = createAdminClient()
 
   // Cannot delete yourself
