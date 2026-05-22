@@ -142,27 +142,32 @@ export async function getCurrentUserRole() {
   return { rol: profile?.rol || null, userId: user.id }
 }
 
-export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin' | 'comunidad') {
+export async function updateUserRole(userId: string, rol: 'estudiante' | 'admin' | 'comunidad' | 'root') {
   const currentUser = await requireAdmin()
   const admin = createAdminClient()
 
-  // Prevent self-demotion
+  // Prevent self-role-change
   if (userId === currentUser.id) {
     return { error: 'No puedes cambiar tu propio rol' }
   }
 
-  // Only root can modify other admins/root users
+  // Only root can assign root role
+  if (rol === 'root' && currentUser.rol !== 'root') {
+    return { error: 'Solo root puede asignar el rol root' }
+  }
+
+  // Fetch target's current role
   const { data: targetProfile } = await admin
     .from('profiles')
     .select('rol')
     .eq('id', userId)
     .maybeSingle()
 
-  if (targetProfile?.rol === 'root') {
-    return { error: 'No se puede modificar un usuario root' }
-  }
-
-  if (targetProfile?.rol === 'admin' && currentUser.rol !== 'root') {
+  // Only root can modify admins or other roots
+  if (
+    (targetProfile?.rol === 'root' || targetProfile?.rol === 'admin') &&
+    currentUser.rol !== 'root'
+  ) {
     return { error: 'Solo root puede modificar administradores' }
   }
 
