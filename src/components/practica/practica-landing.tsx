@@ -142,7 +142,7 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
             </div>
             <h2 className="mb-1.5 text-xl font-bold text-white">Práctica Libre</h2>
             <p className="mb-4 text-sm text-white/70 leading-relaxed">
-              Sin reloj ni presión. Elegí un capítulo y practicá a tu ritmo.
+              Sin reloj ni presión. Elige un capítulo y practica a tu ritmo.
             </p>
             <span className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all ${
               mode === 'libre'
@@ -186,7 +186,7 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
             </div>
             <h2 className="mb-1.5 text-xl font-bold text-white">Simulación Real</h2>
             <p className="mb-4 text-sm text-white/70 leading-relaxed">
-              Examen con tiempo (2–6 horas), preguntas aleatorias. Requiere 70% para aprobar.
+              Examen con tiempo (2-6 horas), preguntas aleatorias. Requiere 70% para aprobar.
             </p>
             <span className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all ${
               mode === 'examen'
@@ -217,7 +217,10 @@ export function PracticaLanding({ cursosConCapitulos, errorCode }: Props) {
                 {mode === 'libre' ? 'Modo Práctica Libre' : 'Modo Simulación Real'}
               </h3>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                Configurá el origen y el volumen de preguntas antes de comenzar.
+                {mode === 'libre'
+                ? 'Configura el origen y la cantidad de preguntas antes de comenzar.'
+                : 'Configura la cantidad de preguntas y la duración antes de comenzar.'
+              }
               </p>
             </div>
           </div>

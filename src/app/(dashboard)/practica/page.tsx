@@ -48,7 +48,7 @@ export default async function PracticaIndexPage({
         Práctica y Examen
       </h1>
       <p className="mb-8 text-sm text-neutral-500 dark:text-neutral-400">
-        Elegí el modo que mejor se adapta a tu sesión de hoy
+        Elige el modo que mejor se adapta a tu sesión de hoy.
       </p>
 
       <PracticaLanding cursosConCapitulos={cursosConCapitulos} errorCode={errorCode} />
