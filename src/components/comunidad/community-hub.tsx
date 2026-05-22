@@ -5,8 +5,8 @@ import { MessageCircleQuestion, Briefcase, ArrowRight } from 'lucide-react'
 const CARDS = [
   {
     href: '/comunidad/dudas',
-    label: 'Dudas',
-    description: 'Consultá tus dudas de estudio y respondé las de otros estudiantes',
+    label: 'Foro de Estudio',
+    description: 'Consulta tus dudas y responde las de otros colegas.',
     image: '/images/community/dudas.png',
     icon: MessageCircleQuestion,
     iconColor: 'text-purple-300',
@@ -16,8 +16,8 @@ const CARDS = [
   },
   {
     href: '/comunidad/trabajos',
-    label: 'Trabajos',
-    description: 'Encontrá oportunidades laborales para intérpretes y traductores',
+    label: 'Bolsa de Trabajos',
+    description: 'Encuentra oportunidades laborales, proyectos y subcontratos.',
     image: '/images/community/trabajos.png',
     icon: Briefcase,
     iconColor: 'text-amber-300',
