@@ -16,7 +16,7 @@ const CARDS = [
   },
   {
     href: '/comunidad/trabajos',
-    label: 'Bolsa de Trabajos',
+    label: 'Trabajos',
     description: 'Encuentra oportunidades laborales, proyectos y subcontratos.',
     image: '/images/community/trabajos.png',
     icon: Briefcase,
