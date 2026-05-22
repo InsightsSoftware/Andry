@@ -89,7 +89,7 @@ export async function proxy(request: NextRequest) {
       const allowedForCC = ['/comunidad', '/aliados', '/perfil']
       if (!allowedForCC.some((r) => pathname.startsWith(r))) {
         const url = request.nextUrl.clone()
-        url.pathname = '/comunidad/trabajos'
+        url.pathname = '/comunidad'
         return NextResponse.redirect(url)
       }
       // Skip subscription check for CC role
