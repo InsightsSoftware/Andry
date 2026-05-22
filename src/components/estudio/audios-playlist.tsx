@@ -307,7 +307,7 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
             Playlist de audio
           </h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Escuchá mientras trabajás o manejás.
+            Escucha mientras trabajas o manejas.
           </p>
         </div>
 
@@ -649,7 +649,7 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
                 <div className="py-4 text-center">
                   <Headphones className="mx-auto mb-2 h-8 w-8 text-neutral-300 dark:text-neutral-600" />
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Elegí un módulo para empezar
+                    Elige un módulo para empezar.
                   </p>
                 </div>
               )}
@@ -666,7 +666,7 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
                 </p>
               </div>
               <p className="mt-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                {activeChapterCompleted}/{activeChapterTotal} tracks
+                {activeChapterCompleted}/{activeChapterTotal} módulos
               </p>
               <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
                 <div
