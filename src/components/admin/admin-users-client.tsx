@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { updateEnvioEstado, inviteUser, updateUserLicencia } from '@/actions/admin'
+import { updateEnvioEstado, inviteUser, updateUserLicencia, deleteUser } from '@/actions/admin'
 import { UserRoleToggle } from './user-role-toggle'
 import {
   ChevronDown,
@@ -18,6 +18,8 @@ import {
   BadgeCheck,
   Pencil,
   Check,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 
 type User = {
@@ -109,12 +111,30 @@ function UserRow({
   user,
   callerRole,
   callerId,
+  onDelete,
 }: {
   user: User
   callerRole: string | null
   callerId: string | null
+  onDelete: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    const result = await deleteUser(user.id)
+    if (result.success) {
+      onDelete(user.id)
+    } else {
+      setDeleteError(result.error || 'Error al eliminar')
+      setDeleting(false)
+      setConfirmDelete(false)
+    }
+  }
 
   return (
     <>
@@ -231,6 +251,48 @@ function UserRow({
                 </div>
               </div>
             </div>
+
+            {/* Delete zone — only if not self */}
+            {callerId !== user.id && (
+              <div className="mt-4 flex items-center gap-3 border-t border-black/5 dark:border-white/5 pt-4">
+                {deleteError && (
+                  <span className="flex items-center gap-1.5 text-xs text-danger-600 dark:text-danger-400">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {deleteError}
+                  </span>
+                )}
+                {confirmDelete ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                      ¿Eliminar a <strong>{user.nombre_completo || user.email}</strong>? Esta acción no se puede deshacer.
+                    </span>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-danger-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-danger-500 disabled:opacity-50 cursor-pointer transition-colors"
+                    >
+                      {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                      {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      disabled={deleting}
+                      className="rounded-lg px-3 py-1.5 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-danger-300 dark:border-danger-700 px-3 py-1.5 text-xs font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Eliminar usuario
+                  </button>
+                )}
+              </div>
+            )}
           </td>
         </tr>
       )}
@@ -413,29 +475,34 @@ function LicenciaEditor({ user }: { user: User }) {
 }
 
 export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) {
+  const [users, setUsers] = useState<User[]>(initialUsers)
   const [tab, setTab] = useState<EnvioTab>('todos')
   const [search, setSearch] = useState('')
   const [oficioFilter, setOficioFilter] = useState('')
   const [showInvite, setShowInvite] = useState(false)
 
+  function handleDelete(id: string) {
+    setUsers((prev) => prev.filter((u) => u.id !== id))
+  }
+
   const pending = useMemo(
-    () => initialUsers.filter((u) => u.envio_estado === 'pendiente'),
-    [initialUsers]
+    () => users.filter((u) => u.envio_estado === 'pendiente'),
+    [users]
   )
   const sent = useMemo(
-    () => initialUsers.filter((u) => u.envio_estado === 'enviado'),
-    [initialUsers]
+    () => users.filter((u) => u.envio_estado === 'enviado'),
+    [users]
   )
 
   // Unique oficio values for the filter dropdown
   const oficios = useMemo(() => {
     const set = new Set<string>()
-    initialUsers.forEach((u) => { if (u.oficio?.trim()) set.add(u.oficio.trim()) })
+    users.forEach((u) => { if (u.oficio?.trim()) set.add(u.oficio.trim()) })
     return Array.from(set).sort()
-  }, [initialUsers])
+  }, [users])
 
   const filtered = useMemo(() => {
-    let list = initialUsers
+    let list = users
     if (tab === 'pendiente') list = pending
     if (tab === 'enviado')   list = sent
     if (oficioFilter) {
@@ -452,7 +519,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
       )
     }
     return list
-  }, [initialUsers, tab, pending, sent, search, oficioFilter])
+  }, [users, tab, pending, sent, search, oficioFilter])
 
   return (
     <div>
@@ -464,7 +531,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
         <div className="flex items-center gap-1.5">
           <Filter className="h-4 w-4 text-neutral-400" />
           {([
-            { key: 'todos',     label: `Todos (${initialUsers.length})` },
+            { key: 'todos',     label: `Todos (${users.length})` },
             { key: 'pendiente', label: `Pendientes de envío (${pending.length})` },
             { key: 'enviado',   label: `Enviados (${sent.length})` },
           ] as { key: EnvioTab; label: string }[]).map(({ key, label }) => (
@@ -552,6 +619,7 @@ export function AdminUsersClient({ initialUsers, callerRole, callerId }: Props) 
                 user={user}
                 callerRole={callerRole}
                 callerId={callerId}
+                onDelete={handleDelete}
               />
             ))}
             {filtered.length === 0 && (
