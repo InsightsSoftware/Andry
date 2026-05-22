@@ -364,13 +364,17 @@ export async function toggleCommentLike(
     await supabase.from('likes_comentarios').insert({ user_id: user.id, comentario_id: comentarioId })
   }
 
-  const { count } = await supabase
+  // Recount using admin client so RLS on comentarios doesn't block the
+  // UPDATE (only the comment owner can update their own comment via RLS, but
+  // any user can like — so we bypass with service role).
+  const admin = createAdminClient()
+  const { count } = await admin
     .from('likes_comentarios')
     .select('*', { count: 'exact', head: true })
     .eq('comentario_id', comentarioId)
 
   const newCount = count ?? 0
-  await supabase.from('comentarios').update({ likes_count: newCount }).eq('id', comentarioId)
+  await admin.from('comentarios').update({ likes_count: newCount }).eq('id', comentarioId)
 
   return { liked: !existing, count: newCount }
 }
@@ -396,14 +400,17 @@ export async function toggleLike(
     await supabase.from('likes_comunidad').insert({ user_id: user.id, post_id: postId })
   }
 
-  // Recount and sync denormalised column
-  const { count } = await supabase
+  // Recount using admin client so RLS on posts_comunidad doesn't block the
+  // UPDATE (only the post owner can update their own post via RLS, but any
+  // user can like — so we bypass with service role).
+  const admin = createAdminClient()
+  const { count } = await admin
     .from('likes_comunidad')
     .select('*', { count: 'exact', head: true })
     .eq('post_id', postId)
 
   const newCount = count ?? 0
-  await supabase.from('posts_comunidad').update({ likes_count: newCount }).eq('id', postId)
+  await admin.from('posts_comunidad').update({ likes_count: newCount }).eq('id', postId)
 
   return { liked: !existing, count: newCount }
 }
