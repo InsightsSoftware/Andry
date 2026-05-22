@@ -84,9 +84,9 @@ export async function proxy(request: NextRequest) {
       .single()
 
     // Users with 'comunidad' (CC — Contratistas Certificados) role:
-    // only allow /comunidad (includes /trabajos and /dudas) and /perfil.
+    // only allow /comunidad, /aliados, and /perfil.
     if (profile?.rol === 'comunidad') {
-      const allowedForCC = ['/comunidad', '/perfil']
+      const allowedForCC = ['/comunidad', '/aliados', '/perfil']
       if (!allowedForCC.some((r) => pathname.startsWith(r))) {
         const url = request.nextUrl.clone()
         url.pathname = '/comunidad/trabajos'

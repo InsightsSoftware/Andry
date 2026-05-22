@@ -56,10 +56,18 @@ const links: NavLink[] = [
   { href: '/perfil', label: 'Mi Perfil', icon: User },
 ]
 
+// Links shown only to full-access users (estudiante / admin / root)
+const CC_LINKS: NavLink[] = [
+  { href: '/comunidad', label: 'Comunidad', icon: Users },
+  { href: '/aliados',   label: 'Aliados',   icon: Handshake },
+  { href: '/perfil',    label: 'Mi Perfil', icon: User },
+]
+
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isComunidad, setIsComunidad] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -72,9 +80,12 @@ export function Sidebar() {
         .single()
         .then(({ data }) => {
           if (data?.rol === 'admin' || data?.rol === 'root') setIsAdmin(true)
+          if (data?.rol === 'comunidad') setIsComunidad(true)
         })
     })
   }, [])
+
+  const visibleLinks = isComunidad ? CC_LINKS : links
 
   async function handleLogout() {
     const supabase = createClient()
@@ -108,7 +119,7 @@ export function Sidebar() {
         </div>
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
-        {links.map((link) => {
+        {visibleLinks.map((link) => {
           const excluded = (link.excludePrefixes || []).some((p) =>
             pathname.startsWith(p)
           )

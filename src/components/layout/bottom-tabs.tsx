@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
   BookOpen,
   ClipboardList,
   Users,
   User,
+  Handshake,
 } from 'lucide-react'
 
 // IA removed from the MVP nav — will return in Fase 2 as part of the
@@ -16,20 +19,45 @@ import {
 // Aliados removed from mobile tabs (accessible via desktop sidebar) —
 // replaced by Práctica which is a core daily-use feature.
 const tabs = [
-  { href: '/panel', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/estudio', label: 'Guía', icon: BookOpen },
-  { href: '/practica', label: 'Práctica', icon: ClipboardList },
+  { href: '/panel',     label: 'Inicio',     icon: LayoutDashboard },
+  { href: '/estudio',   label: 'Guía',       icon: BookOpen },
+  { href: '/practica',  label: 'Práctica',   icon: ClipboardList },
+  { href: '/comunidad', label: 'Comunidad',  icon: Users },
+  { href: '/perfil',    label: 'Perfil',     icon: User },
+]
+
+// CC role only sees these 3 tabs
+const CC_TABS = [
   { href: '/comunidad', label: 'Comunidad', icon: Users },
-  { href: '/perfil', label: 'Perfil', icon: User },
+  { href: '/aliados',   label: 'Aliados',   icon: Handshake },
+  { href: '/perfil',    label: 'Perfil',    icon: User },
 ]
 
 export function BottomTabs() {
   const pathname = usePathname()
+  const [isComunidad, setIsComunidad] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.rol === 'comunidad') setIsComunidad(true)
+        })
+    })
+  }, [])
+
+  const visibleTabs = isComunidad ? CC_TABS : tabs
 
   return (
     <nav aria-label="Navegación principal" className="fixed bottom-0 left-0 right-0 z-40 glass-nav pb-safe md:hidden">
       <div className="flex items-center justify-around" role="tablist">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           // Exam & results pages live under /estudio/... but belong to Práctica tab
           const isPracticaPath =
             pathname.startsWith('/estudio/examen/') ||
