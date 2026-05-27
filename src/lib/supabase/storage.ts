@@ -3,18 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export const CONTENIDO_BUCKET = 'contenido-cursos'
 
 /**
- * Returns a URL the browser can hit to fetch content from the bucket.
+ * Returns a short-lived signed URL for private bucket content.
  *
- * The bucket is configured `public: true` (per migration 00010) — auth is
- * enforced at the app level (middleware + subscription gate), not at the
- * storage level. So we just return the public URL directly; no RLS dance,
- * no TTL, no "Object not found" errors from `createSignedUrl` hitting
- * storage.objects RLS.
+ * The bucket is private (migration 00050). Only users with an active
+ * subscription (or admin/root/mentor role) can generate signed URLs —
+ * enforced by storage.objects RLS.
  *
- * NOTE: when migration 00050 is applied (making the bucket private), this
- * function should be switched to `createSignedUrl`. Both changes must go
- * together — don't apply the migration without updating this function, or
- * vice versa.
+ * TTL default: 300 seconds (5 minutes). Enough to start streaming;
+ * the player will request a fresh URL on next load.
  *
  * Accepts three kinds of input:
  * 1. A bare storage path (e.g. "negocios-y-finanzas/abc/audio_123.mp3")
@@ -24,7 +20,7 @@ export const CONTENIDO_BUCKET = 'contenido-cursos'
 export async function getSignedContentUrl(
   supabase: SupabaseClient,
   urlOrPath: string,
-  _ttlSeconds = 3600
+  ttlSeconds = 300
 ): Promise<string> {
   // External URL — not ours, hand it back as-is.
   if (isExternalUrl(urlOrPath)) {
@@ -32,13 +28,17 @@ export async function getSignedContentUrl(
   }
 
   const path = extractPath(urlOrPath)
-  const { data } = supabase.storage.from(CONTENIDO_BUCKET).getPublicUrl(path)
+  const { data, error } = await supabase.storage
+    .from(CONTENIDO_BUCKET)
+    .createSignedUrl(path, ttlSeconds)
 
-  if (!data?.publicUrl) {
-    throw new Error(`No se pudo construir URL pública para "${path}"`)
+  if (error || !data?.signedUrl) {
+    throw new Error(
+      `No se pudo generar URL firmada para "${path}": ${error?.message ?? 'respuesta vacía'}`
+    )
   }
 
-  return data.publicUrl
+  return data.signedUrl
 }
 
 /**

@@ -30,13 +30,13 @@ create policy "subscribers can read content"
       select 1
         from public.profiles p
        where p.id = auth.uid()
-         and p.subscription_status = 'active'
+         and p.subscription_status = 'activa'
          and (p.subscription_expires_at is null
               or p.subscription_expires_at > now())
     )
   );
 
--- 4) Admins y mentores siempre pueden leer
+-- 4) Admins, root y mentores siempre pueden leer
 create policy "admins read all content"
   on storage.objects for select
   using (
@@ -45,11 +45,11 @@ create policy "admins read all content"
       select 1
         from public.profiles p
        where p.id = auth.uid()
-         and p.rol in ('admin', 'mentor')
+         and p.rol in ('admin', 'root', 'mentor')
     )
   );
 
--- 5) Solo admins pueden subir/modificar/borrar (writes via service_role
+-- 5) Solo admins/root pueden subir/modificar/borrar (writes via service_role
 --    bypasean RLS, asi que el bulk-upload server-side sigue funcionando).
 create policy "admins write content"
   on storage.objects for all
@@ -59,7 +59,7 @@ create policy "admins write content"
       select 1
         from public.profiles p
        where p.id = auth.uid()
-         and p.rol in ('admin', 'mentor')
+         and p.rol in ('admin', 'root', 'mentor')
     )
   )
   with check (
@@ -68,6 +68,6 @@ create policy "admins write content"
       select 1
         from public.profiles p
        where p.id = auth.uid()
-         and p.rol in ('admin', 'mentor')
+         and p.rol in ('admin', 'root', 'mentor')
     )
   );
