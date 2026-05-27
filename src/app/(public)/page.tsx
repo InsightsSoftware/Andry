@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
+import { CheckoutButton } from '@/components/landing/checkout-button'
 import { ForYouSection } from '@/components/landing/for-you-section'
 import { Spotlight } from '@/components/ui/spotlight'
 import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
@@ -86,19 +87,19 @@ function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             <CuposAgotadosBtn />
           ) : (
             <>
-              <Link
-                href="/precios"
+              <a
+                href="#precios"
                 className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple sm:w-auto"
               >
                 Comenzar Ahora
                 <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/precios"
+              </a>
+              <a
+                href="#precios"
                 className="flex min-h-[56px] w-full items-center justify-center rounded-xl px-8 text-lg font-semibold text-neutral-700 dark:text-neutral-300 glass glass-hover transition-all duration-200 sm:w-auto"
               >
                 Ver Precios
-              </Link>
+              </a>
             </>
           )}
         </div>
@@ -214,13 +215,13 @@ function ProblemSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             {cuposAgotados ? (
               <CuposAgotadosBtn />
             ) : (
-              <Link
-                href="/precios"
+              <a
+                href="#precios"
                 className="inline-flex min-h-[52px] items-center gap-2 rounded-xl btn-purple px-8 text-base font-bold text-white transition-all duration-200 glow-purple"
               >
                 Comenzar Ahora
                 <ArrowRight className="h-5 w-5" />
-              </Link>
+              </a>
             )}
           </div>
 
@@ -297,13 +298,13 @@ function FeaturesRowSection() {
         </div>
 
         <div className="mt-10 text-center">
-          <Link
-            href="/precios"
+          <a
+            href="#precios"
             className="inline-flex min-h-[52px] items-center gap-2 rounded-xl btn-purple px-8 text-base font-bold text-white transition-all duration-200 glow-purple"
           >
             Comenzar Ahora
             <ArrowRight className="h-5 w-5" />
-          </Link>
+          </a>
         </div>
       </div>
     </section>
@@ -449,13 +450,13 @@ function CTABannerSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             {cuposAgotados ? (
               <CuposAgotadosBtn />
             ) : (
-              <Link
-                href="/precios"
+              <a
+                href="#precios"
                 className="inline-flex min-h-[56px] items-center gap-2 rounded-xl btn-purple px-10 text-lg font-bold text-white transition-all duration-200 glow-purple"
               >
                 Comenzar mi preparación
                 <ArrowRight className="h-5 w-5" />
-              </Link>
+              </a>
             )}
           </div>
         </div>
@@ -617,7 +618,7 @@ function FAQSection() {
 
 function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
-    <section className="px-4 py-20">
+    <section id="precios" className="px-4 py-20 scroll-mt-16">
       <div className="mx-auto max-w-4xl">
         <div className="mb-12 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary-500 dark:text-primary-400">
@@ -639,7 +640,7 @@ function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Digital</h3>
             <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">Acceso digital completo</p>
             <div className="mb-6">
-              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$447</span>
+              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$400</span>
               <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 6 meses</span>
             </div>
             <ul className="mb-6 flex flex-col gap-2">
@@ -653,13 +654,11 @@ function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             {cuposAgotados ? (
               <CuposAgotadosBtn />
             ) : (
-              <Link
-                href="/precios"
-                className="flex items-center justify-center gap-2 rounded-xl glass glass-hover px-6 py-3 text-sm font-semibold text-neutral-700 dark:text-white transition-all"
-              >
-                Elegir Plan Básico
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <CheckoutButton
+                planKey="basico"
+                label="Elegir Plan Básico"
+                className="w-full glass glass-hover text-neutral-700 dark:text-white"
+              />
             )}
           </div>
 
@@ -694,13 +693,11 @@ function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
               {cuposAgotados ? (
                 <CuposAgotadosBtn />
               ) : (
-                <Link
-                  href="/precios"
-                  className="flex items-center justify-center gap-2 rounded-xl btn-purple px-6 py-3 text-sm font-bold text-white transition-all glow-purple"
-                >
-                  Elegir Plan Premium
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                <CheckoutButton
+                  planKey="premium"
+                  label="Elegir Plan Premium"
+                  className="w-full btn-purple text-white glow-purple"
+                />
               )}
             </div>
           </div>
@@ -728,13 +725,13 @@ function FinalCTASection({ cuposAgotados }: { cuposAgotados: boolean }) {
             <CuposAgotadosBtn className="mt-2" />
           ) : (
             <>
-              <Link
-                href="/precios"
+              <a
+                href="#precios"
                 className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-xl btn-purple px-8 text-lg font-bold text-white transition-all duration-200 glow-purple"
               >
                 Comenzar Ahora
                 <ArrowRight className="h-5 w-5" />
-              </Link>
+              </a>
               <p className="mt-4 text-sm text-neutral-500">
                 Un solo pago. Acceso inmediato.
               </p>
