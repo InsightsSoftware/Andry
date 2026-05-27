@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Loader2 } from 'lucide-react'
 
 interface CheckoutButtonProps {
@@ -12,6 +12,18 @@ interface CheckoutButtonProps {
 export function CheckoutButton({ planKey, label, className = '' }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Reset loading when user navigates back from Stripe (bfcache restore)
+  useEffect(() => {
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        setLoading(false)
+        setError('')
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
 
   async function handleClick() {
     setError('')
