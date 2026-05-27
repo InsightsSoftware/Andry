@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { HeroLogo } from '@/components/ui/hero-logo'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import { ForYouSection } from '@/components/landing/for-you-section'
 import { Spotlight } from '@/components/ui/spotlight'
@@ -45,7 +44,7 @@ function CuposAgotadosBtn({ className = '' }: { className?: string }) {
 
 function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
-    <section className="relative overflow-hidden px-4 pt-16 pb-20 sm:pt-20 sm:pb-28">
+    <section className="relative overflow-hidden px-4 pt-20 pb-20 sm:pt-28 sm:pb-28">
       <HeroParallaxBg />
 
       <Spotlight
@@ -57,16 +56,14 @@ function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
       />
 
       <div className="relative mx-auto max-w-5xl text-center">
-        <HeroLogo />
-
         {/* Badge */}
         <div className="mb-8 inline-flex items-center gap-2 rounded-full glass px-5 py-2.5 text-sm text-neutral-600 dark:text-neutral-300">
           <Hammer className="h-4 w-4 text-accent-500 dark:text-accent-400" />
           Preparación de exámenes para contratistas en Florida
         </div>
 
-        {/* Headline — matching old landing */}
-        <h1 className="mb-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-neutral-900 dark:text-white sm:text-5xl lg:text-6xl">
+        {/* Headline */}
+        <h1 className="mb-6 text-5xl font-extrabold leading-[1.08] tracking-tight text-neutral-900 dark:text-white sm:text-6xl lg:text-7xl">
           Domina el Examen y Obtén tu{' '}
           <br className="hidden sm:block" />
           <span className="text-gold text-glow-gold">Licencia de Contratista</span>{' '}
