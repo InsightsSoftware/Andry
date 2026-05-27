@@ -23,12 +23,12 @@ export function Navbar() {
             Iniciar Sesión
           </Link>
           <ThemeToggle />
-          <Link
-            href="/precios"
+          <a
+            href="/#precios"
             className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-500 transition-colors"
           >
             Comenzar Ahora
-          </Link>
+          </a>
         </div>
 
         {/* Mobile nav */}
@@ -40,12 +40,12 @@ export function Navbar() {
           >
             Entrar
           </Link>
-          <Link
-            href="/precios"
+          <a
+            href="/#precios"
             className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white"
           >
             Comenzar
-          </Link>
+          </a>
         </div>
       </div>
     </nav>
