@@ -22,8 +22,8 @@ const FROM = process.env.EMAIL_FROM || 'Y Exam Prep <noreply@yexamprep.com>'
 // ── Plan labels ──────────────────────────────────────────────────────────────
 
 const PLAN_LABELS: Record<string, { name: string; period: string; price: string }> = {
-  basico:  { name: 'Plan Básico',  period: '6 meses',  price: '$299' },
-  premium: { name: 'Plan Premium', period: '12 meses', price: '$599' },
+  basico:  { name: 'Plan Básico',  period: '6 meses',  price: '$400' },
+  premium: { name: 'Plan Premium', period: '12 meses', price: '$597' },
 }
 
 // ── 1. Purchase confirmation ─────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import { headers } from 'next/headers'
 import { authLimiter } from '@/lib/rate-limit'
 import { loginSchema, registerSchema } from '@/lib/validations'
 import { sendWelcomeEmail } from '@/lib/email'
+import { notifyGHL } from '@/lib/ghl'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,14 @@ export async function registerAction(formData: FormData) {
     to: data.email,
     nombre: data.nombre_completo,
   }).catch((err) => console.error('[registerAction] welcome email error:', err))
+
+  // Notify GHL — registro event (fire-and-forget)
+  notifyGHL({
+    email: data.email,
+    nombre: data.nombre_completo,
+    telefono: data.telefono || null,
+    event: 'registro',
+  }).catch(() => { /* already logged inside notifyGHL */ })
 
   return { success: true }
 }

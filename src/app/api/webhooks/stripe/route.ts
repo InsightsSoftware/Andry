@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPurchaseConfirmationEmail } from '@/lib/email'
+import { notifyGHL } from '@/lib/ghl'
 import Stripe from 'stripe'
 
 // Stripe sends raw body — we need to read it as text for signature verification
@@ -113,6 +114,15 @@ export async function POST(request: Request) {
             plan: planKey,
             direccion: profile.direccion || null,
           }).catch((err) => console.error('[webhook] purchase email error:', err))
+
+          // Notify GHL — compra event (fire-and-forget)
+          notifyGHL({
+            email: profile.email,
+            nombre: profile.nombre_completo || profile.email,
+            telefono: null,
+            plan: planKey,
+            event: 'compra',
+          }).catch(() => { /* already logged inside notifyGHL */ })
         }
 
         await adminSupabase

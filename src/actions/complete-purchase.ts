@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PLANS, isPaymentsSimulated, getStripe, type PlanKey } from '@/lib/stripe'
 import { registerSchema } from '@/lib/validations'
 import { sendPurchaseConfirmationEmail } from '@/lib/email'
+import { notifyGHL } from '@/lib/ghl'
 
 type PurchaseInput = {
   nombre_completo: string
@@ -146,6 +147,15 @@ export async function completePurchase(
     direccion: formData.direccion || null,
   }).catch((err) => console.error('[completePurchase] email error:', err))
 
+  // Notify GHL — compra event (fire-and-forget)
+  notifyGHL({
+    email: formData.email,
+    nombre: formData.nombre_completo,
+    telefono: formData.telefono || null,
+    plan: planKey,
+    event: 'compra',
+  }).catch(() => { /* already logged inside notifyGHL */ })
+
   // Mark as pending shipment (update profile)
   admin
     .from('profiles')
@@ -246,6 +256,15 @@ export async function activateExistingSubscription(
       plan: planKey,
       direccion: profile?.direccion || null,
     }).catch((err) => console.error('[activateExistingSubscription] email error:', err))
+
+    // Notify GHL — compra event (fire-and-forget)
+    notifyGHL({
+      email: user.email,
+      nombre: profile?.nombre_completo || user.email,
+      telefono: null,
+      plan: planKey,
+      event: 'compra',
+    }).catch(() => { /* already logged inside notifyGHL */ })
 
     // Mark as pending shipment
     admin

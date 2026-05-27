@@ -9,7 +9,7 @@ const plans = [
   {
     key: 'basico',
     name: 'Plan Básico',
-    price: '$447',
+    price: '$400',
     period: '6 meses',
     description: 'Acceso digital completo para preparar tu examen',
     features: [

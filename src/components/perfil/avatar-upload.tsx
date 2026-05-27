@@ -1,8 +1,7 @@
 'use client'
 
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { Camera, Minus, Plus, X, Check, Loader2, Trash2 } from 'lucide-react'
-import { AvatarInicial } from '@/components/comunidad/avatar-inicial'
+import { Camera, Minus, Plus, X, Check, Loader2 } from 'lucide-react'
 import { uploadAvatar, removeAvatar } from '@/actions/profile'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -10,6 +9,33 @@ import { uploadAvatar, removeAvatar } from '@/actions/profile'
 const CROP_SIZE = 280          // px — circular preview diameter
 const CROP_RADIUS = CROP_SIZE / 2
 const OUTPUT_SIZE = 400        // px — saved JPEG dimensions
+
+// ── Initials helper (mirrors AvatarInicial logic) ─────────────────────────────
+
+const AVATAR_COLORS = [
+  { bg: 'rgba(124,58,237,0.2)',  text: '#a78bfa' }, // purple
+  { bg: 'rgba(217,119,6,0.2)',   text: '#fbbf24' }, // amber
+  { bg: 'rgba(5,150,105,0.2)',   text: '#34d399' }, // emerald
+  { bg: 'rgba(2,132,199,0.2)',   text: '#38bdf8' }, // sky
+  { bg: 'rgba(219,39,119,0.2)',  text: '#f472b6' }, // pink
+  { bg: 'rgba(234,88,12,0.2)',   text: '#fb923c' }, // orange
+  { bg: 'rgba(13,148,136,0.2)',  text: '#2dd4bf' }, // teal
+  { bg: 'rgba(220,38,38,0.2)',   text: '#f87171' }, // red
+  { bg: 'rgba(79,70,229,0.2)',   text: '#818cf8' }, // indigo
+]
+
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffffffff
+  return Math.abs(h)
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,6 +64,12 @@ export function AvatarUpload({ userId, nombre, initialAvatarUrl }: Props) {
   // zoom: 1.0 = "cover" zoom (image fills the circle)
   const [zoom, setZoom] = useState(1)
   const [minZoom, setMinZoom] = useState(1)
+
+  // ── Image error fallback (broken URL on mobile, etc.) ─────────────────────
+  const [imgError, setImgError] = useState(false)
+
+  // Reset error when avatar URL changes (new upload succeeds)
+  useEffect(() => { setImgError(false) }, [avatarUrl])
 
   // ── Upload state ───────────────────────────────────────────────────────────
   const [uploading, setUploading] = useState(false)
@@ -197,10 +229,18 @@ export function AvatarUpload({ userId, nombre, initialAvatarUrl }: Props) {
   // ── Rendered avatar size on profile page ──────────────────────────────────
   const DISPLAY_SIZE = 80
 
+  // Compute initials color for the inline fallback
+  const avatarName = nombre?.trim() || 'Usuario'
+  const colorIdx = hashStr(avatarName) % AVATAR_COLORS.length
+  const avatarColor = AVATAR_COLORS[colorIdx]
+  const initials = getInitials(avatarName)
+  const showImg = !!(avatarUrl && !imgError)
+
   return (
     <>
       {/* ── Trigger: avatar with camera overlay ─────────────────────────── */}
-      <div className="relative inline-block">
+      {/* shrink-0 prevents compression when inside a flex row on mobile */}
+      <div className="relative inline-block shrink-0">
         {/* Avatar circle */}
         <div
           className="relative overflow-hidden rounded-full cursor-pointer group"
@@ -208,15 +248,26 @@ export function AvatarUpload({ userId, nombre, initialAvatarUrl }: Props) {
           onClick={() => fileInputRef.current?.click()}
           title="Cambiar foto de perfil"
         >
-          {avatarUrl ? (
+          {showImg ? (
+            /* Real photo — absolute + inset-0 is the most reliable fill
+               method across all mobile browsers (avoids % height quirks) */
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src={avatarUrl}
+              src={avatarUrl!}
               alt="Foto de perfil"
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={() => setImgError(true)}
             />
           ) : (
-            <AvatarInicial nombre={nombre} size="lg" className="h-full w-full !rounded-full" />
+            /* Initials fallback — inline style avoids Tailwind opacity/color
+               compounding issues and works reliably on all mobile browsers */
+            <div
+              className="absolute inset-0 flex items-center justify-center text-base font-bold"
+              style={{ background: avatarColor.bg, color: avatarColor.text }}
+              aria-label={avatarName}
+            >
+              {initials}
+            </div>
           )}
 
           {/* Hover overlay */}

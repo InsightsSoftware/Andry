@@ -10,7 +10,7 @@ import { OFICIOS_LISTA } from '@/lib/validations'
 import type { PlanKey } from '@/lib/stripe'
 
 const PLAN_LABELS: Record<string, { name: string; period: string; price: string }> = {
-  basico:  { name: 'Plan Básico',  period: '6 meses',  price: '$447' },
+  basico:  { name: 'Plan Básico',  period: '6 meses',  price: '$400' },
   premium: { name: 'Plan Premium', period: '12 meses', price: '$597' },
 }
 
