@@ -10,7 +10,7 @@ const inter = Inter({
 
 // Hardcoded production URL used for Open Graph / canonical when the
 // server isn't sure of its own origin. Matches NEXT_PUBLIC_APP_URL.
-const SITE_URL = 'https://andry.onrender.com'
+const SITE_URL = 'https://yexamprep.com'
 const SITE_NAME = 'Y Exam Prep'
 const DEFAULT_TITLE =
   'Y Exam Prep — Preparate para tu Licencia de Contratista en Florida'
@@ -57,8 +57,10 @@ export const metadata: Metadata = {
     title: SITE_NAME,
   },
   icons: {
-    icon: '/icons/icon.svg',
-    apple: '/icons/icon.svg',
+    // Next.js auto-serves src/app/icon.png at /icon.png
+    icon: [{ url: '/icon.png', type: 'image/png' }],
+    apple: [{ url: '/icon.png', type: 'image/png' }],
+    shortcut: '/icon.png',
   },
   openGraph: {
     type: 'website',
