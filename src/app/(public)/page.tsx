@@ -640,7 +640,7 @@ function PricingSection({ cuposAgotados }: { cuposAgotados: boolean }) {
             <h3 className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">Digital</h3>
             <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">Acceso digital completo</p>
             <div className="mb-6">
-              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$400</span>
+              <span className="text-4xl font-extrabold text-neutral-900 dark:text-white">$447</span>
               <span className="ml-2 text-neutral-500 dark:text-neutral-400">/ 6 meses</span>
             </div>
             <ul className="mb-6 flex flex-col gap-2">
