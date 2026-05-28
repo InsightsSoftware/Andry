@@ -1,16 +1,20 @@
 /**
  * GoHighLevel (GHL) Inbound Webhook Integration
  *
- * Sends contact/event data to GHL to trigger automations.
- * Works with any GHL plan that supports inbound webhooks.
+ * Envía datos de contacto a GHL cuando un estudiante se registra, compra, o
+ * se le vence la suscripción. GHL filtra automations por el campo "tag".
  *
- * Env var required (set in Render):
- *   GHL_WEBHOOK_URL=https://services.leadconnectorhq.com/hooks/<your-id>
+ * IMPORTANTE: el payload coincide EXACTAMENTE con el sample request que Andry
+ * mapeó en GHL: { nombre, apellidos, email, telefono, tag }.
+ * Si cambiás estas keys, GHL deja de reconocer los campos en el contacto.
  *
- * If GHL_WEBHOOK_URL is not set, all calls are silently skipped (safe to deploy first).
+ * La URL del webhook se puede override con la env var GHL_WEBHOOK_URL.
  */
 
-const GHL_WEBHOOK_URL = process.env.GHL_WEBHOOK_URL
+const DEFAULT_GHL_WEBHOOK_URL =
+  'https://services.leadconnectorhq.com/hooks/F5LCZPUqR16Gz4ftvpAv/webhook-trigger/88f1dc1f-dfbe-4b6d-bb46-6e82a50edd5e'
+
+const GHL_WEBHOOK_URL = process.env.GHL_WEBHOOK_URL || DEFAULT_GHL_WEBHOOK_URL
 
 // ── Event types ───────────────────────────────────────────────────────────────
 
@@ -18,38 +22,42 @@ export type GHLEvent = 'registro' | 'compra' | 'vencimiento'
 
 export interface GHLContactData {
   email: string
+  /** Nombre completo — se separa en nombre/apellidos dentro de notifyGHL */
   nombre: string
   telefono?: string | null
-  /** e.g. 'basico' | 'premium' */
+  /** Plan comprado: 'basico' | 'premium' (eventos compra/vencimiento) */
   plan?: string | null
+  /** Oficio/categoría que eligió el usuario al registrarse (evento registro) */
+  oficio?: string | null
   event: GHLEvent
 }
 
-/**
- * Map our internal event + plan to a GHL tag string.
- * GHL automations filter contacts by tag to decide which workflow to run.
- *
- * Examples:
- *   registro                → tag: 'Y-Registro'
- *   compra basico           → tag: 'Y-Compra-Basico'
- *   compra premium          → tag: 'Y-Compra-Premium'
- *   vencimiento basico      → tag: 'Y-Vencimiento-Basico'
- */
-function buildTag(event: GHLEvent, plan?: string | null): string {
-  switch (event) {
-    case 'registro':
-      return 'Y-Registro'
-    case 'compra':
-      return plan ? `Y-Compra-${capitalise(plan)}` : 'Y-Compra'
-    case 'vencimiento':
-      return plan ? `Y-Vencimiento-${capitalise(plan)}` : 'Y-Vencimiento'
-    default:
-      return 'Y-Evento'
-  }
+// ── Plan → nombre legible ──────────────────────────────────────────────────────
+
+const PLAN_LABELS: Record<string, string> = {
+  basico:  'Plan Básico',
+  premium: 'Plan Premium',
 }
 
-function capitalise(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+/**
+ * El "tag" que ve Andry en GHL = nombre del curso/categoría.
+ *   registro    → el oficio elegido (ej: "General Contractor")
+ *   compra      → el plan comprado (ej: "Plan Premium")
+ *   vencimiento → "Vencimiento <plan>"
+ */
+function buildTag(data: GHLContactData): string {
+  switch (data.event) {
+    case 'registro':
+      return data.oficio || 'Registro'
+    case 'compra':
+      return data.plan ? (PLAN_LABELS[data.plan] ?? data.plan) : 'Compra'
+    case 'vencimiento':
+      return data.plan
+        ? `Vencimiento ${PLAN_LABELS[data.plan] ?? data.plan}`
+        : 'Vencimiento'
+    default:
+      return 'Evento'
+  }
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -59,27 +67,20 @@ function capitalise(s: string) {
  * Never throws — errors are logged only, so they never block the main flow.
  */
 export async function notifyGHL(data: GHLContactData): Promise<void> {
-  if (!GHL_WEBHOOK_URL) {
-    // Not configured yet — skip silently
-    return
-  }
+  if (!GHL_WEBHOOK_URL) return
 
-  const tag = buildTag(data.event, data.plan)
+  // GHL pidió "Nombre" y "Apellidos" separados; el form sólo guarda nombre
+  // completo, así que lo partimos: primer token = nombre, el resto = apellidos.
+  const parts = (data.nombre ?? '').trim().split(/\s+/)
+  const nombre = parts[0] ?? ''
+  const apellidos = parts.slice(1).join(' ')
 
   const payload = {
-    // GHL standard fields
+    nombre,
+    apellidos,
     email: data.email,
-    phone: data.telefono ?? '',
-    firstName: data.nombre?.split(' ')[0] ?? '',
-    lastName: data.nombre?.split(' ').slice(1).join(' ') ?? '',
-    // Custom fields GHL can map
-    tags: [tag],
-    customData: {
-      plan: data.plan ?? '',
-      event: data.event,
-      tag,
-      source: 'yexamprep.com',
-    },
+    telefono: data.telefono ?? '',
+    tag: buildTag(data),
   }
 
   try {
@@ -93,7 +94,7 @@ export async function notifyGHL(data: GHLContactData): Promise<void> {
     if (!res.ok) {
       console.error(`[ghl] webhook error ${res.status}: ${await res.text().catch(() => '')}`)
     } else {
-      console.log(`[ghl] ✅ notified — event=${data.event} tag=${tag}`)
+      console.log(`[ghl] ✅ notified — event=${data.event} tag=${payload.tag}`)
     }
   } catch (err) {
     // Network error, timeout, etc. — log and move on

@@ -120,6 +120,7 @@ export async function registerAction(formData: FormData) {
     email: data.email,
     nombre: data.nombre_completo,
     telefono: data.telefono || null,
+    oficio: data.oficio || null,
     event: 'registro',
   }).catch(() => { /* already logged inside notifyGHL */ })
 
