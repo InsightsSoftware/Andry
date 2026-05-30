@@ -237,6 +237,60 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── Media Session (CarPlay / lockscreen) ────────────────────
+  // Without this, iOS shows the raw audio host (e.g. *.supabase.co) instead of
+  // the module title. Updates every time the active track changes.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    if (!activeTrack) {
+      navigator.mediaSession.metadata = null
+      return
+    }
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: activeTrack.titulo,
+      artist: 'Y Exam Prep',
+      album:
+        [activeTrack.cursoNombre, activeTrack.capituloNombre].filter(Boolean).join(' · ') ||
+        'Y Exam Prep',
+      artwork: [
+        { src: '/icon.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icon.png', sizes: '512x512', type: 'image/png' },
+      ],
+    })
+  }, [activeTrack])
+
+  // Hardware controls (steering-wheel buttons, lockscreen, CarPlay)
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+    const set = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try { ms.setActionHandler(action, handler) } catch { /* action unsupported */ }
+    }
+    set('play', () => { audioRef.current?.play().then(() => setIsPlaying(true)).catch(() => {}) })
+    set('pause', () => { audioRef.current?.pause(); setIsPlaying(false) })
+    set('seekbackward', () => {
+      const el = audioRef.current
+      if (el) el.currentTime = Math.max(0, el.currentTime - 15)
+    })
+    set('seekforward', () => {
+      const el = audioRef.current
+      if (el) el.currentTime = Math.min(el.duration || 0, el.currentTime + 15)
+    })
+    set('previoustrack', hasPrev ? () => selectTrack(visibleTracks[activeIdx - 1].id) : null)
+    set('nexttrack', hasNext ? () => selectTrack(visibleTracks[activeIdx + 1].id) : null)
+    return () => {
+      ;(['play', 'pause', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack'] as const)
+        .forEach((a) => set(a, null))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPrev, hasNext, visibleTracks, activeIdx])
+
+  // Reflect play/pause state on the car/lockscreen UI
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+  }, [isPlaying])
+
   // ── Handlers ────────────────────────────────────────────────
   function selectTrack(id: string) {
     if (activeTrackId === id) {
@@ -687,7 +741,19 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
         ref={audioRef}
         preload="metadata"
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onTimeUpdate={(e) => {
+          const el = e.currentTarget
+          setCurrentTime(el.currentTime)
+          if ('mediaSession' in navigator && el.duration && Number.isFinite(el.duration)) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: el.duration,
+                playbackRate: el.playbackRate,
+                position: el.currentTime,
+              })
+            } catch { /* setPositionState unsupported */ }
+          }
+        }}
         onEnded={() => {
           setIsPlaying(false)
           saveProgressNow()

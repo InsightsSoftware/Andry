@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { updateProgress } from '@/actions/estudio'
 import {
   Play,
@@ -33,6 +34,10 @@ interface AudioPlayerProps {
   next?: { id: string; titulo: string } | null
   /** Where the "back to list" button should point */
   backHref?: string
+  /** Course name — shown as the "album" on CarPlay / lockscreen */
+  cursoNombre?: string
+  /** Chapter name — shown alongside the course on CarPlay / lockscreen */
+  capituloNombre?: string
 }
 
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -47,7 +52,10 @@ export function AudioPlayer({
   prev = null,
   next = null,
   backHref,
+  cursoNombre,
+  capituloNombre,
 }: AudioPlayerProps) {
+  const router = useRouter()
   const audioRef = useRef<HTMLAudioElement>(null)
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -91,6 +99,53 @@ export function AudioPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── Media Session ────────────────────────────────────────────────────────────
+  // Tells CarPlay / lockscreen the module title, chapter and artwork — otherwise
+  // iOS falls back to showing the raw audio host (e.g. *.supabase.co).
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: titulo,
+      artist: 'Y Exam Prep',
+      album: [cursoNombre, capituloNombre].filter(Boolean).join(' · ') || 'Y Exam Prep',
+      artwork: [
+        { src: '/icon.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icon.png', sizes: '512x512', type: 'image/png' },
+      ],
+    })
+  }, [titulo, cursoNombre, capituloNombre])
+
+  // Hardware controls (steering-wheel buttons, lockscreen, CarPlay)
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+    const set = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try { ms.setActionHandler(action, handler) } catch { /* action unsupported */ }
+    }
+    set('play', () => { audioRef.current?.play(); setIsPlaying(true) })
+    set('pause', () => { audioRef.current?.pause(); setIsPlaying(false) })
+    set('seekbackward', () => {
+      const el = audioRef.current
+      if (el) el.currentTime = Math.max(0, el.currentTime - 15)
+    })
+    set('seekforward', () => {
+      const el = audioRef.current
+      if (el) el.currentTime = Math.min(el.duration || 0, el.currentTime + 15)
+    })
+    set('previoustrack', prev ? () => router.push(`/estudio/audio/${prev.id}`) : null)
+    set('nexttrack', next ? () => router.push(`/estudio/audio/${next.id}`) : null)
+    return () => {
+      ;(['play', 'pause', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack'] as const)
+        .forEach((a) => set(a, null))
+    }
+  }, [prev, next, router])
+
+  // Reflect play/pause state on the car/lockscreen UI
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+  }, [isPlaying])
+
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration)
@@ -103,8 +158,18 @@ export function AudioPlayer({
   }
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
+    const el = audioRef.current
+    if (!el) return
+    setCurrentTime(el.currentTime)
+    // Keep the CarPlay / lockscreen scrubber in sync
+    if ('mediaSession' in navigator && el.duration && Number.isFinite(el.duration)) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: el.duration,
+          playbackRate: el.playbackRate,
+          position: el.currentTime,
+        })
+      } catch { /* setPositionState unsupported */ }
     }
   }
 

@@ -128,6 +128,8 @@ export default async function AudioPlayerPage({
         prev={prev ? { id: prev.id, titulo: prev.titulo } : null}
         next={next ? { id: next.id, titulo: next.titulo } : null}
         backHref={`/estudio/${cursoSlug}`}
+        cursoNombre={cursoNombre}
+        capituloNombre={capituloNombre}
       />
 
       {/* Description */}
