@@ -12,7 +12,7 @@
  */
 
 const DEFAULT_GHL_WEBHOOK_URL =
-  'https://services.leadconnectorhq.com/hooks/F5LCZPUqR16Gz4ftvpAv/webhook-trigger/88f1dc1f-dfbe-4b6d-bb46-6e82a50edd5e'
+  'https://services.leadconnectorhq.com/hooks/F5LCZPUqR16Gz4ftvpAv/webhook-trigger/51d8aeb4-5143-40ee-9c27-c81bbc4ed7b1'
 
 const GHL_WEBHOOK_URL = process.env.GHL_WEBHOOK_URL || DEFAULT_GHL_WEBHOOK_URL
 
