@@ -190,3 +190,13 @@ export interface Partner {
   created_at: string
   updated_at: string
 }
+
+export interface PartnerVideo {
+  id: string
+  partner_id: string
+  titulo: string
+  descripcion: string | null
+  video_url: string
+  orden: number
+  created_at: string
+}

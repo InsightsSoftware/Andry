@@ -1,15 +1,15 @@
 import { Handshake, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { PartnersGrid } from '@/components/aliados/partners-grid'
+import { PartnersGrid, type PartnerWithVideos } from '@/components/aliados/partners-grid'
 import { getSignedContentUrl } from '@/lib/supabase/storage'
-import type { Partner } from '@/types/database'
+import type { Partner, PartnerVideo } from '@/types/database'
 
 export const metadata = { title: 'Aliados' }
 
 export default async function AliadosPage() {
   const supabase = await createClient()
 
-  const { data: raw } = await supabase
+  const { data: rawPartners } = await supabase
     .from('partners')
     .select('*')
     .eq('activo', true)
@@ -17,24 +17,51 @@ export default async function AliadosPage() {
     .order('orden', { ascending: true })
     .order('created_at', { ascending: false })
 
-  const partners = (raw || []) as Partner[]
+  const partners = (rawPartners || []) as Partner[]
 
-  // Resolve video URLs server-side. External URLs (YouTube, etc) pass
-  // through unchanged; Supabase storage paths get signed.
-  const withUrls = await Promise.all(
+  // All videos for the active partners, ordered (orden 0 = principal).
+  const { data: rawVideos } = await supabase
+    .from('partner_videos')
+    .select('*')
+    .order('orden', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  const allVideos = (rawVideos || []) as PartnerVideo[]
+
+  // Sign Supabase-storage URLs; external (YouTube) pass through unchanged.
+  async function resolve(url: string): Promise<string> {
+    try {
+      return await getSignedContentUrl(supabase, url, 3600)
+    } catch {
+      return url
+    }
+  }
+
+  const partnersWithVideos: PartnerWithVideos[] = await Promise.all(
     partners.map(async (p) => {
-      let resolvedVideoUrl = p.video_url
-      try {
-        resolvedVideoUrl = await getSignedContentUrl(
-          supabase,
-          p.video_url,
-          3600
+      const own = allVideos.filter((v) => v.partner_id === p.id)
+
+      let videos: PartnerVideo[]
+      if (own.length > 0) {
+        videos = await Promise.all(
+          own.map(async (v) => ({ ...v, video_url: await resolve(v.video_url) }))
         )
-      } catch {
-        // If signing fails we still render the partner — the video just
-        // won't play. Better than hiding a partner entirely.
+      } else {
+        // Fallback for partners that still only have the legacy single video.
+        videos = [
+          {
+            id: `legacy-${p.id}`,
+            partner_id: p.id,
+            titulo: p.nombre,
+            descripcion: p.descripcion,
+            video_url: await resolve(p.video_url),
+            orden: 0,
+            created_at: p.created_at,
+          },
+        ]
       }
-      return { ...p, video_url: resolvedVideoUrl }
+
+      return { ...p, videos }
     })
   )
 
@@ -63,7 +90,7 @@ export default async function AliadosPage() {
         </p>
       </div>
 
-      <PartnersGrid partners={withUrls} />
+      <PartnersGrid partners={partnersWithVideos} />
     </div>
   )
 }

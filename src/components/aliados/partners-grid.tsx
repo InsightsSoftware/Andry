@@ -1,38 +1,25 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import {
-  Handshake,
-  ExternalLink,
-  Star,
-  Play,
-  Filter,
-  X,
-  Phone,
-  Mail,
-  MessageCircle,
-} from 'lucide-react'
+import { Handshake, Star, Play, Filter, X, PlaySquare } from 'lucide-react'
 import { CATEGORIA_LABELS_SHORT as CATEGORIA_LABELS } from '@/lib/partners'
-import type { Partner, PartnerCategoria } from '@/types/database'
+import type { Partner, PartnerVideo, PartnerCategoria } from '@/types/database'
 import { AliadosTour } from '@/components/tour/section-tours'
+import { PartnerVideoModal } from '@/components/aliados/partner-video-modal'
 
-function isYoutubeOrExternal(url: string): 'youtube' | 'external' | 'video' {
-  if (/youtube\.com|youtu\.be/.test(url)) return 'youtube'
-  if (url.startsWith('http')) return 'external'
-  return 'video'
-}
+export type PartnerWithVideos = Partner & { videos: PartnerVideo[] }
 
-function youtubeEmbedUrl(url: string): string {
+function youtubeThumb(url: string): string | null {
   const m =
     url.match(/youtube\.com\/watch\?v=([^&]+)/) ||
     url.match(/youtu\.be\/([^?]+)/) ||
     url.match(/youtube\.com\/embed\/([^?]+)/)
-  const id = m?.[1]
-  return id ? `https://www.youtube.com/embed/${id}` : url
+  return m?.[1] ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : null
 }
 
-export function PartnersGrid({ partners }: { partners: Partner[] }) {
+export function PartnersGrid({ partners }: { partners: PartnerWithVideos[] }) {
   const [categoria, setCategoria] = useState<PartnerCategoria | null>(null)
+  const [openPartner, setOpenPartner] = useState<PartnerWithVideos | null>(null)
 
   const filteredPartners = useMemo(
     () =>
@@ -40,7 +27,6 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
     [partners, categoria]
   )
 
-  // Only show filter pills for categories that actually have partners
   const availableCategorias = useMemo(() => {
     const set = new Set<PartnerCategoria>()
     for (const p of partners) set.add(p.categoria)
@@ -64,6 +50,7 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
   return (
     <div>
       <AliadosTour />
+
       {/* Categoria filter */}
       {availableCategorias.length > 1 && (
         <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -106,7 +93,7 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
       {/* Grid */}
       <div data-tour="aliados-grid" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredPartners.map((p) => (
-          <PartnerCard key={p.id} partner={p} />
+          <PartnerCard key={p.id} partner={p} onOpen={() => setOpenPartner(p)} />
         ))}
       </div>
 
@@ -117,64 +104,69 @@ export function PartnersGrid({ partners }: { partners: Partner[] }) {
           </p>
         </div>
       )}
+
+      {/* Video modal */}
+      {openPartner && (
+        <PartnerVideoModal
+          partner={openPartner}
+          videos={openPartner.videos}
+          open={!!openPartner}
+          onClose={() => setOpenPartner(null)}
+        />
+      )}
     </div>
   )
 }
 
-function PartnerCard({ partner }: { partner: Partner }) {
-  const [playing, setPlaying] = useState(false)
-  const videoType = isYoutubeOrExternal(partner.video_url)
+function PartnerCard({
+  partner,
+  onOpen,
+}: {
+  partner: PartnerWithVideos
+  onOpen: () => void
+}) {
+  const firstVideo = partner.videos[0]
+  const poster =
+    (firstVideo && youtubeThumb(firstVideo.video_url)) || partner.logo_url
+  const videoCount = partner.videos.length
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-      {/* Video / poster area */}
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer dark:border-neutral-800 dark:bg-neutral-900"
+    >
+      {/* Poster / play */}
       <div className="relative aspect-video w-full bg-neutral-900">
-        {playing ? (
-          videoType === 'youtube' ? (
-            <iframe
-              src={`${youtubeEmbedUrl(partner.video_url)}?autoplay=1&rel=0`}
-              title={partner.nombre}
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 h-full w-full"
-            />
-          ) : (
-            <video
-              src={partner.video_url}
-              autoPlay
-              controls
-              playsInline
-              className="absolute inset-0 h-full w-full"
-            />
-          )
+        {poster ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={poster}
+            alt={partner.nombre}
+            className="absolute inset-0 h-full w-full object-cover opacity-70 transition-opacity group-hover:opacity-50"
+          />
         ) : (
-          <button
-            onClick={() => setPlaying(true)}
-            className="absolute inset-0 flex items-center justify-center cursor-pointer group/play"
-            aria-label={`Reproducir video de ${partner.nombre}`}
-          >
-            {partner.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={partner.logo_url}
-                alt={partner.nombre}
-                className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity group-hover/play:opacity-40"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-800 via-neutral-900 to-accent-900" />
-            )}
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-primary-700 shadow-xl transition-transform group-hover/play:scale-110">
-              <Play className="h-6 w-6 translate-x-0.5 fill-current" />
-            </div>
-          </button>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-800 via-neutral-900 to-accent-900" />
         )}
 
-        {partner.destacado && !playing && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-primary-700 shadow-xl transition-transform group-hover:scale-110">
+            <Play className="h-6 w-6 translate-x-0.5 fill-current" />
+          </div>
+        </div>
+
+        {partner.destacado && (
           <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-accent-500 px-2.5 py-1 text-[10px] font-bold text-neutral-900 shadow-lg">
             <Star className="h-2.5 w-2.5 fill-current" />
             Destacado
           </div>
         )}
+
+        {/* Video count */}
+        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+          <PlaySquare className="h-3 w-3" />
+          {videoCount} {videoCount === 1 ? 'video' : 'videos'}
+        </div>
 
         <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
           {CATEGORIA_LABELS[partner.categoria]}
@@ -186,64 +178,14 @@ function PartnerCard({ partner }: { partner: Partner }) {
         <h3 className="mb-1 font-bold text-neutral-900 dark:text-neutral-100">
           {partner.nombre}
         </h3>
-        <p className="mb-4 flex-1 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-3">
+        <p className="line-clamp-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
           {partner.descripcion}
         </p>
-
-        {/* Contact buttons */}
-        <div className="flex flex-col gap-2">
-          {/* Primary CTA */}
-          {partner.sitio_web && (
-            <a
-              href={partner.sitio_web}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-            >
-              {partner.cta_text}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
-
-          {/* Secondary contact options */}
-          {(partner.whatsapp || partner.email_contacto || partner.telefono) && (
-            <div data-tour="aliados-contact" className="flex flex-wrap gap-2">
-              {partner.whatsapp && (
-                <a
-                  href={`https://wa.me/${partner.whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
-                  title={`WhatsApp: ${partner.whatsapp}`}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  WhatsApp
-                </a>
-              )}
-              {partner.email_contacto && (
-                <a
-                  href={`mailto:${partner.email_contacto}`}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                  title={partner.email_contacto}
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  Email
-                </a>
-              )}
-              {partner.telefono && (
-                <a
-                  href={`tel:${partner.telefono.replace(/\s/g, '')}`}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                  title={partner.telefono}
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  Llamar
-                </a>
-              )}
-            </div>
-          )}
-        </div>
+        <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-600 dark:text-accent-400">
+          <Play className="h-3.5 w-3.5 fill-current" />
+          Ver videos
+        </span>
       </div>
-    </div>
+    </button>
   )
 }

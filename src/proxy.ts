@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.anthropic.com https://api.openai.com",
-      "frame-src https://js.stripe.com https://hooks.stripe.com https://*.supabase.co",
+      "frame-src https://js.stripe.com https://hooks.stripe.com https://*.supabase.co https://www.youtube.com https://www.youtube-nocookie.com",
       "media-src 'self' https://*.supabase.co blob:",
       "object-src 'none'",
       "base-uri 'self'",
