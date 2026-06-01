@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   X,
   Play,
@@ -43,11 +43,23 @@ interface Props {
 
 export function PartnerVideoModal({ partner, videos, open, onClose }: Props) {
   const [activeId, setActiveId] = useState<string | null>(videos[0]?.id ?? null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Al abrir, arrancar siempre desde el primer video (el principal)
   useEffect(() => {
     if (open) setActiveId(videos[0]?.id ?? null)
   }, [open, videos])
+
+  // Reproducir el MP4 de forma confiable cuando cambia el video.
+  // (el atributo autoPlay no dispara bien con el remount por `key`)
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return // YouTube usa iframe, no <video>
+    el.muted = true
+    el.play().catch(() => {
+      /* autoplay bloqueado — el usuario puede darle play con los controles */
+    })
+  }, [activeId])
 
   // Cerrar con Esc + bloquear scroll del fondo mientras está abierto
   useEffect(() => {
@@ -109,10 +121,13 @@ export function PartnerVideoModal({ partner, videos, open, onClose }: Props) {
             ) : (
               <video
                 key={active.id}
+                ref={videoRef}
                 src={active.video_url}
                 autoPlay
+                muted
                 controls
                 playsInline
+                preload="auto"
                 className="absolute inset-0 h-full w-full"
               />
             )}
