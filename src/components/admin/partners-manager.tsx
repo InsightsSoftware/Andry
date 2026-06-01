@@ -24,10 +24,12 @@ import {
 import { CATEGORIA_LABELS } from '@/lib/partners'
 import { extractPath } from '@/lib/supabase/storage'
 import { FileUploader } from '@/components/admin/file-uploader'
-import type { Partner, PartnerCategoria } from '@/types/database'
+import { PartnerVideosManager } from '@/components/admin/partner-videos-manager'
+import type { Partner, PartnerVideo, PartnerCategoria } from '@/types/database'
 
 interface PartnersManagerProps {
   initialPartners: Partner[]
+  videosByPartner: Record<string, PartnerVideo[]>
 }
 
 const EMPTY_FORM: PartnerInput = {
@@ -56,7 +58,7 @@ function slugify(s: string): string {
     .slice(0, 80)
 }
 
-export function PartnersManager({ initialPartners }: PartnersManagerProps) {
+export function PartnersManager({ initialPartners, videosByPartner }: PartnersManagerProps) {
   const router = useRouter()
   const [partners, setPartners] = useState(initialPartners)
   const [editing, setEditing] = useState<Partner | null>(null)
@@ -64,6 +66,7 @@ export function PartnersManager({ initialPartners }: PartnersManagerProps) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(EMPTY_FORM)
+  const [managingVideos, setManagingVideos] = useState<Partner | null>(null)
 
   function openCreate() {
     setEditing(null)
@@ -259,6 +262,16 @@ export function PartnersManager({ initialPartners }: PartnersManagerProps) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-1">
+                      <button
+                        onClick={() => setManagingVideos(p)}
+                        disabled={pending}
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-accent-600 hover:bg-accent-50 dark:text-accent-400 dark:hover:bg-accent-900/20 transition-colors disabled:opacity-50 cursor-pointer"
+                        aria-label="Gestionar videos"
+                        title="Gestionar videos de este aliado"
+                      >
+                        <VideoIcon className="h-4 w-4" />
+                        {videosByPartner[p.id]?.length ?? 0}
+                      </button>
                       <button
                         onClick={() => openEdit(p)}
                         disabled={pending}
@@ -530,6 +543,15 @@ export function PartnersManager({ initialPartners }: PartnersManagerProps) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Video manager modal */}
+      {managingVideos && (
+        <PartnerVideosManager
+          partner={managingVideos}
+          initialVideos={videosByPartner[managingVideos.id] || []}
+          onClose={() => setManagingVideos(null)}
+        />
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 import { Handshake } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PartnersManager } from '@/components/admin/partners-manager'
-import type { Partner } from '@/types/database'
+import type { Partner, PartnerVideo } from '@/types/database'
 
 export const metadata = { title: 'Aliados — Admin' }
 
@@ -12,6 +12,17 @@ export default async function AdminPartnersPage() {
     .select('*')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: false })
+
+  const { data: videos } = await admin
+    .from('partner_videos')
+    .select('*')
+    .order('orden', { ascending: true })
+
+  // Group videos by partner id
+  const videosByPartner: Record<string, PartnerVideo[]> = {}
+  for (const v of (videos || []) as PartnerVideo[]) {
+    ;(videosByPartner[v.partner_id] ??= []).push(v)
+  }
 
   return (
     <div>
@@ -29,7 +40,10 @@ export default async function AdminPartnersPage() {
         </div>
       </div>
 
-      <PartnersManager initialPartners={(partners || []) as Partner[]} />
+      <PartnersManager
+        initialPartners={(partners || []) as Partner[]}
+        videosByPartner={videosByPartner}
+      />
     </div>
   )
 }
