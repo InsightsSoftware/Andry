@@ -106,6 +106,7 @@ export async function completePurchase(
         nombre_completo: formData.nombre_completo,
         telefono: formData.telefono,
         direccion: formData.direccion,
+        oficio: formData.oficio || null,
         subscription_status: 'activa',
         subscription_plan: planKey,
         subscription_expires_at: expiresAt.toISOString(),
