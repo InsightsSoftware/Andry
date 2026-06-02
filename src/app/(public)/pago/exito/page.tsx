@@ -319,7 +319,6 @@ function RegistrationForm({
     email: '',
     password: '',
     telefono: '',
-    direccion: '',
     oficio: '',
   })
   const [oficioCustom, setOficioCustom] = useState('')
@@ -442,15 +441,8 @@ function RegistrationForm({
               required
               className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
             />
-            <input
-              name="direccion"
-              value={formData.direccion}
-              onChange={handleChange}
-              placeholder="Dirección (para envío de guía física) *"
-              autoComplete="street-address"
-              required
-              className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
-            />
+            {/* La dirección de envío ya la recolecta Stripe en el checkout del
+                Plan Premium (estructurada y validada), por eso no se pide acá. */}
             <select
               name="oficio"
               value={formData.oficio}

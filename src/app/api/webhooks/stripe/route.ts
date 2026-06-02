@@ -74,6 +74,7 @@ export async function POST(request: Request) {
             subscription_plan: planKey,
             subscription_expires_at: expiresAt.toISOString(),
             stripe_customer_id: session.customer as string,
+            envio_estado: 'pendiente',
           })
           .eq('id', userId)
 
@@ -124,11 +125,6 @@ export async function POST(request: Request) {
             event: 'compra',
           }).catch(() => { /* already logged inside notifyGHL */ })
         }
-
-        await adminSupabase
-          .from('profiles')
-          .update({ envio_estado: 'pendiente' })
-          .eq('id', userId)
 
         console.log(
           `✅ Subscription activated: user=${userId} plan=${planKey} expires=${expiresAt.toISOString()}`

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type Stripe from 'stripe'
 import { getStripe, PLANS, isPaymentsSimulated, type PlanKey } from '@/lib/stripe'
 
 export async function POST(request: Request) {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
 
     // Real Stripe — create checkout WITHOUT requiring an existing user account.
     // The user creates their Supabase account AFTER payment on the success page.
-    const session = await getStripe().checkout.sessions.create({
+    const params: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       payment_method_types: ['card'],
       customer_creation: 'always',
@@ -35,7 +36,16 @@ export async function POST(request: Request) {
       },
       success_url: `${appUrl}/pago/exito?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
       cancel_url: `${appUrl}/precios?cancelled=true`,
-    })
+    }
+
+    // El Plan Premium incluye la guía física → Stripe recolecta la dirección de
+    // envío estructurada y validada en el checkout (luego va a GHL vía el
+    // workflow de Stripe). El Plan Básico es 100% digital: no se le pide dirección.
+    if (planKey === 'premium') {
+      params.shipping_address_collection = { allowed_countries: ['US'] }
+    }
+
+    const session = await getStripe().checkout.sessions.create(params)
 
     return NextResponse.json({ url: session.url })
   } catch (error) {

@@ -12,7 +12,6 @@ type PurchaseInput = {
   email: string
   password: string
   telefono: string
-  direccion: string
   oficio: string
 }
 
@@ -65,7 +64,6 @@ export async function completePurchase(
     user_metadata: {
       nombre_completo: formData.nombre_completo,
       telefono: formData.telefono,
-      direccion: formData.direccion,
       oficio: formData.oficio,
     },
   })
@@ -105,8 +103,8 @@ export async function completePurchase(
         email: formData.email,
         nombre_completo: formData.nombre_completo,
         telefono: formData.telefono,
-        direccion: formData.direccion,
         oficio: formData.oficio || null,
+        envio_estado: 'pendiente',
         subscription_status: 'activa',
         subscription_plan: planKey,
         subscription_expires_at: expiresAt.toISOString(),
@@ -141,11 +139,12 @@ export async function completePurchase(
     })
 
   // Send purchase confirmation email (fire-and-forget)
+  // La dirección de envío vive solo en Stripe/GHL (Stripe la recolecta en el
+  // checkout del Plan Premium), por eso ya no se le pasa al email de la plataforma.
   sendPurchaseConfirmationEmail({
     to: formData.email,
     nombre: formData.nombre_completo,
     plan: planKey,
-    direccion: formData.direccion || null,
   }).catch((err) => console.error('[completePurchase] email error:', err))
 
   // Notify GHL — compra event (fire-and-forget)
@@ -156,15 +155,6 @@ export async function completePurchase(
     plan: planKey,
     event: 'compra',
   }).catch(() => { /* already logged inside notifyGHL */ })
-
-  // Mark as pending shipment (update profile)
-  admin
-    .from('profiles')
-    .update({ envio_estado: 'pendiente' })
-    .eq('id', userId)
-    .then(({ error }) => {
-      if (error) console.error('[completePurchase] envio_estado update error:', error)
-    })
 
   return { success: true, email: formData.email }
 }
@@ -214,6 +204,7 @@ export async function activateExistingSubscription(
       subscription_status: 'activa',
       subscription_plan: planKey,
       subscription_expires_at: expiresAt.toISOString(),
+      envio_estado: 'pendiente',
     })
     .eq('id', user.id)
 
@@ -266,15 +257,6 @@ export async function activateExistingSubscription(
       plan: planKey,
       event: 'compra',
     }).catch(() => { /* already logged inside notifyGHL */ })
-
-    // Mark as pending shipment
-    admin
-      .from('profiles')
-      .update({ envio_estado: 'pendiente' })
-      .eq('id', user.id)
-      .then(({ error }) => {
-        if (error) console.error('[activateExistingSubscription] envio_estado error:', error)
-      })
   }
 
   return { success: true, email: user.email ?? '' }

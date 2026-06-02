@@ -46,10 +46,8 @@ export const registerSchema = z.object({
   telefono: z
     .string()
     .min(1, 'El teléfono es obligatorio'),
-  direccion: z
-    .string()
-    .min(5, 'La dirección debe tener al menos 5 caracteres')
-    .max(200, 'La dirección es demasiado larga'),
+  // La dirección de envío se recolecta en Stripe (solo Plan Premium, que lleva
+  // guía física); ya no se pide en el formulario de registro de la plataforma.
   oficio: z
     .string()
     .min(1, 'El oficio es obligatorio'),
