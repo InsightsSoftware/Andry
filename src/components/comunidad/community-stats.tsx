@@ -129,8 +129,7 @@ export async function CommunityStats({ currentUser }: Props = {}) {
             <span className="font-semibold text-neutral-700 dark:text-neutral-300">
               {miembros || 0}
             </span>{' '}
-            {memberWord} de la comunidad
-            {(miembros || 0) > 5 && ` · ${members.length} activos esta semana`}
+            {memberWord}
           </p>
         </div>
       )}

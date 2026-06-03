@@ -38,12 +38,10 @@ export async function POST(request: Request) {
       cancel_url: `${appUrl}/precios?cancelled=true`,
     }
 
-    // El Plan Premium incluye la guía física → Stripe recolecta la dirección de
-    // envío estructurada y validada en el checkout (luego va a GHL vía el
-    // workflow de Stripe). El Plan Básico es 100% digital: no se le pide dirección.
-    if (planKey === 'premium') {
-      params.shipping_address_collection = { allowed_countries: ['US'] }
-    }
+    // Stripe recolecta la dirección de envío estructurada y validada en el
+    // checkout de AMBOS planes (luego va a GHL vía el workflow de Stripe).
+    // El Premium la usa para enviar la guía física; en el Básico queda como dato.
+    params.shipping_address_collection = { allowed_countries: ['US'] }
 
     const session = await getStripe().checkout.sessions.create(params)
 
