@@ -110,7 +110,6 @@ export default async function AudiosPage() {
               cursoId: curso.id,
               cursoNombre: curso.nombre,
               progresoPct: prog?.progreso_porcentaje ?? 0,
-              posicionInicial: prog?.ultima_posicion ?? '0',
               completado: prog?.completado ?? false,
             }
           })

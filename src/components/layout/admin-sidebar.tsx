@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  BarChart3,
   Users,
   FileText,
   HelpCircle,
@@ -18,7 +17,6 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 const links = [
-  { href: '/admin/dashboard', label: 'Métricas', icon: BarChart3 },
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
   { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/audios', label: 'Audios', icon: Headphones },
@@ -34,7 +32,7 @@ export function AdminSidebar() {
   return (
     <aside className="hidden md:sticky md:top-0 md:h-screen md:w-64 md:flex md:flex-col glass-sidebar">
       <div className="flex h-32 items-center justify-between border-b border-black/5 dark:border-white/5 px-3">
-        <Link href="/admin/dashboard" className="flex items-center">
+        <Link href="/admin/usuarios" className="flex items-center">
           <Image
             src="/logo.png"
             alt="Y Exam Prep Admin"

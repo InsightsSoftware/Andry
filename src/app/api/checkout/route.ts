@@ -28,6 +28,9 @@ export async function POST(request: Request) {
       payment_method_types: ['card'],
       customer_creation: 'always',
       line_items: [{ price: plan.priceId, quantity: 1 }],
+      // Habilita el campo de códigos de descuento en el checkout de Stripe.
+      // Los códigos se crean en Stripe (Dashboard → Coupons / Promotion codes).
+      allow_promotion_codes: true,
       metadata: {
         plan_key: planKey,
         duration_months: String(plan.durationMonths),

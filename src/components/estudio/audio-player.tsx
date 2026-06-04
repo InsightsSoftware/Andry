@@ -27,7 +27,6 @@ interface AudioPlayerProps {
   descripcion: string | null
   duracionSegundos: number | null
   initialProgress: number
-  initialPosition: string
   /** Previous audio in the same chapter, if any */
   prev?: { id: string; titulo: string } | null
   /** Next audio in the same chapter, if any */
@@ -48,7 +47,6 @@ export function AudioPlayer({
   titulo,
   duracionSegundos,
   initialProgress,
-  initialPosition,
   prev = null,
   next = null,
   backHref,
@@ -60,7 +58,7 @@ export function AudioPlayer({
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(parseFloat(initialPosition) || 0)
+  const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(duracionSegundos || 0)
   const [volume, setVolume] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
@@ -149,11 +147,7 @@ export function AudioPlayer({
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration)
-      // Resume from last position
-      const startPos = parseFloat(initialPosition) || 0
-      if (startPos > 0 && startPos < audioRef.current.duration) {
-        audioRef.current.currentTime = startPos
-      }
+      // Los audios siempre arrancan en 0 (sin "retomar donde quedaste").
     }
   }
 

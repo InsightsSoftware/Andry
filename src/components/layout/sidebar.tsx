@@ -175,7 +175,7 @@ export function Sidebar() {
       {isAdmin && (
         <div className="border-t border-black/5 dark:border-white/5 p-4">
           <Link
-            href="/admin/dashboard"
+            href="/admin/usuarios"
             className={cn(
               'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
               pathname.startsWith('/admin')

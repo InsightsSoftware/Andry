@@ -44,17 +44,15 @@ export default async function AudioPlayerPage({
     data: { user },
   } = await supabase.auth.getUser()
   let initialProgress = 0
-  let initialPosition = '0'
   if (user) {
     const { data: progreso } = await supabase
       .from('progreso_estudio')
-      .select('progreso_porcentaje, ultima_posicion')
+      .select('progreso_porcentaje')
       .eq('user_id', user.id)
       .eq('contenido_id', id)
       .single()
     if (progreso) {
       initialProgress = progreso.progreso_porcentaje
-      initialPosition = progreso.ultima_posicion || '0'
     }
   }
 
@@ -124,7 +122,6 @@ export default async function AudioPlayerPage({
         descripcion={contenido.descripcion}
         duracionSegundos={contenido.duracion_segundos}
         initialProgress={initialProgress}
-        initialPosition={initialPosition}
         prev={prev ? { id: prev.id, titulo: prev.titulo } : null}
         next={next ? { id: next.id, titulo: next.titulo } : null}
         backHref={`/estudio/${cursoSlug}`}

@@ -33,7 +33,6 @@ export interface Track {
   cursoId: string | null
   cursoNombre: string
   progresoPct: number
-  posicionInicial: string
   completado: boolean
 }
 
@@ -187,8 +186,7 @@ export function AudiosPlaylist({ tracks, capitulos, isAdmin = false }: Props) {
     if (el.src !== activeTrack.url) {
       el.src = activeTrack.url
       el.load()
-      const pos = parseFloat(activeTrack.posicionInicial) || 0
-      if (pos > 0) el.currentTime = pos
+      // Los audios siempre arrancan en 0 (sin "retomar donde quedaste").
     }
     el.playbackRate = rate
   }, [activeTrack, rate])

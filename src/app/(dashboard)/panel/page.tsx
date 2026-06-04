@@ -170,7 +170,7 @@ export default async function DashboardPage() {
       {/* Admin quick link */}
       {(profile?.rol === 'admin' || profile?.rol === 'root') && (
         <Link
-          href="/admin/dashboard"
+          href="/admin/usuarios"
           className="mt-6 flex items-center justify-between rounded-xl p-4 glass glass-hover transition-all duration-200"
         >
           <div className="flex items-center gap-3">

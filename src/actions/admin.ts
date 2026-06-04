@@ -42,57 +42,6 @@ async function requireRoot() {
   return user
 }
 
-// ── Dashboard metrics ──────────────────────────────────────────────
-
-export async function getAdminMetrics() {
-  await requireAdmin()
-  const admin = createAdminClient()
-
-  const [users, courses, questions, payments] = await Promise.all([
-    admin.from('profiles').select('id', { count: 'exact', head: true }),
-    admin.from('cursos').select('id', { count: 'exact', head: true }).eq('activo', true),
-    admin.from('preguntas').select('id', { count: 'exact', head: true }),
-    admin
-      .from('pagos')
-      .select('monto_centavos')
-      .gte(
-        'created_at',
-        new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-      ),
-  ])
-
-  const monthlyRevenue = (payments.data || []).reduce(
-    (sum, p) => sum + (p.monto_centavos || 0),
-    0
-  )
-
-  // Subscription breakdown
-  const { data: subData } = await admin
-    .from('profiles')
-    .select('subscription_status')
-
-  const activeSubscriptions = (subData || []).filter(
-    (p) => p.subscription_status === 'activa'
-  ).length
-
-  // Recent signups (last 7 days)
-  const weekAgo = new Date()
-  weekAgo.setDate(weekAgo.getDate() - 7)
-  const { count: recentSignups } = await admin
-    .from('profiles')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', weekAgo.toISOString())
-
-  return {
-    totalUsers: users.count || 0,
-    activeCourses: courses.count || 0,
-    totalQuestions: questions.count || 0,
-    monthlyRevenue: monthlyRevenue / 100,
-    activeSubscriptions,
-    recentSignups: recentSignups || 0,
-  }
-}
-
 // ── User management ────────────────────────────────────────────────
 
 export async function getUsers() {
