@@ -27,6 +27,10 @@ import {
 
 const CUPOS_LIMITE = 110
 
+// VSL (video de ventas) — asset público en Supabase Storage, bucket 'marketing'.
+const VSL_VIDEO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl.mp4`
+const VSL_POSTER_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl-poster.jpg`
+
 // ── Cupos agotados CTA ────────────────────────────────────────────────────────
 
 function CuposAgotadosBtn({ className = '' }: { className?: string }) {
@@ -78,8 +82,17 @@ function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
         </p>
 
         {/* VSL — Video de Ventas Principal */}
-        <div className="mx-auto mb-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-primary-900/30 aspect-video flex items-center justify-center">
-          <p className="text-neutral-400 text-sm">Video de demostración próximamente</p>
+        <div className="mx-auto mb-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-primary-900/30 aspect-video">
+          <video
+            src={VSL_VIDEO_URL}
+            poster={VSL_POSTER_URL}
+            controls
+            playsInline
+            preload="metadata"
+            className="h-full w-full"
+          >
+            Tu navegador no soporta la reproducción de video.
+          </video>
         </div>
 
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
