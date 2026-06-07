@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import { CheckoutButton } from '@/components/landing/checkout-button'
 import { ForYouSection } from '@/components/landing/for-you-section'
+import { HeroVsl } from '@/components/landing/hero-vsl'
 import { Spotlight } from '@/components/ui/spotlight'
 import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -83,16 +84,7 @@ function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
 
         {/* VSL — Video de Ventas Principal */}
         <div className="mx-auto mb-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-primary-900/30 aspect-video">
-          <video
-            src={VSL_VIDEO_URL}
-            poster={VSL_POSTER_URL}
-            controls
-            playsInline
-            preload="metadata"
-            className="h-full w-full"
-          >
-            Tu navegador no soporta la reproducción de video.
-          </video>
+          <HeroVsl src={VSL_VIDEO_URL} poster={VSL_POSTER_URL} />
         </div>
 
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
