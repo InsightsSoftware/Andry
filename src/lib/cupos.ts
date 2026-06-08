@@ -8,10 +8,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
  * Fuente única de verdad: lo usan tanto la landing como el checkout, así
  * nunca se desincronizan.
  *
- * ⚠️ Para vender las 100 guías reales, subir este número (y conviene borrar
- * los usuarios de testing antes, para no arrancar con el cupo casi lleno).
+ * ⚠️ Los usuarios de testing también ocupan cupo. Si querés exactamente N
+ * ventas reales, borrá los de testing o sumá su cantidad a este número.
  */
-export const CUPOS_LIMITE = 9
+export const CUPOS_LIMITE = 110
 
 /** Cuenta usuarios con suscripción activa (las ventas reales). */
 export async function contarCuposVendidos(): Promise<number> {

@@ -118,7 +118,7 @@ function WaitlistModal({ onClose }: { onClose: () => void }) {
               <strong className="text-neutral-700 dark:text-neutral-300">
                 apenas se amplíen los lugares
               </strong>
-              . Sin spam.
+              .
             </p>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <input
