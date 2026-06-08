@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { getStripe, PLANS, isPaymentsSimulated, type PlanKey } from '@/lib/stripe'
+import { cuposAgotados } from '@/lib/cupos'
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +10,15 @@ export async function POST(request: Request) {
 
     if (!planKey || !PLANS[planKey]) {
       return NextResponse.json({ error: 'Plan inválido' }, { status: 400 })
+    }
+
+    // Cap de ventas: bloquear el pago si ya se llegó al límite, incluso si el
+    // usuario entró por un link directo salteando los botones de la landing.
+    if (await cuposAgotados()) {
+      return NextResponse.json(
+        { error: 'Cupos agotados por el momento. No hay lugares disponibles.' },
+        { status: 403 }
+      )
     }
 
     const plan = PLANS[planKey]

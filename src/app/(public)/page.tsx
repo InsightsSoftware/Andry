@@ -4,7 +4,7 @@ import { CheckoutButton } from '@/components/landing/checkout-button'
 import { ForYouSection } from '@/components/landing/for-you-section'
 import { Spotlight } from '@/components/ui/spotlight'
 import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { cuposAgotados as checkCuposAgotados } from '@/lib/cupos'
 import {
   BookOpen,
   Headphones,
@@ -25,7 +25,10 @@ import {
   Lock,
 } from 'lucide-react'
 
-const CUPOS_LIMITE = 9
+// La landing cuenta los cupos en vivo (cap de ventas). Sin esto, Next
+// prerenderiza la página estática y el conteo queda congelado del build,
+// así que el bloqueo nunca se activa aunque ya se haya llegado al límite.
+export const dynamic = 'force-dynamic'
 
 // VSL (video de ventas) — asset público en Supabase Storage, bucket 'marketing'.
 const VSL_VIDEO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl.mp4`
@@ -757,18 +760,7 @@ function FinalCTASection({ cuposAgotados }: { cuposAgotados: boolean }) {
 }
 
 export default async function LandingPage() {
-  // Count paid users to enforce the launch cap
-  let cuposAgotados = false
-  try {
-    const admin = createAdminClient()
-    const { count } = await admin
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('subscription_status', 'activa')
-    cuposAgotados = (count ?? 0) >= CUPOS_LIMITE
-  } catch {
-    // If the query fails, leave the buttons visible (fail open)
-  }
+  const cuposAgotados = await checkCuposAgotados()
 
   return (
     <>
