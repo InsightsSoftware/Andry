@@ -177,7 +177,7 @@ export function ExamQuestionCard({
       {isPractica && feedback && (
         <div className="mb-5 rounded-xl border border-success-400 dark:border-success-600 bg-success-50 dark:bg-success-900/15 p-4 text-sm leading-relaxed">
           <p className="font-semibold mb-1 text-success-700 dark:text-success-400">
-            Análisis
+            Explicación
           </p>
           {feedback.explicacion && (
             <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">{feedback.explicacion}</p>

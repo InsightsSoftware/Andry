@@ -25,7 +25,7 @@ import {
   Lock,
 } from 'lucide-react'
 
-const CUPOS_LIMITE = 110
+const CUPOS_LIMITE = 9
 
 // VSL (video de ventas) — asset público en Supabase Storage, bucket 'marketing'.
 const VSL_VIDEO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl.mp4`
@@ -764,6 +764,7 @@ export default async function LandingPage() {
     const { count } = await admin
       .from('profiles')
       .select('id', { count: 'exact', head: true })
+      .eq('subscription_status', 'activa')
     cuposAgotados = (count ?? 0) >= CUPOS_LIMITE
   } catch {
     // If the query fails, leave the buttons visible (fail open)
