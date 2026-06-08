@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { HeroParallaxBg } from '@/components/ui/hero-parallax-bg'
 import { CheckoutButton } from '@/components/landing/checkout-button'
 import { ForYouSection } from '@/components/landing/for-you-section'
+import { CuposAgotadosBtn } from '@/components/landing/cupos-agotados-btn'
 import { Spotlight } from '@/components/ui/spotlight'
 import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards'
 import { cuposAgotados as checkCuposAgotados } from '@/lib/cupos'
@@ -22,7 +23,6 @@ import {
   BadgeCheck,
   TrendingUp,
   Landmark,
-  Lock,
 } from 'lucide-react'
 
 // La landing cuenta los cupos en vivo (cap de ventas). Sin esto, Next
@@ -33,22 +33,6 @@ export const dynamic = 'force-dynamic'
 // VSL (video de ventas) — asset público en Supabase Storage, bucket 'marketing'.
 const VSL_VIDEO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl.mp4`
 const VSL_POSTER_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/marketing/vsl-poster.jpg`
-
-// ── Cupos agotados CTA ────────────────────────────────────────────────────────
-
-function CuposAgotadosBtn({ className = '' }: { className?: string }) {
-  return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
-      <div className="inline-flex items-center gap-2 rounded-xl bg-neutral-200 dark:bg-neutral-700 px-6 py-3.5 text-sm font-semibold text-neutral-500 dark:text-neutral-400 cursor-not-allowed select-none">
-        <Lock className="h-4 w-4 shrink-0" />
-        Límite de cupos alcanzado
-      </div>
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">
-        Próximamente se amplían las vacantes
-      </p>
-    </div>
-  )
-}
 
 function HeroSection({ cuposAgotados }: { cuposAgotados: boolean }) {
   return (
