@@ -43,6 +43,7 @@ const EMPTY_FORM: PartnerInput = {
   sitio_web: '',
   telefono: '',
   email_contacto: '',
+  whatsapp: '',
   cta_text: 'Contactar',
   orden: 0,
   destacado: false,
@@ -91,6 +92,7 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
       sitio_web: p.sitio_web || '',
       telefono: p.telefono || '',
       email_contacto: p.email_contacto || '',
+      whatsapp: p.whatsapp || '',
       cta_text: p.cta_text,
       orden: p.orden,
       destacado: p.destacado,
@@ -518,6 +520,22 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
                   />
                 </Field>
               </div>
+
+              {/* WhatsApp — habilita el botón de WhatsApp en el modal de videos */}
+              <Field
+                label="WhatsApp"
+                help="Opcional. Habilita el botón de WhatsApp en el modal de videos. Incluí el código de país (ej: +1)."
+              >
+                <input
+                  type="tel"
+                  value={form.whatsapp || ''}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, whatsapp: e.target.value }))
+                  }
+                  placeholder="+1 305 555 1234"
+                  className={inputCls}
+                />
+              </Field>
 
               {/* CTA + Orden */}
               <div className="grid gap-4 sm:grid-cols-2">

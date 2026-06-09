@@ -34,6 +34,7 @@ const partnerInputSchema = z.object({
   sitio_web: z.string().trim().url().or(z.literal('')).optional(),
   telefono: z.string().trim().max(40).optional(),
   email_contacto: z.string().trim().email().or(z.literal('')).optional(),
+  whatsapp: z.string().trim().max(40).optional(),
   cta_text: z.string().trim().min(2).max(40).default('Contactar'),
   orden: z.number().int().min(0).default(0),
   destacado: z.boolean().default(false),
@@ -96,6 +97,7 @@ export async function createPartner(input: PartnerInput) {
       sitio_web: parsed.data.sitio_web || null,
       telefono: parsed.data.telefono || null,
       email_contacto: parsed.data.email_contacto || null,
+      whatsapp: parsed.data.whatsapp || null,
     })
     .select()
     .single()
@@ -128,6 +130,7 @@ export async function updatePartner(id: string, input: PartnerInput) {
       sitio_web: parsed.data.sitio_web || null,
       telefono: parsed.data.telefono || null,
       email_contacto: parsed.data.email_contacto || null,
+      whatsapp: parsed.data.whatsapp || null,
     })
     .eq('id', id)
 
