@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -71,6 +71,13 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(EMPTY_FORM)
   const [managingVideos, setManagingVideos] = useState<Partner | null>(null)
+
+  // Re-sincronizar la lista cuando el server refresca los datos (router.refresh()
+  // tras crear/editar/borrar). Sin esto, la tabla y el modal de edición muestran
+  // datos viejos hasta recargar la página completa.
+  useEffect(() => {
+    setPartners(initialPartners)
+  }, [initialPartners])
 
   function openCreate() {
     setEditing(null)
