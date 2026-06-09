@@ -41,6 +41,8 @@ const EMPTY_FORM: PartnerInput = {
   imagen_portada: '',
   video_url: '',
   sitio_web: '',
+  telefono: '',
+  email_contacto: '',
   cta_text: 'Contactar',
   orden: 0,
   destacado: false,
@@ -87,6 +89,8 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
       imagen_portada: p.imagen_portada || '',
       video_url: p.video_url,
       sitio_web: p.sitio_web || '',
+      telefono: p.telefono || '',
+      email_contacto: p.email_contacto || '',
       cta_text: p.cta_text,
       orden: p.orden,
       destacado: p.destacado,
@@ -478,6 +482,38 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
                       setForm((f) => ({ ...f, sitio_web: e.target.value }))
                     }
                     placeholder="https://insights-software.com"
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+
+              {/* Contacto — alimenta el pop-up "Contactar" en la card del aliado */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Teléfono de contacto"
+                  help="Opcional. Si lo cargás, aparece el botón Contactar en la card."
+                >
+                  <input
+                    type="tel"
+                    value={form.telefono || ''}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, telefono: e.target.value }))
+                    }
+                    placeholder="+1 (305) 555-1234"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field
+                  label="Email de contacto"
+                  help="Opcional. Si lo cargás, aparece el botón Contactar en la card."
+                >
+                  <input
+                    type="email"
+                    value={form.email_contacto || ''}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, email_contacto: e.target.value }))
+                    }
+                    placeholder="contacto@empresa.com"
                     className={inputCls}
                   />
                 </Field>
