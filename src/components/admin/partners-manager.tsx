@@ -38,6 +38,7 @@ const EMPTY_FORM: PartnerInput = {
   descripcion: '',
   categoria: 'creditos',
   logo_url: '',
+  imagen_portada: '',
   video_url: '',
   sitio_web: '',
   cta_text: 'Contactar',
@@ -83,6 +84,7 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
       descripcion: p.descripcion,
       categoria: p.categoria,
       logo_url: p.logo_url || '',
+      imagen_portada: p.imagen_portada || '',
       video_url: p.video_url,
       sitio_web: p.sitio_web || '',
       cta_text: p.cta_text,
@@ -423,6 +425,33 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
                       setForm((f) => ({ ...f, video_url: e.target.value }))
                     }
                     placeholder="https://youtube.com/watch?v=... o partners/demo.mp4"
+                    className={inputCls}
+                  />
+                </div>
+              </Field>
+
+              {/* Imagen de portada — opcional; si no, se usa el frame del video */}
+              <Field
+                label="Imagen de portada (miniatura)"
+                help="Opcional. Si la subís, se usa como portada de la card. Si no, se usa el frame del video. Ideal 16:9."
+              >
+                <div className="space-y-2">
+                  <FileUploader
+                    tipo="image"
+                    folder="partners"
+                    currentUrl={form.imagen_portada}
+                    onUploadComplete={(signedUrl) => {
+                      const path = signedUrl ? extractPath(signedUrl) : ''
+                      setForm((f) => ({ ...f, imagen_portada: path }))
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={form.imagen_portada || ''}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, imagen_portada: e.target.value }))
+                    }
+                    placeholder="o pegá una URL / path de imagen"
                     className={inputCls}
                   />
                 </div>

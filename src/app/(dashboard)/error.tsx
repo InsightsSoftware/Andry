@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle } from 'lucide-react'
+import { useChunkReloadOnError } from '@/lib/use-chunk-reload'
 
 export default function DashboardError({
   error,
@@ -9,6 +10,8 @@ export default function DashboardError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useChunkReloadOnError(error)
+
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
       <div className="rounded-2xl p-8 max-w-md glass-card">

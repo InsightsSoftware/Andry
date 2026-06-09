@@ -29,6 +29,7 @@ const partnerInputSchema = z.object({
   descripcion: z.string().trim().min(10).max(500),
   categoria: z.enum(PARTNER_CATEGORIAS),
   logo_url: z.string().trim().url().or(z.literal('')).optional(),
+  imagen_portada: z.string().trim().optional(),
   video_url: z.string().trim().min(1),
   sitio_web: z.string().trim().url().or(z.literal('')).optional(),
   cta_text: z.string().trim().min(2).max(40).default('Contactar'),
@@ -89,6 +90,7 @@ export async function createPartner(input: PartnerInput) {
     .insert({
       ...parsed.data,
       logo_url: parsed.data.logo_url || null,
+      imagen_portada: parsed.data.imagen_portada || null,
       sitio_web: parsed.data.sitio_web || null,
     })
     .select()
@@ -118,6 +120,7 @@ export async function updatePartner(id: string, input: PartnerInput) {
     .update({
       ...parsed.data,
       logo_url: parsed.data.logo_url || null,
+      imagen_portada: parsed.data.imagen_portada || null,
       sitio_web: parsed.data.sitio_web || null,
     })
     .eq('id', id)

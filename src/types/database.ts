@@ -177,6 +177,7 @@ export interface Partner {
   descripcion: string
   categoria: PartnerCategoria
   logo_url: string | null
+  imagen_portada: string | null
   video_url: string
   sitio_web: string | null
   cta_text: string

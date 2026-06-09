@@ -61,7 +61,11 @@ export default async function AliadosPage() {
         ]
       }
 
-      return { ...p, videos }
+      return {
+        ...p,
+        imagen_portada: p.imagen_portada ? await resolve(p.imagen_portada) : null,
+        videos,
+      }
     })
   )
 
