@@ -225,12 +225,12 @@ function PartnerCard({
         <h3 className="mb-1 font-bold text-neutral-900 dark:text-neutral-100">
           {partner.nombre}
         </h3>
-        <p className="line-clamp-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+        <p className="line-clamp-2 min-h-[2.75rem] text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
           {partner.descripcion}
         </p>
 
-        {/* Actions */}
-        <div className="mt-3 flex items-center gap-2">
+        {/* Actions — mt-auto las fija abajo para que queden alineadas entre cards */}
+        <div className="mt-auto flex items-center gap-2 pt-3">
           <button
             type="button"
             onClick={onOpen}
