@@ -102,7 +102,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
             onChange={(e) => setSearch(e.target.value)}
             placeholder={
               isDuda
-                ? 'Buscar por título: ej. "cálculo breaker"...'
+                ? 'Buscar por título: ej. "remodelación baño"...'
                 : 'Buscar por título: ej. "electricidad Miami"...'
             }
             className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-9 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
@@ -122,7 +122,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
         {hasActiveFilter && (
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Mostrando <strong>{filteredPosts.length}</strong> de {posts.length}{' '}
-            {isDuda ? 'dudas' : 'trabajos'}
+            {isDuda ? 'publicaciones' : 'trabajos'}
           </p>
         )}
       </div>
@@ -156,7 +156,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
             Sin resultados
           </p>
           <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-            No encontramos {isDuda ? 'dudas' : 'trabajos'} con esa búsqueda.
+            No encontramos {isDuda ? 'publicaciones' : 'trabajos'} con esa búsqueda.
           </p>
           <button
             onClick={() => setSearch('')}
@@ -184,16 +184,16 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
           <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
             <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent-400/30 bg-accent-500/10 px-3 py-1 text-xs font-semibold text-accent-300 backdrop-blur-sm">
               <Sparkles className="h-3 w-3" />
-              {isDuda ? 'Espacio de estudio' : 'Red de contratistas'}
+              {isDuda ? 'Foro de contratistas' : 'Red de contratistas'}
             </div>
             <h2 className="mb-2 text-2xl font-extrabold text-white sm:text-3xl">
               {isDuda
-                ? 'Aprendé más rápido en comunidad'
+                ? 'El muro de la comunidad'
                 : 'Conectá con otros contratistas'}
             </h2>
             <p className="mb-5 max-w-xl text-sm text-neutral-200 sm:text-base">
               {isDuda
-                ? 'Preguntá dudas del examen, compartí tips y resolvé con gente que ya pasó por lo mismo. Sé el primero en abrir el hilo.'
+                ? 'Publicá tus proyectos, debatí sobre negocios o aclará temas del examen con otros contratistas. Sé el primero en publicar.'
                 : 'Publicá tus trabajos, encontrá subcontratistas de plomería, electricidad, HVAC. Este es tu tablero.'}
             </p>
             <button
@@ -201,7 +201,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
               className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-900/30 transition-colors hover:bg-primary-700"
             >
               <Plus className="h-4 w-4" />
-              {isDuda ? 'Publicar mi primera duda' : 'Publicar mi primer trabajo'}
+              {isDuda ? 'Crear mi primera publicación' : 'Publicar mi primer trabajo'}
             </button>
           </div>
         </div>

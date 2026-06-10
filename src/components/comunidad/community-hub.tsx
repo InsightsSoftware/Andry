@@ -11,7 +11,7 @@ const CARDS = [
     icon: MessageCircleQuestion,
     iconColor: 'text-purple-300',
     iconBg: 'bg-purple-500/20 border-purple-500/30',
-    cta: 'Ver dudas',
+    cta: 'Entrar al foro',
     ctaClass: 'bg-purple-600 hover:bg-purple-500 text-white',
   },
   {

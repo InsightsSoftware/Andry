@@ -172,7 +172,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
     <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-          {isDuda ? 'Publicar una duda' : 'Publicar un trabajo'}
+          {isDuda ? 'Crear una publicación' : 'Publicar un trabajo'}
         </h2>
         <button
           onClick={onClose}
@@ -188,7 +188,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
           name="titulo"
           placeholder={
             isDuda
-              ? 'Ej: Duda sobre calculo de carga electrica'
+              ? 'Ej: ¿Cómo cotizo un panel eléctrico?'
               : 'Ej: Busco electricista para proyecto residencial'
           }
           required
@@ -196,7 +196,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            {isDuda ? 'Describe tu duda' : 'Descripcion del trabajo'}
+            {isDuda ? 'Describe tu publicación' : 'Descripcion del trabajo'}
           </label>
           <textarea
             name="contenido"
@@ -204,7 +204,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
             className="w-full rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-4 py-3 text-base text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/30"
             placeholder={
               isDuda
-                ? 'Explica tu duda con el mayor detalle posible...'
+                ? 'Escribí tu publicación con el mayor detalle posible...'
                 : 'Describe el trabajo, requisitos, fecha estimada...'
             }
             required
@@ -342,7 +342,7 @@ export function PostForm({ tipo, onClose, onSuccess }: PostFormProps) {
         )}
 
         <Button type="submit" loading={loading || anyUploading} size="lg">
-          {anyUploading ? 'Subiendo archivos...' : isDuda ? 'Publicar Duda' : 'Publicar Trabajo'}
+          {anyUploading ? 'Subiendo archivos...' : isDuda ? 'Publicar' : 'Publicar Trabajo'}
         </Button>
       </form>
     </div>

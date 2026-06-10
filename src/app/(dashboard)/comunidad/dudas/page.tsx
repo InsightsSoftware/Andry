@@ -5,7 +5,7 @@ import { CommunityPage } from '@/components/comunidad/community-page'
 import { CommunityStats } from '@/components/comunidad/community-stats'
 import { Skeleton, CardSkeleton } from '@/components/ui/skeleton'
 
-export const metadata = { title: 'Comunidad - Dudas' }
+export const metadata = { title: 'Muro de Publicaciones' }
 
 // ── Skeleton fallbacks ─────────────────────────────────────────────────────
 
