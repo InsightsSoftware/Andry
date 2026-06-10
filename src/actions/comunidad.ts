@@ -100,16 +100,20 @@ export async function markResuelto(postId: string) {
 
   if (!user) return { error: 'No autenticado' }
 
-  // Fetch the post to verify ownership or admin
-  const { data: post } = await supabase
+  // Use the service-role client for the read + write. RLS on posts_comunidad
+  // only lets the owner or is_admin() update — and is_admin() matches rol='admin'
+  // but NOT 'root', so a root user marking someone else's post would be silently
+  // blocked (0 rows, no error) and the post un-marks on refresh. We authorize in
+  // code instead (owner OR admin/root), same as setPostResuelto.
+  const admin = createAdminClient()
+  const { data: post } = await admin
     .from('posts_comunidad')
-    .select('user_id, tipo')
+    .select('user_id')
     .eq('id', postId)
     .single()
 
   if (!post) return { error: 'Post no encontrado' }
 
-  // Check if user is admin/root
   const { data: profile } = await supabase
     .from('profiles')
     .select('rol')
@@ -121,7 +125,7 @@ export async function markResuelto(postId: string) {
 
   if (!isOwner && !isAdmin) return { error: 'Sin permiso' }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('posts_comunidad')
     .update({ resuelto: true })
     .eq('id', postId)
