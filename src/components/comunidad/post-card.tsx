@@ -31,8 +31,6 @@ import {
   toggleComentarioDestacado,
   setPostResuelto,
   setResolucionComment,
-  getResolucionComment,
-  getCommentMediaUrls,
   toggleLike,
   toggleCommentLike,
   togglePinPost,
@@ -55,6 +53,7 @@ interface Comment {
   parent_id?: string | null
   contenido: string
   imagen_url?: string | null
+  media_urls?: string[] | null
   created_at: string
   destacado?: boolean
   likes_count?: number
@@ -74,6 +73,7 @@ interface Post {
   created_at: string
   media_urls?: string[] | null
   likes_count?: number
+  resolucion_comment_id?: string | null
   profiles: Profile | null
   comentarios: Comment[]
 }
@@ -156,30 +156,11 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
   const [deleting, setDeleting] = useState(false)
   const [localMedia, setLocalMedia] = useState(post.media_urls ?? [])
   const [localComments, setLocalComments] = useState(post.comentarios ?? [])
-  const [resolucionCommentId, setResolucionCommentId] = useState<string | null>(null)
+  // Both come straight from the server query (admin client) — a lazy fetch
+  // here with the user's session hits RLS and silently hides other users'
+  // comment images for members without an active subscription.
+  const [resolucionCommentId, setResolucionCommentId] = useState<string | null>(post.resolucion_comment_id ?? null)
   const [settingResolucion, setSettingResolucion] = useState<string | null>(null)
-  const [commentMediaMap, setCommentMediaMap] = useState<Record<string, string[]>>({})
-  const lazyLoadedRef = useRef(false)
-
-  // Lazy-load extra comment data (resolucion + media_urls) on first open
-  useEffect(() => {
-    if (!showComments || lazyLoadedRef.current) return
-    lazyLoadedRef.current = true
-
-    // Load resolución
-    getResolucionComment(post.id).then((id) => {
-      if (id) setResolucionCommentId(id)
-    })
-
-    // Load media_urls for each comment that has images
-    localComments.forEach((c) => {
-      getCommentMediaUrls(c.id).then((urls) => {
-        if (urls && urls.length > 0) {
-          setCommentMediaMap((prev) => ({ ...prev, [c.id]: urls }))
-        }
-      })
-    })
-  }, [showComments])
 
   // Real-time: subscribe to new comments when modal is open
   useEffect(() => {
@@ -191,7 +172,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'comentarios', filter: `post_id=eq.${post.id}` },
         async (payload) => {
-          const raw = payload.new as { id: string; user_id: string; parent_id: string | null; contenido: string; imagen_url: string | null; created_at: string; destacado: boolean; likes_count: number }
+          const raw = payload.new as { id: string; user_id: string; parent_id: string | null; contenido: string; imagen_url: string | null; media_urls: string[] | null; created_at: string; destacado: boolean; likes_count: number }
           // Fetch profile for the new comment author
           const { data: profile } = await supabase
             .from('profiles')
@@ -415,6 +396,7 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
       user_id: currentUserId,
       parent_id: parentId,
       contenido: textToSend,
+      media_urls: imagesToSend.map((img) => img.remoteUrl).filter((u): u is string => !!u),
       created_at: new Date().toISOString(),
       destacado: false,
       profiles: currentUserName
@@ -830,8 +812,8 @@ export function PostCard({ post, currentUserId, currentUserName, currentUserAvat
                           </div>
                           {/* Comment images */}
                           {(() => {
-                            const imgs: string[] = commentMediaMap[comment.id]?.length
-                              ? commentMediaMap[comment.id]
+                            const imgs: string[] = comment.media_urls?.length
+                              ? comment.media_urls
                               : comment.imagen_url ? [comment.imagen_url] : []
                             if (!imgs.length) return null
                             return (

@@ -60,9 +60,9 @@ async function TrabajosContent() {
       .from('posts_comunidad')
       .select(
         `
-        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls, pinned, likes_count,
+        id, user_id, titulo, contenido, tipo, ubicacion, presupuesto, resuelto, created_at, media_urls, pinned, likes_count, resolucion_comment_id,
         profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol ),
-        comentarios!comentarios_post_id_fkey ( id, user_id, parent_id, contenido, imagen_url, created_at, destacado, likes_count,
+        comentarios!comentarios_post_id_fkey ( id, user_id, parent_id, contenido, imagen_url, media_urls, created_at, destacado, likes_count,
           profiles:user_id ( nombre_completo, avatar_url, es_mentor, oficio, ubicacion, rol )
         )
       `
