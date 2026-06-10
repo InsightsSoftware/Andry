@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { uploadLimiter } from '@/lib/rate-limit'
@@ -60,10 +61,12 @@ export async function POST(request: Request) {
     )
   }
 
-  // Build storage path: {userId}/{timestamp}-{sanitized-name}
+  // Build storage path: {userId}/{timestamp}-{uuid}.{ext}
+  // The random UUID is critical: without it, two files uploaded in the same
+  // millisecond collide on the same path and one overwrites the other, which
+  // silently loses photos (they appear on upload but vanish after refresh).
   const ext = file.name.split('.').pop()?.toLowerCase() || 'bin'
-  const timestamp = Date.now()
-  const path = `${user.id}/${timestamp}.${ext}`
+  const path = `${user.id}/${Date.now()}-${randomUUID()}.${ext}`
 
   // Upload via admin client (bypasses RLS)
   const admin = createAdminClient()
