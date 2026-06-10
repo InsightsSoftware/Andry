@@ -89,7 +89,7 @@ export function BottomTabs() {
               aria-label={tab.label}
               data-tour={tourKey}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-3 py-2.5 min-w-[64px] min-h-[48px] justify-center',
+                'relative flex flex-col items-center gap-0.5 px-3 py-2.5 min-w-[64px] min-h-[48px] justify-center',
                 'transition-all duration-200',
                 isActive
                   ? 'text-primary-600 dark:text-primary-400'

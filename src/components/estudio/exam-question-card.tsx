@@ -192,7 +192,7 @@ export function ExamQuestionCard({
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
 
         {isPractica ? (
           /* Practice: Finalizar | Anterior + [Revisar] + Siguiente */
@@ -206,7 +206,7 @@ export function ExamQuestionCard({
             </button>
 
             {/* Right: Anterior + Revisar + Siguiente */}
-            <div className="flex gap-2">
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
               <button
                 onClick={onPrev}
                 disabled={numero <= 1}
@@ -220,7 +220,7 @@ export function ExamQuestionCard({
                 <button
                   onClick={onRevisar}
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 dark:bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="order-last w-full justify-center inline-flex items-center gap-2 rounded-xl bg-violet-600 dark:bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors disabled:opacity-50 cursor-pointer sm:order-none sm:w-auto"
                 >
                   {submitting
                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -259,7 +259,7 @@ export function ExamQuestionCard({
             </button>
 
             {/* Right: Anterior + Siguiente */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <button
                 onClick={onPrev}
                 disabled={numero <= 1}
