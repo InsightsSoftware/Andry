@@ -5,8 +5,8 @@ import { MessageCircleQuestion, Briefcase, ArrowRight } from 'lucide-react'
 const CARDS = [
   {
     href: '/comunidad/dudas',
-    label: 'Foro de Estudio',
-    description: 'Consulta tus dudas y responde las de otros colegas.',
+    label: 'Foro de Contratistas',
+    description: 'Comparte proyectos, resuelve consultas y conecta con otros colegas.',
     image: '/images/community/dudas.png',
     icon: MessageCircleQuestion,
     iconColor: 'text-purple-300',

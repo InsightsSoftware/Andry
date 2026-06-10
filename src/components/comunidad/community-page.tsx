@@ -72,11 +72,11 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            {isDuda ? 'Dudas de Estudio' : 'Trabajos'}
+            {isDuda ? 'Muro de Publicaciones' : 'Trabajos'}
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {isDuda
-              ? 'Pregunta y resuelve dudas con otros estudiantes'
+              ? 'Publica tus trabajos, debate sobre negocios o aclara temas del examen.'
               : 'Encuentra y publica oportunidades de trabajo'}
           </p>
         </div>
@@ -87,7 +87,7 @@ export function CommunityPage({ tipo, posts, currentUserId, currentUserName, cur
         >
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">
-            {isDuda ? 'Nueva Duda' : 'Nuevo Trabajo'}
+            {isDuda ? 'Nueva publicación' : 'Nuevo Trabajo'}
           </span>
         </button>
       </div>
