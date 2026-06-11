@@ -9,7 +9,6 @@ import {
   Mail,
   Phone,
 } from 'lucide-react'
-import { CATEGORIA_LABELS_SHORT as CATEGORIA_LABELS } from '@/lib/partners'
 import type { Partner, PartnerVideo } from '@/types/database'
 
 // ── YouTube helpers ──────────────────────────────────────────────────────────
@@ -147,7 +146,7 @@ export function PartnerVideoModal({ partner, videos, open, onClose }: Props) {
             {/* Partner info + contact */}
             <div className="mt-5 border-t border-neutral-200 pt-4 dark:border-neutral-800">
               <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-accent-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-500">
-                {CATEGORIA_LABELS[partner.categoria]}
+                {partner.categoria}
               </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                 {partner.nombre}

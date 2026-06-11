@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { Handshake, Star, Play, Filter, X, PlaySquare, Phone } from 'lucide-react'
-import { CATEGORIA_LABELS_SHORT as CATEGORIA_LABELS } from '@/lib/partners'
 import type { Partner, PartnerVideo, PartnerCategoria } from '@/types/database'
 import { AliadosTour } from '@/components/tour/section-tours'
 import { PartnerVideoModal } from '@/components/aliados/partner-video-modal'
@@ -86,7 +85,7 @@ export function PartnersGrid({ partners }: { partners: PartnerWithVideos[] }) {
                   : 'border-neutral-200 bg-white text-neutral-600 hover:border-accent-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400'
               }`}
             >
-              {CATEGORIA_LABELS[cat]}
+              {cat}
             </button>
           ))}
           {categoria && (
@@ -216,7 +215,7 @@ function PartnerCard({
         </div>
 
         <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-          {CATEGORIA_LABELS[partner.categoria]}
+          {partner.categoria}
         </div>
       </button>
 

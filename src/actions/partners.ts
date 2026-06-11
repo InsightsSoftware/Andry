@@ -7,17 +7,6 @@ import { z } from 'zod'
 
 // ─── Validation ───────────────────────────────────────────────────
 
-const PARTNER_CATEGORIAS = [
-  'creditos',
-  'contabilidad',
-  'software',
-  'seguros',
-  'legal',
-  'flota',
-  'marketing',
-  'otros',
-] as const
-
 const partnerInputSchema = z.object({
   nombre: z.string().trim().min(2).max(100),
   slug: z
@@ -27,7 +16,7 @@ const partnerInputSchema = z.object({
     .max(80)
     .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
   descripcion: z.string().trim().min(10).max(500),
-  categoria: z.enum(PARTNER_CATEGORIAS),
+  categoria: z.string().trim().min(2, 'Escribí una categoría').max(40),
   logo_url: z.string().trim().url().or(z.literal('')).optional(),
   imagen_portada: z.string().trim().optional(),
   video_url: z.string().trim().min(1),

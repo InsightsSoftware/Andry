@@ -21,11 +21,10 @@ import {
   togglePartnerActive,
   type PartnerInput,
 } from '@/actions/partners'
-import { CATEGORIA_LABELS } from '@/lib/partners'
 import { extractPath } from '@/lib/supabase/storage'
 import { FileUploader } from '@/components/admin/file-uploader'
 import { PartnerVideosManager } from '@/components/admin/partner-videos-manager'
-import type { Partner, PartnerVideo, PartnerCategoria } from '@/types/database'
+import type { Partner, PartnerVideo } from '@/types/database'
 
 interface PartnersManagerProps {
   initialPartners: Partner[]
@@ -36,7 +35,7 @@ const EMPTY_FORM: PartnerInput = {
   nombre: '',
   slug: '',
   descripcion: '',
-  categoria: 'creditos',
+  categoria: '',
   logo_url: '',
   imagen_portada: '',
   video_url: '',
@@ -247,7 +246,7 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
                     </div>
                   </td>
                   <td className="hidden px-4 py-3 text-neutral-600 dark:text-neutral-400 sm:table-cell">
-                    {CATEGORIA_LABELS[p.categoria]}
+                    {p.categoria}
                   </td>
                   <td className="hidden px-4 py-3 text-center text-neutral-600 dark:text-neutral-400 md:table-cell">
                     {p.orden}
@@ -368,26 +367,17 @@ export function PartnersManager({ initialPartners, videosByPartner }: PartnersMa
                 </Field>
               </div>
 
-              {/* Categoría */}
+              {/* Categoría — texto libre */}
               <Field label="Categoría" required>
-                <select
+                <input
+                  type="text"
                   value={form.categoria}
                   onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      categoria: e.target.value as PartnerCategoria,
-                    }))
+                    setForm((f) => ({ ...f, categoria: e.target.value }))
                   }
+                  placeholder="Ej: Créditos comerciales, Seguros, Marketing…"
                   className={inputCls}
-                >
-                  {(Object.keys(CATEGORIA_LABELS) as PartnerCategoria[]).map(
-                    (cat) => (
-                      <option key={cat} value={cat}>
-                        {CATEGORIA_LABELS[cat]}
-                      </option>
-                    )
-                  )}
-                </select>
+                />
               </Field>
 
               {/* Descripción */}

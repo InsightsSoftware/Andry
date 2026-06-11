@@ -160,15 +160,8 @@ export interface MensajeAI {
   created_at: string
 }
 
-export type PartnerCategoria =
-  | 'creditos'
-  | 'contabilidad'
-  | 'software'
-  | 'seguros'
-  | 'legal'
-  | 'flota'
-  | 'marketing'
-  | 'otros'
+// Categoría de texto libre: el admin escribe la que quiera.
+export type PartnerCategoria = string
 
 export interface Partner {
   id: string
