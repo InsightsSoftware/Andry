@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Phone, Mail, Check, Copy } from 'lucide-react'
 
 interface Props {
@@ -20,6 +20,15 @@ const WIDTH = 248
 export function ContactPopover({ phone, email, origin, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState<'phone' | 'email' | null>(null)
+  const [pos, setPos] = useState<{ left: number; top: number; above: boolean }>(() => {
+    let left = origin.x - WIDTH / 2
+    if (typeof window !== 'undefined') {
+      const m = 12
+      if (left + WIDTH + m > window.innerWidth) left = window.innerWidth - WIDTH - m
+      if (left < m) left = m
+    }
+    return { left, top: origin.y + 10, above: false }
+  })
 
   // Cerrar al click afuera o con Escape.
   useEffect(() => {
@@ -47,14 +56,34 @@ export function ContactPopover({ phone, email, origin, onClose }: Props) {
     setTimeout(() => setCopied(null), 1600)
   }
 
-  // Posicionar centrado bajo el click, clampeado a la pantalla.
-  let left = origin.x - WIDTH / 2
-  const top = origin.y + 10
-  if (typeof window !== 'undefined') {
+  // Posicionar: por defecto centrado debajo del click; si no entra abajo
+  // (cerca del borde inferior en mobile), se abre hacia arriba. Siempre
+  // clampeado al viewport. Se mide la altura real antes de pintar.
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const h = el.offsetHeight
     const m = 12
-    if (left + WIDTH + m > window.innerWidth) left = window.innerWidth - WIDTH - m
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    let left = origin.x - WIDTH / 2
+    if (left + WIDTH + m > vw) left = vw - WIDTH - m
     if (left < m) left = m
-  }
+
+    let top = origin.y + 10
+    let above = false
+    if (top + h + m > vh) {
+      const aboveTop = origin.y - h - 10
+      if (aboveTop >= m) {
+        top = aboveTop
+        above = true
+      } else {
+        top = Math.max(m, vh - h - m)
+      }
+    }
+    setPos({ left, top, above })
+  }, [origin.x, origin.y])
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -62,10 +91,10 @@ export function ContactPopover({ phone, email, origin, onClose }: Props) {
         ref={ref}
         role="menu"
         style={{
-          left,
-          top,
+          left: pos.left,
+          top: pos.top,
           width: WIDTH,
-          transformOrigin: 'top center',
+          transformOrigin: pos.above ? 'bottom center' : 'top center',
           animation: 'popover-in 0.16s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         className="fixed rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
