@@ -5,6 +5,7 @@ import { ManageSubscriptionButton } from '@/components/ui/manage-subscription-bu
 import { SignOutButton } from '@/components/ui/sign-out-button'
 import { ReplayTourButton } from '@/components/tour/replay-tour-button'
 import { AvatarUpload } from '@/components/perfil/avatar-upload'
+import { ThemeSetting } from '@/components/perfil/theme-setting'
 
 export const metadata = { title: 'Mi Perfil' }
 
@@ -113,6 +114,14 @@ export default async function ProfilePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Preferencias */}
+      <div className="mt-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
+        <h2 className="mb-4 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
+          Preferencias
+        </h2>
+        <ThemeSetting />
       </div>
 
       {/* Actions */}

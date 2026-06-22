@@ -16,7 +16,6 @@ import {
   LogOut,
   Shield,
 } from 'lucide-react'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -95,7 +94,7 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:sticky md:top-0 md:h-screen glass-sidebar">
-      <div className="relative flex h-28 items-center justify-center border-b border-black/5 dark:border-white/5 px-2">
+      <div className="flex h-28 items-center justify-center border-b border-black/5 dark:border-white/5 px-2">
         <Link href="/panel" className="flex w-full items-center justify-center">
           {/* Dark mode logo (gold) */}
           <Image
@@ -114,9 +113,6 @@ export function Sidebar() {
             className="block dark:hidden w-[calc(100%-70px)] h-auto object-contain"
           />
         </Link>
-        <div className="absolute top-2 right-2">
-          <ThemeToggle />
-        </div>
       </div>
       <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1 p-4">
         {visibleLinks.map((link) => {
