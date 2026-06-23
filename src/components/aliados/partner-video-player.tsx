@@ -19,16 +19,27 @@ function formatTime(t: number): string {
 export function PartnerVideoPlayer({ src, poster }: { src: string; poster?: string }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [playing, setPlaying] = useState(false)
-  const [muted, setMuted] = useState(true)
+  const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  // Autoplay muteado al montar / cambiar de video.
+  // Al montar / cambiar de video: reproducir CON sonido al 50%.
+  // El modal se abre por un click del usuario, así que el navegador suele
+  // permitir el audio. Si lo bloquea, caemos a muteado y el usuario activa
+  // el sonido con el botón de volumen. (iOS ignora `volume`: usa el del
+  // dispositivo, controlado por los botones físicos.)
   useEffect(() => {
     const v = ref.current
     if (!v) return
-    v.muted = true
-    v.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+    v.volume = 0.5
+    v.muted = false
+    v.play()
+      .then(() => setPlaying(true))
+      .catch(() => {
+        v.muted = true
+        setMuted(true)
+        v.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+      })
   }, [src])
 
   const togglePlay = useCallback(() => {
@@ -68,8 +79,6 @@ export function PartnerVideoPlayer({ src, poster }: { src: string; poster?: stri
         ref={ref}
         src={src}
         poster={poster}
-        autoPlay
-        muted
         playsInline
         preload="auto"
         onClick={togglePlay}
