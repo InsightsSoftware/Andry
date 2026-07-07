@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { updateEnvioEstado, inviteUser, deleteUser } from '@/actions/admin'
+import { updateEnvioEstado, inviteUser, deleteUser, setPermanentAccess } from '@/actions/admin'
 import { UserRoleToggle } from './user-role-toggle'
 import {
   ChevronDown,
@@ -17,6 +17,7 @@ import {
   Loader2,
   Trash2,
   AlertTriangle,
+  Infinity as InfinityIcon,
 } from 'lucide-react'
 
 type User = {
@@ -104,6 +105,61 @@ function EnvioButton({ userId, estado }: { userId: string; estado: string }) {
   )
 }
 
+type Sub = { status: string | null; plan: string | null; expires: string | null }
+
+function PermanentAccessControl({
+  userId,
+  sub,
+  onChange,
+}: {
+  userId: string
+  sub: Sub
+  onChange: (s: Sub) => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const isPermanent = sub.status === 'activa' && sub.expires === null
+
+  async function toggle(permanent: boolean) {
+    setLoading(true)
+    setErr(null)
+    const r = await setPermanentAccess(userId, permanent)
+    if ('success' in r && r.success) {
+      onChange({ status: r.status, plan: r.plan, expires: r.expires_at })
+    } else {
+      setErr(('error' in r && r.error) || 'Error')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="mt-2">
+      {isPermanent ? (
+        <button
+          onClick={() => toggle(false)}
+          disabled={loading}
+          title="Vuelve a poner vencimiento (revoca el acceso permanente)"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-danger-300 dark:border-danger-700 px-2.5 py-1 text-xs font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 disabled:opacity-50 cursor-pointer transition-colors"
+        >
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+          Desactivar acceso permanente
+        </button>
+      ) : (
+        <button
+          onClick={() => toggle(true)}
+          disabled={loading}
+          title="El usuario queda con acceso premium que nunca vence"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 disabled:opacity-50 cursor-pointer transition-colors"
+        >
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <InfinityIcon className="h-3 w-3" />}
+          Hacer que nunca venza
+        </button>
+      )}
+      {err && <p className="mt-1 text-xs text-danger-500">{err}</p>}
+    </div>
+  )
+}
+
 function UserRow({
   user,
   callerRole,
@@ -119,6 +175,11 @@ function UserRow({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [sub, setSub] = useState<Sub>({
+    status: user.subscription_status,
+    plan: user.subscription_plan,
+    expires: user.subscription_expires_at,
+  })
 
   async function handleDelete() {
     setDeleting(true)
@@ -154,10 +215,10 @@ function UserRow({
           {user.email}
         </td>
         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 capitalize text-sm">
-          {user.subscription_plan || 'ninguno'}
+          {sub.plan || 'ninguno'}
         </td>
         <td className="px-4 py-3">
-          <StatusBadge status={user.subscription_status || 'ninguna'} />
+          <StatusBadge status={sub.status || 'ninguna'} />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
           <EnvioButton userId={user.id} estado={user.envio_estado || 'no_aplica'} />
@@ -235,13 +296,22 @@ function UserRow({
                 </p>
                 <div className="space-y-0.5">
                   <p className="text-neutral-700 dark:text-neutral-300 capitalize">
-                    {user.subscription_plan || 'Sin plan'}
+                    {sub.plan || 'Sin plan'}
                   </p>
-                  {user.subscription_expires_at && (
-                    <p className="text-xs text-neutral-500">
-                      Vence: {new Date(user.subscription_expires_at).toLocaleDateString('es-ES')}
+                  {sub.status === 'activa' && sub.expires === null ? (
+                    <p className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      <InfinityIcon className="h-3 w-3" /> Nunca vence
                     </p>
-                  )}
+                  ) : sub.expires ? (
+                    <p className="text-xs text-neutral-500">
+                      Vence: {new Date(sub.expires).toLocaleDateString('es-ES')}
+                    </p>
+                  ) : null}
+                  <PermanentAccessControl
+                    userId={user.id}
+                    sub={sub}
+                    onChange={setSub}
+                  />
                 </div>
               </div>
             </div>

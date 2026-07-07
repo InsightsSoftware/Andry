@@ -155,6 +155,42 @@ export async function updateEnvioEstado(
   return { success: true }
 }
 
+/**
+ * Marca (o desmarca) a un usuario como "acceso permanente / nunca vence".
+ *  - permanent=true  → subscription_status='activa', expires_at=NULL, plan='premium'.
+ *    Con expires_at en NULL, el cron de vencimiento lo SALTEA (nunca lo expira).
+ *  - permanent=false → subscription_status='expirada', expires_at=ahora (revoca el acceso).
+ * Solo admin/root. Devuelve el nuevo estado para actualizar la UI.
+ */
+export async function setPermanentAccess(userId: string, permanent: boolean) {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const patch = permanent
+    ? { subscription_status: 'activa', subscription_expires_at: null, subscription_plan: 'premium' }
+    : { subscription_status: 'expirada', subscription_expires_at: new Date().toISOString() }
+
+  const { data, error } = await admin
+    .from('profiles')
+    .update(patch)
+    .eq('id', userId)
+    .select('subscription_status, subscription_plan, subscription_expires_at')
+    .single()
+
+  if (error) {
+    console.error('Error setting permanent access:', error)
+    return { error: 'Error al actualizar el acceso' }
+  }
+
+  revalidatePath('/admin/usuarios')
+  return {
+    success: true as const,
+    status: data.subscription_status as string | null,
+    plan: data.subscription_plan as string | null,
+    expires_at: data.subscription_expires_at as string | null,
+  }
+}
+
 export async function deleteUser(userId: string) {
   const currentUser = await requireAdmin()
   const admin = createAdminClient()
